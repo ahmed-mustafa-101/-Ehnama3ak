@@ -1,0 +1,106 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/datasources/settings_api_service.dart';
+import '../../domain/repositories/settings_repository.dart';
+import 'settings_state.dart';
+
+class SettingsCubit extends Cubit<SettingsState> {
+  final SettingsRepository _repo;
+
+  SettingsCubit(this._repo) : super(const SettingsState());
+
+  Future<void> fetchSettings() async {
+    emit(state.copyWith(status: SettingsStatus.loading));
+    try {
+      final settings = await _repo.getSettings();
+      emit(state.copyWith(status: SettingsStatus.success, userSettings: settings));
+    } catch (e) {
+      emit(state.copyWith(
+        status: SettingsStatus.failure,
+        errorMessage: SettingsApiService.parseError(e),
+      ));
+    }
+  }
+
+  Future<void> updateProfile({
+    required String name,
+    required String email,
+    String? profileImagePath,
+  }) async {
+    emit(state.copyWith(isUpdating: true));
+    try {
+      await _repo.updateProfile(
+        name: name,
+        email: email,
+        profileImagePath: profileImagePath,
+      );
+      // Refresh settings to get updated info
+      await fetchSettings();
+      emit(state.copyWith(isUpdating: false, status: SettingsStatus.success));
+    } catch (e) {
+      emit(state.copyWith(
+        isUpdating: false,
+        status: SettingsStatus.failure,
+        errorMessage: SettingsApiService.parseError(e),
+      ));
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    emit(state.copyWith(isPasswordChanging: true));
+    try {
+      await _repo.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      emit(state.copyWith(
+        isPasswordChanging: false,
+        status: SettingsStatus.success,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isPasswordChanging: false,
+        status: SettingsStatus.failure,
+        errorMessage: SettingsApiService.parseError(e),
+      ));
+    }
+  }
+
+  Future<void> fetchPrivacyPolicy() async {
+    emit(state.copyWith(status: SettingsStatus.loading));
+    try {
+      final privacyPolicy = await _repo.getPrivacyPolicy();
+      emit(state.copyWith(
+        status: SettingsStatus.success,
+        privacyPolicy: privacyPolicy,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: SettingsStatus.failure,
+        errorMessage: SettingsApiService.parseError(e),
+      ));
+    }
+  }
+
+  Future<void> fetchSupportInfo() async {
+    emit(state.copyWith(status: SettingsStatus.loading));
+    try {
+      final supportInfo = await _repo.getSupportInfo();
+      emit(state.copyWith(
+        status: SettingsStatus.success,
+        supportInfo: supportInfo,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: SettingsStatus.failure,
+        errorMessage: SettingsApiService.parseError(e),
+      ));
+    }
+  }
+
+  void resetStatus() {
+    emit(state.copyWith(status: SettingsStatus.initial));
+  }
+}
