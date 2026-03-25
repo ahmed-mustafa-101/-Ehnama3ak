@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ehnama3ak/services/doctor_sessions_api_service.dart';
+import 'package:ehnama3ak/screens_app/doctor/sessions/data/datasources/doctor_sessions_api_service.dart';
 import 'package:ehnama3ak/features/auth/data/datasources/auth_api_service.dart';
 import 'doctor_sessions_state.dart';
 
@@ -54,7 +54,11 @@ class DoctorSessionsCubit extends Cubit<DoctorSessionsState> {
         // Default to refreshing upcoming sessions
         fetchUpcomingSessions();
       } else {
-        emit(const DoctorSessionCreateError("Failed to create session. Please check your data."));
+        emit(
+          const DoctorSessionCreateError(
+            "Failed to create session. Please check your data.",
+          ),
+        );
       }
     } catch (e) {
       emit(DoctorSessionCreateError(AuthApiService.parseApiError(e)));

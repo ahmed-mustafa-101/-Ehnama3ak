@@ -44,6 +44,7 @@ class MainLayoutState extends State<MainLayout> {
   int get currentIndex => _currentIndex;
 
   void changeTab(int index) {
+    if (!mounted) return;
     setState(() {
       _currentIndex = index;
       _showNotifications = false; // Close notifications when changing tabs
@@ -52,6 +53,7 @@ class MainLayoutState extends State<MainLayout> {
   }
 
   void changeHomeSubTab(int subTabIndex) {
+    if (!mounted) return;
     setState(() {
       _currentIndex = 0; // Navigate to HomeScreen
       _homeSubTab = subTabIndex; // Set the sub-tab
@@ -61,12 +63,14 @@ class MainLayoutState extends State<MainLayout> {
   }
 
   void toggleNotifications() {
+    if (!mounted) return;
     setState(() {
       _showNotifications = !_showNotifications;
     });
   }
 
   void toggleMessages() {
+    if (!mounted) return;
     setState(() {
       _showMessages = !_showMessages;
     });
@@ -80,6 +84,7 @@ class MainLayoutState extends State<MainLayout> {
 
   Future<void> _loadRole() async {
     final role = await PrefManager.getUserRole();
+    if (!mounted) return;
     setState(() {
       _userRole = role;
     });

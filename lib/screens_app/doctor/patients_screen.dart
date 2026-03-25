@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../cubits/doctor_patients_cubit.dart';
-import '../../cubits/doctor_patients_state.dart';
+import 'doctor_patients/presentation/cubit/doctor_patients_cubit.dart';
+import 'doctor_patients/presentation/cubit/doctor_patients_state.dart';
 
 import '../messages/message_detail_screen.dart';
 
@@ -234,13 +234,18 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
                     );
                   }
                 },
-                icon: const Icon(Icons.message_rounded, color: Color(0xFF0DA5FE)),
+                icon: const Icon(
+                  Icons.message_rounded,
+                  color: Color(0xFF0DA5FE),
+                ),
               ),
               const SizedBox(width: 4),
               ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0DA5FE).withValues(alpha: 0.1),
+                  backgroundColor: const Color(
+                    0xFF0DA5FE,
+                  ).withValues(alpha: 0.1),
                   foregroundColor: const Color(0xFF0DA5FE),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -257,4 +262,3 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
     );
   }
 }
-

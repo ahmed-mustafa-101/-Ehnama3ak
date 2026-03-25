@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../services/doctor_reports_api_service.dart';
-import '../features/auth/data/datasources/auth_api_service.dart';
+import '../../data/datasources/doctor_reports_api_service.dart';
+import '../../../../../features/auth/data/datasources/auth_api_service.dart';
 import 'doctor_reports_state.dart';
 
 class DoctorReportsCubit extends Cubit<DoctorReportsState> {

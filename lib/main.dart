@@ -1,3 +1,11 @@
+import 'package:ehnama3ak/screen_tap/progress/data/datasources/progress_api_service.dart';
+import 'package:ehnama3ak/screen_tap/progress/presentation/cubit/progress_cubit.dart';
+import 'package:ehnama3ak/screen_tap/therapist/data/datasources/doctor_api_service.dart';
+import 'package:ehnama3ak/screen_tap/therapist/presentation/cubit/doctor_cubit.dart';
+import 'package:ehnama3ak/screens_app/profile/data/datasources/profile_api_service.dart';
+import 'package:ehnama3ak/screens_app/profile/presentation/cubit/profile_cubit.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/data/datasources/doctor_dashboard_api_service.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_cubit.dart';
 import 'package:flutter/material.dart';
 import 'core/widgets/theme/theme_notifier.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,12 +31,12 @@ import 'features/help_support/data/datasources/help_api_service.dart';
 import 'features/help_support/data/repositories/help_repository_impl.dart';
 import 'features/help_support/presentation/controllers/help_cubit.dart';
 import 'features/splash/auth_wrapper.dart';
-import 'services/doctor_sessions_api_service.dart';
-import 'cubits/doctor_sessions_cubit.dart';
-import 'services/doctor_patients_api_service.dart';
-import 'cubits/doctor_patients_cubit.dart';
-import 'services/doctor_reports_api_service.dart';
-import 'cubits/doctor_reports_cubit.dart';
+import 'screens_app/doctor/sessions/data/datasources/doctor_sessions_api_service.dart';
+import 'screens_app/doctor/sessions/presentation/cubit/doctor_sessions_cubit.dart';
+import 'screens_app/doctor/doctor_patients/data/datasources/doctor_patients_api_service.dart';
+import 'screens_app/doctor/doctor_patients/presentation/cubit/doctor_patients_cubit.dart';
+import 'screens_app/doctor/reports/data/datasources/doctor_reports_api_service.dart';
+import 'screens_app/doctor/reports/presentation/cubit/doctor_reports_cubit.dart';
 import 'features/notifications/data/datasources/notification_api_service.dart';
 import 'features/notifications/data/repositories/notification_repository_impl.dart';
 import 'features/notifications/presentation/cubit/notification_cubit.dart';
@@ -48,10 +56,18 @@ class EhnaMa3akApp extends StatelessWidget {
     final storage = SecureTokenStorage();
     final apiService = AuthApiService(tokenStorage: storage);
     final dioClient = DioClient(tokenStorage: storage);
-    final feedRepo = FeedRepositoryImpl(FeedApiService(dioClient: dioClient, tokenStorage: storage));
-    final podcastRepo = PodcastRepositoryImpl(PodcastApiService(dioClient: dioClient));
-    final resourceRepo = ResourceRepositoryImpl(ResourceApiService(dioClient: dioClient));
-    final settingsRepo = SettingsRepositoryImpl(SettingsApiService(dioClient: dioClient));
+    final feedRepo = FeedRepositoryImpl(
+      FeedApiService(dioClient: dioClient, tokenStorage: storage),
+    );
+    final podcastRepo = PodcastRepositoryImpl(
+      PodcastApiService(dioClient: dioClient),
+    );
+    final resourceRepo = ResourceRepositoryImpl(
+      ResourceApiService(dioClient: dioClient),
+    );
+    final settingsRepo = SettingsRepositoryImpl(
+      SettingsApiService(dioClient: dioClient),
+    );
     final helpRepo = HelpRepositoryImpl(HelpApiService(dioClient: dioClient));
 
     return RepositoryProvider<FeedRepository>.value(
@@ -62,21 +78,11 @@ class EhnaMa3akApp extends StatelessWidget {
             create: (context) =>
                 AuthCubit(AuthRepositoryImpl(apiService, storage)),
           ),
-          BlocProvider(
-            create: (context) => FeedCubit(feedRepo),
-          ),
-          BlocProvider(
-            create: (context) => PodcastCubit(podcastRepo),
-          ),
-          BlocProvider(
-            create: (context) => ResourceCubit(resourceRepo),
-          ),
-          BlocProvider(
-            create: (context) => SettingsCubit(settingsRepo),
-          ),
-          BlocProvider(
-            create: (context) => HelpCubit(helpRepo),
-          ),
+          BlocProvider(create: (context) => FeedCubit(feedRepo)),
+          BlocProvider(create: (context) => PodcastCubit(podcastRepo)),
+          BlocProvider(create: (context) => ResourceCubit(resourceRepo)),
+          BlocProvider(create: (context) => SettingsCubit(settingsRepo)),
+          BlocProvider(create: (context) => HelpCubit(helpRepo)),
           BlocProvider(
             create: (context) => DoctorSessionsCubit(
               DoctorSessionsApiService(dio: dioClient.dio),
@@ -88,9 +94,8 @@ class EhnaMa3akApp extends StatelessWidget {
             ),
           ),
           BlocProvider(
-            create: (context) => DoctorReportsCubit(
-              DoctorReportsApiService(dio: dioClient.dio),
-            ),
+            create: (context) =>
+                DoctorReportsCubit(DoctorReportsApiService(dio: dioClient.dio)),
           ),
           BlocProvider(
             create: (context) => NotificationCubit(
@@ -101,57 +106,75 @@ class EhnaMa3akApp extends StatelessWidget {
           ),
           BlocProvider(
             create: (context) => MessageCubit(
-              MessageRepositoryImpl(
-                MessageApiService(dioClient: dioClient),
-              ),
+              MessageRepositoryImpl(MessageApiService(dioClient: dioClient)),
             )..loadUnreadCount(),
+          ),
+          BlocProvider(
+            create: (context) => ProgressCubit(
+              progressApiService: ProgressApiService(dio: dioClient.dio),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => DoctorCubit(
+              doctorApiService: DoctorApiService(dio: dioClient.dio),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => ProfileCubit(
+              profileApiService: ProfileApiService(dio: dioClient.dio),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => DoctorDashboardCubit(
+              apiService: DoctorDashboardApiService(dio: dioClient.dio),
+            ),
           ),
         ],
         child: ValueListenableBuilder<ThemeMode>(
-        valueListenable: ThemeNotifier.themeMode,
-        builder: (context, mode, _) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Ehna Ma3ak',
-            themeMode: mode,
+          valueListenable: ThemeNotifier.themeMode,
+          builder: (context, mode, _) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Ehna Ma3ak',
+              themeMode: mode,
 
-            // Light Theme
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              fontFamily: 'Roboto',
-              scaffoldBackgroundColor: Colors.white,
-              brightness: Brightness.light,
-              appBarTheme: const AppBarTheme(
-                backgroundColor: Colors.white,
-                iconTheme: IconThemeData(color: Colors.black),
-                titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
+              // Light Theme
+              theme: ThemeData(
+                primarySwatch: Colors.blue,
+                fontFamily: 'Roboto',
+                scaffoldBackgroundColor: Colors.white,
+                brightness: Brightness.light,
+                appBarTheme: const AppBarTheme(
+                  backgroundColor: Colors.white,
+                  iconTheme: IconThemeData(color: Colors.black),
+                  titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
+                ),
               ),
-            ),
 
-            // Dark Theme
-            darkTheme: ThemeData(
-              primarySwatch: Colors.blue,
-              fontFamily: 'Roboto',
-              scaffoldBackgroundColor: const Color(0xFF121212),
-              brightness: Brightness.dark,
-              colorScheme: const ColorScheme.dark(
-                primary: Color(0xff0DA5FE),
-                secondary: Color(0xff0DA5FE),
+              // Dark Theme
+              darkTheme: ThemeData(
+                primarySwatch: Colors.blue,
+                fontFamily: 'Roboto',
+                scaffoldBackgroundColor: const Color(0xFF121212),
+                brightness: Brightness.dark,
+                colorScheme: const ColorScheme.dark(
+                  primary: Color(0xff0DA5FE),
+                  secondary: Color(0xff0DA5FE),
+                ),
+                appBarTheme: const AppBarTheme(
+                  backgroundColor: Color(0xFF121212),
+                  iconTheme: IconThemeData(color: Colors.white),
+                  titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+                textTheme: const TextTheme(
+                  bodyLarge: TextStyle(color: Colors.white),
+                  bodyMedium: TextStyle(color: Colors.white70),
+                ),
               ),
-              appBarTheme: const AppBarTheme(
-                backgroundColor: Color(0xFF121212),
-                iconTheme: IconThemeData(color: Colors.white),
-                titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
-              ),
-              textTheme: const TextTheme(
-                bodyLarge: TextStyle(color: Colors.white),
-                bodyMedium: TextStyle(color: Colors.white70),
-              ),
-            ),
 
-            home: const AuthWrapper(),
-          );
-        },
+              home: const AuthWrapper(),
+            );
+          },
         ),
       ),
     );

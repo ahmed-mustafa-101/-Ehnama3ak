@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:ehnama3ak/models/doctor_patient_model.dart';
+import 'package:ehnama3ak/screens_app/doctor/doctor_patients/models/doctor_patient_model.dart';
 
 abstract class DoctorPatientsState extends Equatable {
   const DoctorPatientsState();

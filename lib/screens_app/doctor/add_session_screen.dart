@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../cubits/doctor_sessions_cubit.dart';
-import '../../cubits/doctor_sessions_state.dart';
+import 'sessions/presentation/cubit/doctor_sessions_cubit.dart';
+import 'sessions/presentation/cubit/doctor_sessions_state.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddSessionScreen extends StatefulWidget {
@@ -15,7 +15,7 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _patientNameController = TextEditingController();
   final _priceController = TextEditingController();
-  
+
   final ImagePicker _picker = ImagePicker();
   XFile? _selectedFile;
 
@@ -74,12 +74,12 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
       );
 
       context.read<DoctorSessionsCubit>().createSession(
-            patientName: _patientNameController.text.trim(),
-            sessionType: _selectedType,
-            scheduledAt: scheduledAt,
-            price: double.tryParse(_priceController.text.trim()),
-            filePath: _selectedFile?.path,
-          );
+        patientName: _patientNameController.text.trim(),
+        sessionType: _selectedType,
+        scheduledAt: scheduledAt,
+        price: double.tryParse(_priceController.text.trim()),
+        filePath: _selectedFile?.path,
+      );
     }
   }
 
@@ -97,10 +97,7 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
           Navigator.pop(context);
         } else if (state is DoctorSessionCreateError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
       },
@@ -220,8 +217,8 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
                           text: _selectedFile != null
                               ? _selectedFile!.name
                               : (_selectedType == "Chat"
-                                  ? "upload chat screenshot/image"
-                                  : "upload video file"),
+                                    ? "upload chat screenshot/image"
+                                    : "upload video file"),
                           onTap: _pickFile,
                         ),
 

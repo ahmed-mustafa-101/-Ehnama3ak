@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../cubits/doctor_sessions_cubit.dart';
-import '../../cubits/doctor_sessions_state.dart';
-import '../../models/doctor_session_model.dart';
+import 'sessions/presentation/cubit/doctor_sessions_cubit.dart';
+import 'sessions/presentation/cubit/doctor_sessions_state.dart';
+import 'sessions/models/doctor_session_model.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_session_screen.dart';
@@ -74,7 +74,9 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
             onTap: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AddSessionScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const AddSessionScreen(),
+                ),
               );
               // Cubit handles refresh on success, but manual refresh doesn't hurt
               _loadSessions();
@@ -137,7 +139,11 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
               SizedBox(height: 16),
               Text(
                 "No sessions added yet.",
-                style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               SizedBox(height: 8),
               Text(
@@ -161,7 +167,11 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
             padding: const EdgeInsets.all(30),
             child: Column(
               children: [
-                const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+                const Icon(
+                  Icons.error_outline,
+                  size: 60,
+                  color: Colors.redAccent,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   "Server Connection Error",
@@ -179,7 +189,9 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0EA5E9),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                   child: const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -198,18 +210,26 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
     // If status is null or not 'completed'/'cancelled', treat as upcoming-capable
     final String status = session.status?.toLowerCase() ?? 'upcoming';
     final bool canStart = status == 'upcoming' || status == 'pending';
-    
-    final String displayDate = session.date ?? 
-        (session.scheduledAt != null ? DateFormat('EEEE, MMM d, yyyy').format(session.scheduledAt!) : 'No Date');
-    final String displayTime = session.time ?? 
-        (session.scheduledAt != null ? DateFormat('h:mm a').format(session.scheduledAt!) : 'No Time');
+
+    final String displayDate =
+        session.date ??
+        (session.scheduledAt != null
+            ? DateFormat('EEEE, MMM d, yyyy').format(session.scheduledAt!)
+            : 'No Date');
+    final String displayTime =
+        session.time ??
+        (session.scheduledAt != null
+            ? DateFormat('h:mm a').format(session.scheduledAt!)
+            : 'No Time');
     final String sessionType = session.sessionType ?? 'Session';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1E1E1E)
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -229,12 +249,18 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                   children: [
                     Text(
                       session.patientName ?? 'Unknown Patient',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       "$displayDate - $displayTime",
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
                     ),
                     if (session.price != null) ...[
                       const SizedBox(height: 4),
@@ -251,14 +277,19 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                     Row(
                       children: [
                         Icon(
-                          sessionType.toLowerCase() == 'chat' ? Icons.chat_outlined : Icons.videocam_outlined,
+                          sessionType.toLowerCase() == 'chat'
+                              ? Icons.chat_outlined
+                              : Icons.videocam_outlined,
                           size: 16,
                           color: Colors.grey,
                         ),
                         const SizedBox(width: 5),
                         Text(
                           '$sessionType Session',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -269,7 +300,9 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Icon(
-                    sessionType.toLowerCase() == 'chat' ? Icons.chat : Icons.videocam,
+                    sessionType.toLowerCase() == 'chat'
+                        ? Icons.chat
+                        : Icons.videocam,
                     color: const Color(0xFF0DA5FE),
                     size: 28,
                   ),
@@ -285,21 +318,26 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  if (session.sessionUrl != null && session.sessionUrl!.isNotEmpty) {
+                  if (session.sessionUrl != null &&
+                      session.sessionUrl!.isNotEmpty) {
                     final uri = Uri.tryParse(session.sessionUrl!);
                     if (uri != null && await canLaunchUrl(uri)) {
                       await launchUrl(uri);
                     } else {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Could not launch session link")),
+                          const SnackBar(
+                            content: Text("Could not launch session link"),
+                          ),
                         );
                       }
                     }
                   } else {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("No session link available")),
+                        const SnackBar(
+                          content: Text("No session link available"),
+                        ),
                       );
                     }
                   }
@@ -309,7 +347,9 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0DA5FE),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 0,
                 ),
               ),
@@ -323,7 +363,7 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
   Widget _buildStatusBadge(String status) {
     Color color;
     String label = status.toUpperCase();
-    
+
     switch (status.toLowerCase()) {
       case 'upcoming':
       case 'pending':
@@ -348,7 +388,11 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

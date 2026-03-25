@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../cubits/doctor_reports_cubit.dart';
-import '../../cubits/doctor_reports_state.dart';
-import '../../models/doctor_report_model.dart';
+import 'reports/presentation/cubit/doctor_reports_cubit.dart';
+import 'reports/presentation/cubit/doctor_reports_state.dart';
+import 'reports/models/doctor_report_model.dart';
 
 class DoctorReportsScreen extends StatefulWidget {
   const DoctorReportsScreen({super.key});
@@ -96,7 +96,11 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
             padding: const EdgeInsets.all(30),
             child: Column(
               children: [
-                const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+                const Icon(
+                  Icons.error_outline,
+                  size: 60,
+                  color: Colors.redAccent,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   message,
@@ -120,7 +124,7 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
     // Detect icon and color based on type
     IconData icon;
     Color color = const Color(0xFF0DA5FE);
-    
+
     final type = report.type?.toLowerCase() ?? '';
     if (type.contains('progress')) {
       icon = Icons.assignment_outlined;

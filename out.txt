@@ -1,0 +1,12 @@
+{
+  "get": {
+    "tags": [
+      "Doctors"
+    ],
+    "responses": {
+      "200": {
+        "description": "OK"
+      }
+    }
+  }
+}

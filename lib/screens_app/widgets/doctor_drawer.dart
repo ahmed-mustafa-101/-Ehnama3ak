@@ -149,9 +149,12 @@ class DoctorDrawer extends StatelessWidget {
                     width: 1.5,
                   ),
                 ),
-                child: const CircleAvatar(
+                child: CircleAvatar(
                   radius: 35,
-                  backgroundImage: AssetImage('assets/images/profile.jpg'),
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage: (user?.profileImageUrl != null && user!.profileImageUrl!.isNotEmpty)
+                      ? NetworkImage(user.profileImageUrl!)
+                      : const AssetImage('assets/images/profile.jpg') as ImageProvider,
                 ),
               ),
               const SizedBox(width: 15),

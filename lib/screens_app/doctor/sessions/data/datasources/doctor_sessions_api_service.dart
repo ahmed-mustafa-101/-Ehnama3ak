@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:ehnama3ak/models/doctor_session_model.dart';
+import 'package:ehnama3ak/screens_app/doctor/sessions/models/doctor_session_model.dart';
 import 'dart:developer';
 
 class DoctorSessionsApiService {
@@ -27,31 +27,44 @@ class DoctorSessionsApiService {
     try {
       log('Fetching sessions from: $endpoint');
       final response = await _dio.get(endpoint);
-      
+
       log('Response status: ${response.statusCode}');
       log('Response data type: ${response.data.runtimeType}');
       log('Response data: ${response.data}');
 
       final dynamic data = response.data;
-      
+
       if (data == null) return [];
 
       // If data is just a number (like '3'), it might be a count or an error
       if (data is num) {
-        log('Warning: Backend returned a number ($data) instead of sessions list');
+        log(
+          'Warning: Backend returned a number ($data) instead of sessions list',
+        );
         return [];
       }
 
       // Handle simple list response
       if (data is List) {
-        return data.map((json) => DoctorSessionModel.fromJson(Map<String, dynamic>.from(json))).toList();
-      } 
-      
+        return data
+            .map(
+              (json) =>
+                  DoctorSessionModel.fromJson(Map<String, dynamic>.from(json)),
+            )
+            .toList();
+      }
+
       // Handle response containing 'data' or 'items' keys
       if (data is Map) {
         final dynamic items = data['items'] ?? data['data'] ?? data['sessions'];
         if (items is List) {
-          return items.map((json) => DoctorSessionModel.fromJson(Map<String, dynamic>.from(json))).toList();
+          return items
+              .map(
+                (json) => DoctorSessionModel.fromJson(
+                  Map<String, dynamic>.from(json),
+                ),
+              )
+              .toList();
         }
         // If it's a single object, maybe it's one session
         return [DoctorSessionModel.fromJson(Map<String, dynamic>.from(data))];
@@ -67,7 +80,8 @@ class DoctorSessionsApiService {
       // which seems to be just a count / no-sessions indicator.
       final statusCode = e.response?.statusCode;
       final responseData = e.response?.data;
-      if (statusCode == 500 && (responseData == 3 || responseData?.toString() == '3')) {
+      if (statusCode == 500 &&
+          (responseData == 3 || responseData?.toString() == '3')) {
         log('Treating 500 with body "3" as empty sessions list');
         return [];
       }
@@ -111,13 +125,17 @@ class DoctorSessionsApiService {
       };
     }
 
-    log('Creating session at: /api/DoctorSessions with body (keys): ${body is Map ? body.keys : 'FormData'}');
+    log(
+      'Creating session at: /api/DoctorSessions with body (keys): ${body is Map ? body.keys : 'FormData'}',
+    );
 
     final response = await _dio.post(
       '/api/DoctorSessions',
       data: body,
       options: Options(
-        contentType: body is FormData ? 'multipart/form-data' : 'application/json',
+        contentType: body is FormData
+            ? 'multipart/form-data'
+            : 'application/json',
       ),
     );
 
