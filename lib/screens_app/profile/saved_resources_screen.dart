@@ -23,7 +23,7 @@ class _SavedResourcesScreenState extends State<SavedResourcesScreen> {
       appBar: AppBar(
         title: const Text('Saved Resources'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () {
             context.read<ProfileCubit>().resetToProfile();
             Navigator.pop(context);
@@ -42,10 +42,14 @@ class _SavedResourcesScreenState extends State<SavedResourcesScreen> {
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text(state.message, style: const TextStyle(color: Colors.red)),
+                  Text(
+                    state.message,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => context.read<ProfileCubit>().loadSavedResources(),
+                    onPressed: () =>
+                        context.read<ProfileCubit>().loadSavedResources(),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -55,7 +59,10 @@ class _SavedResourcesScreenState extends State<SavedResourcesScreen> {
           if (state is SavedResourcesSuccess) {
             if (state.resources.isEmpty) {
               return const Center(
-                child: Text('No saved resources yet.', style: TextStyle(color: Colors.grey)),
+                child: Text(
+                  'No saved resources yet.',
+                  style: TextStyle(color: Colors.grey),
+                ),
               );
             }
             return ListView.separated(
@@ -65,20 +72,38 @@ class _SavedResourcesScreenState extends State<SavedResourcesScreen> {
               itemBuilder: (context, index) {
                 final item = state.resources[index];
                 return Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(12),
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: item.imageUrl.isNotEmpty
-                          ? Image.network(item.imageUrl, width: 60, height: 60, fit: BoxFit.cover)
-                          : Container(width: 60, height: 60, color: Colors.grey[300], child: const Icon(Icons.bookmark)),
+                          ? Image.network(
+                              item.imageUrl,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              width: 60,
+                              height: 60,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.bookmark),
+                            ),
                     ),
-                    title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(item.type, style: const TextStyle(color: Colors.blueAccent)),
+                    title: Text(
+                      item.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      item.type,
+                      style: const TextStyle(color: Colors.blueAccent),
+                    ),
                     trailing: const Icon(Icons.open_in_new, color: Colors.grey),
                     onTap: () {
-                       // could open URL but not strictly required
+                      // could open URL but not strictly required
                     },
                   ),
                 );

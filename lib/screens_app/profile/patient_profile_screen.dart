@@ -1,9 +1,12 @@
-import 'package:ehnama3ak/core/widgets/app_button.dart';
+import 'dart:io';
+import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/core/widgets/app_tile.dart';
+import 'package:ehnama3ak/core/widgets/custom_app_button.dart';
+import 'package:ehnama3ak/screen_tap/settings_screen.dart';
+import 'package:ehnama3ak/screens_app/notifications/notifications_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-
 import '../../core/widgets/logout_dialog.dart';
 import '../../features/auth/presentation/controllers/auth_cubit.dart';
 import '../../features/settings/presentation/controllers/settings_cubit.dart';
@@ -29,56 +32,122 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     context.read<ProfileCubit>().loadProfile();
   }
 
+  String _getFullImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
+    String base = DioClient.baseUrl;
+    String cleanUrl = url.startsWith('/') ? url : '/$url';
+    return '$base$cleanUrl';
+  }
+
   void _showEditProfileDialog(ProfileModel profile) {
     final nameCtrl = TextEditingController(text: profile.fullName);
-    final imageCtrl = TextEditingController(text: profile.profileImageUrl);
+    XFile? pickedImage;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Profile'),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Edit Profile'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final ImagePicker picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.gallery,
+                      );
+                      if (image != null) {
+                        setState(() {
+                          pickedImage = image;
+                        });
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: pickedImage != null
+                              ? FileImage(File(pickedImage!.path))
+                              : (profile.profileImageUrl.isNotEmpty
+                                    ? NetworkImage(
+                                        _getFullImageUrl(
+                                          profile.profileImageUrl,
+                                        ),
+                                      )
+                                    : const AssetImage(
+                                            'assets/images/user_avatar.png',
+                                          )
+                                          as ImageProvider),
+                          child: null,
+                        ),
+                        const Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: CircleAvatar(
+                            radius: 12,
+                            backgroundColor: primaryColor,
+                            child: Icon(
+                              Icons.camera_alt,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Full Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: imageCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Profile Image URL',
-                  border: OutlineInputBorder(),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    // Use unified updateProfile for both Name and Image
+                    await context.read<ProfileCubit>().updateProfile(
+                      fullName: nameCtrl.text,
+                      imagePath: pickedImage?.path,
+                    );
+
+                    // Sync Drawer
+                    if (context.mounted) {
+                      context.read<SettingsCubit>().fetchSettings();
+                    }
+                  },
+                  child: const Text('Save'),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                context.read<ProfileCubit>().updateProfile(nameCtrl.text, imageCtrl.text);
-                // Sync with drawer
-                context.read<SettingsCubit>().fetchSettings();
-              },
-              child: const Text('Save'),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
@@ -114,11 +183,17 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       listener: (context, state) {
         if (state is UpdateProfileLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Updating profile...'), duration: Duration(milliseconds: 500)),
+            const SnackBar(
+              content: Text('Updating profile...'),
+              duration: Duration(milliseconds: 500),
+            ),
           );
         } else if (state is UpdateProfileSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+            ),
           );
         } else if (state is ProfileError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -128,7 +203,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       },
       child: BlocBuilder<ProfileCubit, ProfileState>(
         buildWhen: (previous, current) {
-          return current is ProfileLoading || current is ProfileSuccess || current is ProfileError;
+          return current is ProfileLoading ||
+              current is ProfileSuccess ||
+              current is ProfileError;
         },
         builder: (context, state) {
           if (state is ProfileLoading || state is ProfileInitial) {
@@ -142,7 +219,11 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text(state.message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+                  Text(
+                    state.message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => context.read<ProfileCubit>().loadProfile(),
@@ -168,11 +249,14 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                           radius: 70,
                           backgroundColor: Colors.grey[200],
                           backgroundImage: profile.profileImageUrl.isNotEmpty
-                              ? NetworkImage(profile.profileImageUrl)
-                              : const AssetImage('assets/images/image_patient.png') as ImageProvider,
-                          child: profile.profileImageUrl.isEmpty
-                              ? const Icon(Icons.person, size: 50, color: Colors.grey)
-                              : null,
+                              ? NetworkImage(
+                                  _getFullImageUrl(profile.profileImageUrl),
+                                )
+                              : const AssetImage(
+                                      'assets/images/user_avatar.png',
+                                    )
+                                    as ImageProvider,
+                          child: null,
                         ),
                         Positioned(
                           bottom: 0,
@@ -180,15 +264,21 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                           child: GestureDetector(
                             onTap: () async {
                               final ImagePicker picker = ImagePicker();
-                              final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                              final XFile? image = await picker.pickImage(
+                                source: ImageSource.gallery,
+                              );
                               if (image != null) {
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Uploading image...')),
+                                  const SnackBar(
+                                    content: Text('Uploading image...'),
+                                  ),
                                 );
                                 // Upload image using ProfileCubit to avoid global AuthLoading screen reset!
-                                await context.read<ProfileCubit>().updateProfileImage(image.path);
-                                
+                                await context
+                                    .read<ProfileCubit>()
+                                    .updateProfileImage(image.path);
+
                                 // Sync Drawer instantly
                                 if (!context.mounted) return;
                                 context.read<SettingsCubit>().fetchSettings();
@@ -200,7 +290,11 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                                 color: primaryColor,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 24),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 24,
+                              ),
                             ),
                           ),
                         ),
@@ -219,34 +313,35 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                profile.fullName.isNotEmpty ? profile.fullName : 'No Name',
+                                profile.fullName.isNotEmpty
+                                    ? profile.fullName
+                                    : 'No Name',
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.color,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                profile.email.isNotEmpty ? profile.email : 'No Email',
-                                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                profile.email.isNotEmpty
+                                    ? profile.email
+                                    : 'No Email',
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),
                         ),
 
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                          child: AppButton(
-                            label: 'Edit Profile',
-                            onPressed: () => _showEditProfileDialog(profile),
-                            icon: Icons.edit,
-                            iconSize: 15,
-                            width: 150,
-                            height: 40,
-                            radius: 20,
-                            textStyle: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
+                        CustomSmallButton(
+                          label: 'Edit Profile',
+                          icon: Icons.edit,
+                          onPressed: () => _showEditProfileDialog(profile),
                         ),
                       ],
                     ),
@@ -256,9 +351,18 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        StatCard(title: 'Sessions', value: profile.sessionsCount.toString()),
-                        StatCard(title: 'Exercises', value: profile.exercisesCount.toString()),
-                        StatCard(title: 'Days', value: profile.daysCount.toString()),
+                        StatCard(
+                          title: 'Sessions',
+                          value: profile.sessionsCount.toString(),
+                        ),
+                        StatCard(
+                          title: 'Exercises',
+                          value: profile.exercisesCount.toString(),
+                        ),
+                        StatCard(
+                          title: 'Days',
+                          value: profile.daysCount.toString(),
+                        ),
                       ],
                     ),
 
@@ -267,14 +371,32 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     AppTile(
                       icon: Icons.settings,
                       title: 'Account Settings',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SettingsScreen(),
+                          ),
+                        );
+                      },
                     ),
                     AppTile(
                       icon: Icons.notifications,
                       title: 'Notifications',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    AppTile(
+                      icon: Icons.language,
+                      title: 'Language',
                       onTap: () {},
                     ),
-                    AppTile(icon: Icons.language, title: 'Language', onTap: () {}),
                     AppTile(
                       icon: Icons.bookmark_outline,
                       title: 'Saved Resources',

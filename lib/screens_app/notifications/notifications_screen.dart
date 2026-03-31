@@ -1,3 +1,4 @@
+import 'package:ehnama3ak/core/widgets/app_icon_back.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/notifications/presentation/cubit/notification_cubit.dart';
@@ -96,6 +97,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Row(
         children: [
+          AppIconBack(top: 5, left: 0),
+          const Spacer(),
           Text(
             'Notifications',
             style: TextStyle(

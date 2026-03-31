@@ -221,8 +221,8 @@ class MainLayoutState extends State<MainLayout> {
                 changeTab(2);
               },
               child: SizedBox(
-                width: 100,
-                height: 120,
+                width: 80,
+                height: 100,
                 child: Image.asset(
                   'assets/images/chatbot.png',
                   fit: BoxFit.contain,

@@ -2,18 +2,25 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:ehnama3ak/screens_app/profile/data/datasources/profile_api_service.dart';
 import 'package:ehnama3ak/screens_app/profile/presentation/cubit/profile_state.dart';
+import 'package:ehnama3ak/core/storage/secure_token_storage.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileApiService _profileApiService;
+  final SecureTokenStorage _tokenStorage;
 
-  ProfileCubit({required ProfileApiService profileApiService})
-      : _profileApiService = profileApiService,
+  ProfileCubit({
+    required ProfileApiService profileApiService,
+    required SecureTokenStorage tokenStorage,
+  })  : _profileApiService = profileApiService,
+        _tokenStorage = tokenStorage,
         super(ProfileInitial());
 
   Future<void> loadProfile() async {
     emit(ProfileLoading());
     try {
       final profile = await _profileApiService.getProfile();
+      // Update cached profile image URL
+      await _tokenStorage.saveUserProfileImageUrl(profile.profileImageUrl);
       emit(ProfileSuccess(profile));
     } on DioException catch (e) {
       _handleErrors(e);
@@ -22,11 +29,11 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  Future<void> updateProfile(String fullName, String profileImageUrl) async {
+  Future<void> updateProfile({required String fullName, String? imagePath}) async {
     final currentState = state;
     emit(UpdateProfileLoading());
     try {
-      await _profileApiService.updateProfile(fullName, profileImageUrl);
+      await _profileApiService.updateProfile(fullName: fullName, imagePath: imagePath);
       emit(UpdateProfileSuccess('Profile updated successfully'));
       await loadProfile();
     } on DioException catch (e) {

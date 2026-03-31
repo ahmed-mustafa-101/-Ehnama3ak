@@ -81,7 +81,7 @@ class EhnaMa3akApp extends StatelessWidget {
           BlocProvider(create: (context) => FeedCubit(feedRepo)),
           BlocProvider(create: (context) => PodcastCubit(podcastRepo)),
           BlocProvider(create: (context) => ResourceCubit(resourceRepo)),
-          BlocProvider(create: (context) => SettingsCubit(settingsRepo)),
+          BlocProvider(create: (context) => SettingsCubit(settingsRepo, storage)),
           BlocProvider(create: (context) => HelpCubit(helpRepo)),
           BlocProvider(
             create: (context) => DoctorSessionsCubit(
@@ -122,6 +122,7 @@ class EhnaMa3akApp extends StatelessWidget {
           BlocProvider(
             create: (context) => ProfileCubit(
               profileApiService: ProfileApiService(dio: dioClient.dio),
+              tokenStorage: storage,
             ),
           ),
           BlocProvider(

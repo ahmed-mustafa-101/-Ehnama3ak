@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:ehnama3ak/core/storage/pref_manager.dart';
 import 'package:ehnama3ak/core/widgets/post_options_menu.dart';
 import 'package:ehnama3ak/core/utils/responsive.dart';
+import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/features/feed/data/models/comment_model.dart';
 import 'package:ehnama3ak/features/feed/data/models/post_model.dart';
 import 'package:ehnama3ak/features/feed/domain/repositories/feed_repository.dart';
@@ -9,6 +10,8 @@ import 'package:ehnama3ak/features/feed/presentation/cubit/comments_cubit.dart';
 import 'package:ehnama3ak/features/feed/presentation/cubit/comments_state.dart';
 import 'package:ehnama3ak/features/feed/presentation/cubit/feed_cubit.dart';
 import 'package:ehnama3ak/features/feed/presentation/cubit/feed_state.dart';
+import 'package:ehnama3ak/features/settings/presentation/controllers/settings_cubit.dart';
+import 'package:ehnama3ak/features/settings/presentation/controllers/settings_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -48,6 +51,7 @@ class _ForYouViewState extends State<ForYouView> {
     _loadUserId();
     _scrollController.addListener(_onScroll);
     context.read<FeedCubit>().loadFeed();
+    context.read<SettingsCubit>().fetchSettings();
   }
 
   Future<void> _loadUserId() async {
@@ -290,37 +294,51 @@ class _ForYouViewState extends State<ForYouView> {
     );
   }
 
+  String _getFullImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
+    String base = DioClient.baseUrl;
+    String cleanUrl = url.startsWith('/') ? url : '/$url';
+    return '$base$cleanUrl';
+  }
+
   Widget _buildHeader(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(
-          Responsive.borderRadius(context, 18),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black38
-                : Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.all(Responsive.padding(context, 12)),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: Responsive.iconSize(context, 22),
-                backgroundImage: const AssetImage(
-                  'assets/images/image_patient.png',
-                ),
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, settingsState) {
+        final user = settingsState.userSettings;
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(
+              Responsive.borderRadius(context, 18),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black38
+                    : Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              SizedBox(width: Responsive.spacing(context, 12)),
+            ],
+          ),
+          padding: EdgeInsets.all(Responsive.padding(context, 12)),
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: Responsive.iconSize(context, 22),
+                    backgroundImage: (user?.profileImageUrl != null &&
+                            user!.profileImageUrl!.isNotEmpty)
+                        ? NetworkImage(_getFullImageUrl(user.profileImageUrl!))
+                        : const AssetImage('assets/images/user_avatar.png')
+                              as ImageProvider,
+                  ),
+                  SizedBox(width: Responsive.spacing(context, 12)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,6 +489,8 @@ class _ForYouViewState extends State<ForYouView> {
           ),
         ],
       ),
+        );
+      },
     );
   }
 }

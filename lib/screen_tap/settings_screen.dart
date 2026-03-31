@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../features/settings/presentation/controllers/settings_cubit.dart';
 import '../features/settings/presentation/controllers/settings_state.dart';
 import '../features/auth/presentation/controllers/auth_cubit.dart';
 import '../core/widgets/app_button.dart';
 import '../core/widgets/logout_dialog.dart';
 import '../core/widgets/app_tile.dart';
+import '../core/network/dio_client.dart';
+import '../screens_app/notifications/notifications_screen.dart';
 import 'section_title.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -22,6 +26,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     context.read<SettingsCubit>().fetchSettings();
   }
 
+  String _getFullImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
+    String base = DioClient.baseUrl;
+    String cleanUrl = url.startsWith('/') ? url : '/$url';
+    return '$base$cleanUrl';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -30,15 +42,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocConsumer<SettingsCubit, SettingsState>(
         listener: (context, state) {
-          if (state.status == SettingsStatus.failure && state.errorMessage != null) {
+          if (state.status == SettingsStatus.failure &&
+              state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage!), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(state.errorMessage!),
+                backgroundColor: Colors.red,
+              ),
             );
             context.read<SettingsCubit>().resetStatus();
           }
         },
         builder: (context, state) {
-          if (state.status == SettingsStatus.loading && state.userSettings == null) {
+          if (state.status == SettingsStatus.loading &&
+              state.userSettings == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -65,9 +82,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundImage: user?.profileImageUrl != null
-                            ? NetworkImage(user!.profileImageUrl!)
-                            : const AssetImage('assets/images/image_patient.png') as ImageProvider,
+                        backgroundImage: (user?.profileImageUrl != null &&
+                                user!.profileImageUrl!.isNotEmpty)
+                            ? NetworkImage(_getFullImageUrl(user.profileImageUrl!))
+                            : const AssetImage('assets/images/user_avatar.png')
+                                  as ImageProvider,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -75,13 +94,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              (user?.name != null && user!.name.isNotEmpty) 
-                                  ? user.name 
+                              (user?.name != null && user!.name.isNotEmpty)
+                                  ? user.name
                                   : '...',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyLarge?.color,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -99,11 +120,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       AppButton(
                         label: 'Edit',
-                        onPressed: () => _showEditProfileDialog(context, user?.name ?? '', user?.email ?? ''),
+                        onPressed: () => _showEditProfileDialog(
+                          context,
+                          user?.name ?? '',
+                          user?.email ?? '',
+                        ),
                         width: 68,
                         height: 30,
                         radius: 6,
-                        textStyle: const TextStyle(fontSize: 11, color: Colors.white),
+                        textStyle: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
@@ -117,7 +145,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 AppTile(
                   icon: Icons.notifications_none,
                   title: 'Notifications',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationsScreen(),
+                      ),
+                    );
+                  },
                 ),
                 AppTile(
                   icon: Icons.language,
@@ -168,31 +203,97 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showEditProfileDialog(BuildContext context, String name, String email) {
     final nameController = TextEditingController(text: name);
     final emailController = TextEditingController(text: email);
+    XFile? pickedImage;
+    final currentUser = context.read<SettingsCubit>().state.userSettings;
 
     showDialog(
       context: context,
-      builder: (diagContext) => AlertDialog(
-        title: const Text('Edit Profile'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
-            TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              context.read<SettingsCubit>().updateProfile(
-                name: nameController.text,
-                email: emailController.text,
-              );
-              Navigator.pop(diagContext);
-            },
-            child: const Text('Save'),
-          ),
-        ],
+      builder: (diagContext) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Edit Profile'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final ImagePicker picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.gallery,
+                      );
+                      if (image != null) {
+                        setState(() {
+                          pickedImage = image;
+                        });
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: pickedImage != null
+                              ? FileImage(File(pickedImage!.path))
+                              : (currentUser?.profileImageUrl != null &&
+                                      currentUser!.profileImageUrl!.isNotEmpty
+                                    ? NetworkImage(
+                                        _getFullImageUrl(
+                                          currentUser.profileImageUrl!,
+                                        ),
+                                      )
+                                    : const AssetImage(
+                                            'assets/images/user_avatar.png',
+                                          )
+                                          as ImageProvider),
+                        ),
+                        const Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: CircleAvatar(
+                            radius: 15,
+                            backgroundColor: Color(0xFF0DA5FE),
+                            child: Icon(
+                              Icons.camera_alt,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                  ),
+                  TextField(
+                    controller: emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(diagContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<SettingsCubit>().updateProfile(
+                    name: nameController.text,
+                    email: emailController.text,
+                    profileImagePath: pickedImage?.path,
+                  );
+                  Navigator.pop(diagContext);
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -221,7 +322,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(diagContext),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () {
               context.read<SettingsCubit>().changePassword(
@@ -249,12 +353,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                const Text('Privacy Policy', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Privacy Policy',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
                 const Divider(),
                 Expanded(
                   child: state.status == SettingsStatus.loading
                       ? const Center(child: CircularProgressIndicator())
-                      : SingleChildScrollView(child: Text(state.privacyPolicy?.content ?? 'No content')),
+                      : SingleChildScrollView(
+                          child: Text(
+                            state.privacyPolicy?.content ?? 'No content',
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -275,13 +386,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Support Center', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Support Center',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
                 const Divider(),
                 if (state.status == SettingsStatus.loading)
                   const CircularProgressIndicator()
                 else if (state.supportInfo != null) ...[
-                  ListTile(leading: const Icon(Icons.email), title: Text(state.supportInfo!.email)),
-                  ListTile(leading: const Icon(Icons.phone), title: Text(state.supportInfo!.phone)),
+                  ListTile(
+                    leading: const Icon(Icons.email),
+                    title: Text(state.supportInfo!.email),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.phone),
+                    title: Text(state.supportInfo!.phone),
+                  ),
                   if (state.supportInfo!.description != null)
                     Padding(
                       padding: const EdgeInsets.all(8.0),

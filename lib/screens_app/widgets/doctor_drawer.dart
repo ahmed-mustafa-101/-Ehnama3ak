@@ -152,9 +152,12 @@ class DoctorDrawer extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 35,
                   backgroundColor: Colors.grey[200],
-                  backgroundImage: (user?.profileImageUrl != null && user!.profileImageUrl!.isNotEmpty)
+                  backgroundImage:
+                      (user?.profileImageUrl != null &&
+                          user!.profileImageUrl!.isNotEmpty)
                       ? NetworkImage(user.profileImageUrl!)
-                      : const AssetImage('assets/images/profile.jpg') as ImageProvider,
+                      : const AssetImage('assets/images/user_avatar.jpg')
+                            as ImageProvider,
                 ),
               ),
               const SizedBox(width: 15),
@@ -166,10 +169,11 @@ class DoctorDrawer extends StatelessWidget {
                     fontSize: 20,
                     color: isDark ? Colors.white : Colors.black,
                   ),
-                  specializationStyle:
-                      const TextStyle(color: Colors.grey, fontSize: 13),
-                  yearsStyle:
-                      const TextStyle(color: Colors.grey, fontSize: 12),
+                  specializationStyle: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 13,
+                  ),
+                  yearsStyle: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ),
             ],
@@ -185,12 +189,12 @@ class DoctorDrawer extends StatelessWidget {
     IconData icon,
     String title,
     bool isSelected, {
-    bool isLogout = false,
     VoidCallback? onTap,
   }) {
-    final Color color = isLogout
-        ? Colors.black
-        : (isSelected ? const Color(0xFF0DA5FE) : Colors.black);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color color = isSelected
+        ? const Color(0xFF0DA5FE)
+        : (isDark ? Colors.white : Colors.black);
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
@@ -203,6 +207,11 @@ class DoctorDrawer extends StatelessWidget {
           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
         ),
       ),
+      selected: isSelected,
+      selectedTileColor: isDark
+          ? Colors.white.withOpacity(0.05)
+          : const Color(0xFF0DA5FE).withOpacity(0.1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       onTap: onTap ?? () => onSelect(index),
     );
   }

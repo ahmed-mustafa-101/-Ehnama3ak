@@ -6,6 +6,7 @@ import '../../core/widgets/registered_doctor_profile_texts.dart';
 import '../../features/auth/data/models/auth_model.dart';
 import '../../features/auth/presentation/controllers/auth_cubit.dart';
 import '../../features/auth/presentation/controllers/auth_state.dart';
+import '../notifications/notifications_screen.dart';
 
 class DoctorSettingsScreen extends StatelessWidget {
   const DoctorSettingsScreen({super.key});
@@ -64,7 +65,14 @@ class DoctorSettingsScreen extends StatelessWidget {
             Icons.notifications_active_outlined,
             'Notifications',
             hasDivider: true,
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NotificationsScreen(),
+                ),
+              );
+            },
           ),
 
           _buildSettingItem(
@@ -159,20 +167,16 @@ class DoctorSettingsScreen extends StatelessWidget {
           fontWeight: FontWeight.bold,
           color: isDark ? Colors.white : Colors.black87,
         );
-        final subStyle = TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 16,
-        );
-        final yearsStyle = TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 14,
-        );
+        final subStyle = TextStyle(color: Colors.grey.shade600, fontSize: 16);
+        final yearsStyle = TextStyle(color: Colors.grey.shade600, fontSize: 14);
         return Column(
           children: [
             GestureDetector(
               onTap: () async {
                 final ImagePicker picker = ImagePicker();
-                final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                final XFile? image = await picker.pickImage(
+                  source: ImageSource.gallery,
+                );
                 if (image != null) {
                   if (!context.mounted) return;
                   context.read<AuthCubit>().updateProfileImage(image.path);
@@ -194,9 +198,12 @@ class DoctorSettingsScreen extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 60,
                       backgroundColor: Colors.grey[200],
-                      backgroundImage: (user?.profileImageUrl != null && user!.profileImageUrl!.isNotEmpty)
+                      backgroundImage:
+                          (user?.profileImageUrl != null &&
+                              user!.profileImageUrl!.isNotEmpty)
                           ? NetworkImage(user.profileImageUrl!)
-                          : const AssetImage('assets/images/image_doctor.png') as ImageProvider,
+                          : const AssetImage('assets/images/user_avatar.png')
+                                as ImageProvider,
                     ),
                   ),
                   Positioned(
@@ -208,7 +215,11 @@ class DoctorSettingsScreen extends StatelessWidget {
                         color: Color(0xFF0DA5FE),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -241,8 +252,10 @@ class DoctorSettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 15),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -375,9 +388,7 @@ class DoctorSettingsScreen extends StatelessWidget {
               ),
               TextField(
                 controller: specController,
-                decoration: const InputDecoration(
-                  labelText: 'Specialization',
-                ),
+                decoration: const InputDecoration(labelText: 'Specialization'),
                 readOnly: true,
               ),
               TextField(
@@ -391,10 +402,7 @@ class DoctorSettingsScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'Profile data comes from your account. Update via support if needed.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             ],
           ),

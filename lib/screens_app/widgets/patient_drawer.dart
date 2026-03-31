@@ -1,3 +1,4 @@
+import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/core/widgets/logout_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -110,9 +111,12 @@ class AppDrawer extends StatelessWidget {
               CircleAvatar(
                 radius: 28,
                 backgroundColor: const Color(0xFF0DA5FE).withValues(alpha: 0.1),
-                backgroundImage: (user?.profileImageUrl != null && user!.profileImageUrl!.isNotEmpty)
-                    ? NetworkImage(user.profileImageUrl!)
-                    : const AssetImage('assets/images/user_avatar.png') as ImageProvider,
+                backgroundImage:
+                    (user?.profileImageUrl != null &&
+                        user!.profileImageUrl!.isNotEmpty)
+                    ? NetworkImage(_getFullImageUrl(user.profileImageUrl!))
+                    : const AssetImage('assets/images/user_avatar.png')
+                          as ImageProvider,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -120,8 +124,8 @@ class AppDrawer extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      (user?.name != null && user!.name.isNotEmpty) 
-                          ? user.name 
+                      (user?.name != null && user!.name.isNotEmpty)
+                          ? user.name
                           : 'Loading...',
                       style: TextStyle(
                         fontSize: 18,
@@ -180,5 +184,13 @@ class AppDrawer extends StatelessWidget {
       ),
       onTap: onTap ?? () => onSelect(index),
     );
+  }
+
+  String _getFullImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
+    String base = DioClient.baseUrl;
+    String cleanUrl = url.startsWith('/') ? url : '/$url';
+    return '$base$cleanUrl';
   }
 }

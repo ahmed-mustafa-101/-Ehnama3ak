@@ -1,12 +1,11 @@
 import 'package:dio/dio.dart';
 import 'dart:developer';
 import 'package:ehnama3ak/screens_app/profile/models/profile_model.dart';
-import 'package:ehnama3ak/screens_app/profile/models/update_profile_model.dart';
 import 'package:ehnama3ak/screens_app/profile/models/saved_resource_model.dart';
 
 class ProfileApiService {
   final Dio _dio;
-  
+
   ProfileApiService({required Dio dio}) : _dio = dio;
 
   Future<ProfileModel> getProfile() async {
@@ -22,10 +21,17 @@ class ProfileApiService {
     }
   }
 
-  Future<void> updateProfile(String fullName, String profileImageUrl) async {
+  Future<void> updateProfile({
+    required String fullName,
+    String? imagePath,
+  }) async {
     try {
-      final model = UpdateProfileModel(fullName: fullName, profileImageUrl: profileImageUrl);
-      await _dio.post('/api/Profile/update', data: model.toJson());
+      final formData = FormData.fromMap({
+        'FullName': fullName,
+        if (imagePath != null)
+          'ProfileImage': await MultipartFile.fromFile(imagePath),
+      });
+      await _dio.post('/api/Profile/update', data: formData);
     } on DioException catch (e) {
       log('DioError updating profile: ${e.response?.statusCode}');
       rethrow;
@@ -38,9 +44,9 @@ class ProfileApiService {
   Future<void> updateProfileImage(String imagePath) async {
     try {
       final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(imagePath),
+        'ProfileImage': await MultipartFile.fromFile(imagePath),
       });
-      await _dio.post('/api/Auth/update-profile-image', data: formData);
+      await _dio.post('/api/Profile/update', data: formData);
     } on DioException catch (e) {
       log('DioError updating profile image: ${e.response?.statusCode}');
       rethrow;
@@ -54,12 +60,14 @@ class ProfileApiService {
     try {
       final response = await _dio.get('/api/Profile/saved-resources');
       if (response.data is List) {
-        return (response.data as List).map((e) => SavedResourceModel.fromJson(e)).toList();
+        return (response.data as List)
+            .map((e) => SavedResourceModel.fromJson(e))
+            .toList();
       }
       return [];
     } on DioException catch (e) {
       log('DioError getting saved resources: ${e.response?.statusCode}');
-      if (e.response?.statusCode == 404) return []; 
+      if (e.response?.statusCode == 404) return [];
       rethrow;
     } catch (e) {
       log('Error getting saved resources: $e');

@@ -238,7 +238,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                         user!.profileImageUrl!.isNotEmpty)
                                     ? NetworkImage(user.profileImageUrl!)
                                     : const AssetImage(
-                                            'assets/images/image_doctor.png',
+                                            'assets/images/user_avatar.png',
                                           )
                                           as ImageProvider,
                               ),
@@ -414,7 +414,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                           Icons.calendar_month_rounded,
                           '${stats.sessionsCount} Sessions',
                           const Color(0xFF0DA5FE),
-                          5,
+                          -1,
                         ),
                         _dashboardItem(
                           context,
@@ -428,14 +428,14 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                           Icons.groups_rounded,
                           '${stats.patientsCount} Patients',
                           Colors.purple,
-                          6,
+                          -1,
                         ),
                         _dashboardItem(
                           context,
                           Icons.chat_bubble_rounded,
-                          'Upcoming Sessions',
+                          '${stats.upcomingSessionsCount} Upcoming Sessions',
                           const Color(0xFF0DA5FE),
-                          5,
+                          -1,
                         ),
                         _dashboardItem(
                           context,

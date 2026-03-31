@@ -1,17 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/datasources/settings_api_service.dart';
 import '../../domain/repositories/settings_repository.dart';
+import '../../../../core/storage/secure_token_storage.dart';
 import 'settings_state.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
   final SettingsRepository _repo;
+  final SecureTokenStorage _tokenStorage;
 
-  SettingsCubit(this._repo) : super(const SettingsState());
+  SettingsCubit(this._repo, this._tokenStorage) : super(const SettingsState());
 
   Future<void> fetchSettings() async {
     emit(state.copyWith(status: SettingsStatus.loading));
     try {
       final settings = await _repo.getSettings();
+      // Update cached profile image URL
+      await _tokenStorage.saveUserProfileImageUrl(settings.profileImageUrl);
       emit(state.copyWith(status: SettingsStatus.success, userSettings: settings));
     } catch (e) {
       emit(state.copyWith(
