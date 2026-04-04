@@ -3,7 +3,6 @@ import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/core/widgets/app_tile.dart';
 import 'package:ehnama3ak/core/widgets/custom_app_button.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
-import 'package:ehnama3ak/core/localization/locale_cubit.dart';
 import 'package:ehnama3ak/screen_tap/settings_screen.dart';
 import 'package:ehnama3ak/screens_app/notifications/notifications_screen.dart';
 import 'package:flutter/material.dart';
@@ -76,15 +75,18 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(l10n.cancel,
-                      style: const TextStyle(color: Colors.grey)),
+                  child: Text(
+                    l10n.cancel,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: () async {
                     Navigator.pop(context);
@@ -144,12 +146,13 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         } else if (state is UpdateProfileSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(state.message), backgroundColor: Colors.green),
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+            ),
           );
         } else if (state is ProfileError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(state.message), backgroundColor: Colors.red),
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
       },
@@ -170,13 +173,14 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text(state.message,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.red)),
+                  Text(
+                    state.message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () =>
-                        context.read<ProfileCubit>().loadProfile(),
+                    onPressed: () => context.read<ProfileCubit>().loadProfile(),
                     child: Text(l10n.tryAgain),
                   ),
                 ],
@@ -187,8 +191,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
           if (state is ProfileSuccess) {
             final profile = state.profile;
             return RefreshIndicator(
-              onRefresh: () async =>
-                  context.read<ProfileCubit>().loadProfile(),
+              onRefresh: () async => context.read<ProfileCubit>().loadProfile(),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(20),
@@ -201,10 +204,12 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                           backgroundColor: Colors.grey[200],
                           backgroundImage: profile.profileImageUrl.isNotEmpty
                               ? NetworkImage(
-                                  _getFullImageUrl(profile.profileImageUrl))
+                                  _getFullImageUrl(profile.profileImageUrl),
+                                )
                               : const AssetImage(
-                                      'assets/images/user_avatar.png')
-                                  as ImageProvider,
+                                      'assets/images/user_avatar.png',
+                                    )
+                                    as ImageProvider,
                         ),
                         Positioned(
                           bottom: 0,
@@ -213,29 +218,31 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                             onTap: () async {
                               final picker = ImagePicker();
                               final XFile? image = await picker.pickImage(
-                                  source: ImageSource.gallery);
+                                source: ImageSource.gallery,
+                              );
                               if (image != null) {
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(l10n.uploadingImage)),
+                                  SnackBar(content: Text(l10n.uploadingImage)),
                                 );
                                 await context
                                     .read<ProfileCubit>()
                                     .updateProfileImage(image.path);
                                 if (!context.mounted) return;
-                                context
-                                    .read<SettingsCubit>()
-                                    .fetchSettings();
+                                context.read<SettingsCubit>().fetchSettings();
                               }
                             },
                             child: Container(
                               padding: const EdgeInsets.all(10),
                               decoration: const BoxDecoration(
-                                  color: primaryColor,
-                                  shape: BoxShape.circle),
-                              child: const Icon(Icons.camera_alt,
-                                  color: Colors.white, size: 24),
+                                color: primaryColor,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 24,
+                              ),
                             ),
                           ),
                         ),
@@ -256,10 +263,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.color,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.color,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -268,7 +274,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                                     ? profile.email
                                     : l10n.noEmail,
                                 style: const TextStyle(
-                                    color: Colors.grey, fontSize: 14),
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),
@@ -285,14 +293,17 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         StatCard(
-                            title: l10n.sessionsLabel,
-                            value: profile.sessionsCount.toString()),
+                          title: l10n.sessionsLabel,
+                          value: profile.sessionsCount.toString(),
+                        ),
                         StatCard(
-                            title: l10n.exercisesLabel,
-                            value: profile.exercisesCount.toString()),
+                          title: l10n.exercisesLabel,
+                          value: profile.exercisesCount.toString(),
+                        ),
                         StatCard(
-                            title: l10n.daysLabel,
-                            value: profile.daysCount.toString()),
+                          title: l10n.daysLabel,
+                          value: profile.daysCount.toString(),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 30),
@@ -300,25 +311,31 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                       icon: Icons.settings,
                       title: l10n.accountSettings,
                       onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const SettingsScreen())),
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      ),
                     ),
                     AppTile(
                       icon: Icons.notifications,
                       title: l10n.notifications,
                       onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const NotificationsScreen())),
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsScreen(),
+                        ),
+                      ),
                     ),
                     AppTile(
                       icon: Icons.language,
                       title: l10n.language,
                       onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const SettingsScreen())),
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      ),
                     ),
                     AppTile(
                       icon: Icons.bookmark_outline,
