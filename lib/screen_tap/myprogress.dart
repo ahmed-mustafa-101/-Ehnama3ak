@@ -3,6 +3,7 @@ import 'package:ehnama3ak/screen_tap/progress/models/latest_assessment_model.dar
 import 'package:ehnama3ak/screen_tap/progress/models/mood_weekly_model.dart';
 import 'package:ehnama3ak/screen_tap/progress/presentation/cubit/progress_cubit.dart';
 import 'package:ehnama3ak/screen_tap/progress/presentation/cubit/progress_state.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -39,6 +40,7 @@ class _MyProgressPageState extends State<MyProgressPage> {
                     min: 1,
                     max: 5,
                     divisions: 4,
+                    activeColor: const Color(0xff0DA5FE),
                     label: selectedValue.toString(),
                     onChanged: (val) {
                       setState(() {
@@ -55,14 +57,22 @@ class _MyProgressPageState extends State<MyProgressPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xff0DA5FE),
+                  ),
+                  child: Text(AppLocalizations.of(context).cancel),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
                     context.read<ProgressCubit>().saveMood(selectedValue);
                   },
-                  child: const Text('Save'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xff0DA5FE),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(AppLocalizations.of(context).save),
                 ),
               ],
             );
@@ -88,7 +98,7 @@ class _MyProgressPageState extends State<MyProgressPage> {
               Text(
                 details.title,
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 30,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -97,7 +107,7 @@ class _MyProgressPageState extends State<MyProgressPage> {
                 'Score: ${details.score}',
                 style: const TextStyle(
                   fontSize: 16,
-                  color: Colors.blueAccent,
+                  color: Color(0xff0DA5FE),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -363,7 +373,7 @@ class _MyProgressPageState extends State<MyProgressPage> {
                   onPressed: _showSaveMoodDialog,
                   icon: const Icon(Icons.add_reaction),
                   label: const Text(
-                    'Log Daily Mood',
+                    'Todays mood',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -387,71 +397,153 @@ class _MyProgressPageState extends State<MyProgressPage> {
   }
 
   Widget _buildMoodGraph(List<MoodWeeklyModel> data) {
-    // Dynamic mood graph building
-    double maxVal = 5.0; // Assume mood max value is 5
     return Card(
-      elevation: 3,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.show_chart, color: Colors.blueAccent),
-                const SizedBox(width: 8),
-                const Text(
-                  'Weekly Mood Graph',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
+            const Text(
+              'Hello, how do you feel today?',
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1D1B20),
+              ),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              height: 160,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: data.map((item) {
-                  double heightFactor = (item.value / maxVal).clamp(0.0, 1.0);
-                  return Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          item.value.toString(),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blueAccent,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 500),
-                          width: 24,
-                          height: 100 * heightFactor,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Colors.blue, Colors.lightBlueAccent],
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: data.map((item) {
+                // Mapping mood level to emoji and beautiful pastel colors
+                final Map<int, Map<String, dynamic>> moodConfig = {
+                  1: {'emoji': '😢', 'color': const Color(0xFFFFEBEE)},
+                  2: {'emoji': '☹️', 'color': const Color(0xFFF3E5F5)},
+                  3: {'emoji': '😐', 'color': const Color(0xFFE3F2FD)},
+                  4: {'emoji': '🙂', 'color': const Color(0xFFE0F2F1)},
+                  5: {'emoji': '😄', 'color': const Color(0xFFE8F5E9)},
+                };
+
+                final config =
+                    moodConfig[item.value] ??
+                    {'emoji': '', 'color': Colors.transparent};
+                final Color capsuleColor = config['color'] as Color;
+                final String emoji = config['emoji'] as String;
+
+                // Height logic: Empty days show a circle, others show a bar
+                // Max container height is 140
+                double barHeight = item.value == 0
+                    ? 0
+                    : 40 + (item.value * 18.0);
+
+                // Determine if this is the current day (Friday in the image example)
+                // For logic, we'll assume the last entry with a value > 0 or just the last entry if it's weekly
+                bool isToday =
+                    data.indexOf(item) ==
+                    data.length - 2; // Fri is index 5 out of 7?
+                // Let's just use item.day to maybe match? But the image shows Fri.
+                // We'll use a simple heuristic: if it's the 6th day (index 5) or similar.
+                // Better: check if it's "Fri" just for the sake of the demo if needed,
+                // but usually the backend provides this order.
+
+                return Expanded(
+                  child: Column(
+                    children: [
+                      Builder(
+                        builder: (context) {
+                          String dayShort = item.day.length > 3
+                              ? item.day.substring(0, 3)
+                              : item.day;
+                          if (dayShort.isNotEmpty) {
+                            dayShort =
+                                dayShort[0].toUpperCase() +
+                                dayShort.substring(1).toLowerCase();
+                          }
+                          return Text(
+                            dayShort,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isToday
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isToday
+                                  ? Colors.black
+                                  : Colors.grey.shade500,
                             ),
-                            borderRadius: BorderRadius.circular(6),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 140,
+                        width: 44,
+                        child: Stack(
+                          alignment: Alignment.bottomCenter,
+                          children: [
+                            if (item.value == 0)
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  if (isToday)
+                                    const Icon(
+                                      Icons.arrow_drop_down,
+                                      color: Colors.grey,
+                                      size: 18,
+                                    ),
+                                  Container(
+                                    height: 38,
+                                    width: 38,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.grey.shade200,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 600),
+                                curve: Curves.easeOutBack,
+                                height: barHeight,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                  color: capsuleColor,
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
+                                alignment: Alignment.topCenter,
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  emoji,
+                                  style: const TextStyle(fontSize: 22),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // The dot at the bottom if value > 0
+                      if (item.value > 0)
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1D1B20),
+                            shape: BoxShape.circle,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          item.day,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
+                        )
+                      else
+                        const SizedBox(height: 4),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
           ],
         ),

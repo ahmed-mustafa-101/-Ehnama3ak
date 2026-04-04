@@ -25,6 +25,21 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
   }
 
+  Future<void> uploadAvatar(String imagePath) async {
+    emit(state.copyWith(isUpdating: true));
+    try {
+      await _repo.uploadAvatar(imagePath);
+      await fetchSettings();
+      emit(state.copyWith(isUpdating: false));
+    } catch (e) {
+      emit(state.copyWith(
+        isUpdating: false,
+        status: SettingsStatus.failure,
+        errorMessage: SettingsApiService.parseError(e),
+      ));
+    }
+  }
+
   Future<void> updateProfile({
     required String name,
     required String email,

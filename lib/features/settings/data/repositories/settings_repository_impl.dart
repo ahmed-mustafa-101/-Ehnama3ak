@@ -11,6 +11,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<UserSettings> getSettings() => _apiService.getSettings();
 
   @override
+  Future<void> uploadAvatar(String imagePath) =>
+      _apiService.uploadAvatar(imagePath);
+
+  @override
   Future<void> updateProfile({
     required String name,
     required String email,

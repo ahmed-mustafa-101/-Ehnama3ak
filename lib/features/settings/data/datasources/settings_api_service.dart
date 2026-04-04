@@ -17,6 +17,17 @@ class SettingsApiService {
     }
   }
 
+  Future<void> uploadAvatar(String imagePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(imagePath),
+      });
+      await _dio.post('/api/Profile/upload-avatar', data: formData);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> updateProfile({
     required String name,
     required String email,
@@ -25,6 +36,7 @@ class SettingsApiService {
     try {
       FormData formData = FormData.fromMap({
         'name': name,
+        'fullName': name,
         'email': email,
         if (profileImagePath != null)
           'profileImage': await MultipartFile.fromFile(profileImagePath),

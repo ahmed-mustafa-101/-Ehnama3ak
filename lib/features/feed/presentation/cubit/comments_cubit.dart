@@ -89,4 +89,33 @@ class CommentsCubit extends Cubit<CommentsState> {
   }
 
   void clearError() => emit(state.copyWith(clearError: true));
+
+  Future<void> updateComment(String commentId, String text) async {
+    final userId = await PrefManager.getUserId() ?? '';
+    if (userId.isEmpty) return;
+
+    try {
+      final updatedComment = await _repo.updateComment(
+        commentId: commentId,
+        text: text.trim(),
+        userId: userId,
+      );
+      final updatedList = state.comments.map((c) {
+        return c.id == commentId ? updatedComment : c;
+      }).toList();
+      emit(state.copyWith(comments: updatedList, clearError: true));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: FeedApiService.parseError(e)));
+    }
+  }
+
+  Future<void> deleteComment(String commentId) async {
+    try {
+      await _repo.deleteComment(commentId);
+      final updatedList = state.comments.where((c) => c.id != commentId).toList();
+      emit(state.copyWith(comments: updatedList, clearError: true));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: FeedApiService.parseError(e)));
+    }
+  }
 }

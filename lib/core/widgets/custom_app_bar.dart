@@ -114,16 +114,12 @@ class CustomAppBar extends StatelessWidget {
                   Container(
                     width: 32,
                     height: 32,
-                    decoration: const BoxDecoration(
-                      color: Color(0xff0DA5FE),
-                      shape: BoxShape.circle,
-                    ),
                     child: IconButton(
                       padding: EdgeInsets.zero,
-                      icon: const Icon(
-                        Icons.message_sharp,
-                        color: Colors.white,
-                        size: 18,
+                      icon: Image.asset(
+                        'assets/images/messageicon.png',
+                        width: 28,
+                        height: 28,
                       ),
                       onPressed: () {
                         if (onMessageTap != null) {

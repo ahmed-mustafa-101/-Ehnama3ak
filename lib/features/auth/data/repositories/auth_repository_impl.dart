@@ -12,12 +12,12 @@ class AuthRepositoryImpl implements AuthRepository {
   final SecureTokenStorage _storage;
 
   AuthRepositoryImpl(AuthApiService apiService, [SecureTokenStorage? storage])
-      : _apiService = apiService,
-        _storage = storage ?? SecureTokenStorage();
+    : _apiService = apiService,
+      _storage = storage ?? SecureTokenStorage();
 
   @override
   Future<AuthResponseModel> login(String email, String password) async {
-    final prevId = await _storage.getUserId();
+    // final prevId = await _storage.getUserId();
     final prevSpec = await _storage.getUserSpecialization();
     final prevYears = await _storage.getUserYearsExperience();
     final prevImage = await _storage.getUserProfileImageUrl();
@@ -26,23 +26,22 @@ class AuthRepositoryImpl implements AuthRepository {
     response = _enrichFromToken(response);
 
     var d = response.data;
-    final sameUser =
-        prevId != null && prevId.isNotEmpty && prevId == d.id;
-    if (sameUser) {
+    // Keep doctor profile even if login response/token misses it
+    if (d.role == UserRole.doctor) {
       response = AuthResponseModel(
         success: response.success,
-        data: AuthModel(
-          id: d.id,
-          name: d.name,
-          email: d.email,
-          role: d.role,
-          token: d.token,
-          specialization: d.specialization ?? prevSpec,
+        data: d.copyWith(
+          specialization:
+              (d.specialization == null || d.specialization!.isEmpty)
+              ? prevSpec
+              : d.specialization,
           yearsOfExperience: d.yearsOfExperience ?? prevYears,
-          profileImageUrl: d.profileImageUrl ?? prevImage,
+          profileImageUrl:
+              (d.profileImageUrl == null || d.profileImageUrl!.isEmpty)
+              ? prevImage
+              : d.profileImageUrl,
         ),
       );
-      d = response.data;
     }
 
     if (response.token.isEmpty) {
@@ -186,8 +185,9 @@ class AuthRepositoryImpl implements AuthRepository {
         email: d.email,
         role: d.role,
         token: d.token,
-        specialization:
-            specialization.isNotEmpty ? specialization : d.specialization,
+        specialization: specialization.isNotEmpty
+            ? specialization
+            : d.specialization,
         yearsOfExperience: yearsOfExperience,
         profileImageUrl: d.profileImageUrl,
       ),
@@ -248,23 +248,62 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthResponseModel> updateProfileImage(String imagePath) async {
     final response = await _apiService.updateProfileImage(imagePath);
+    // Enrich with existing fields before saving, as avatar-upload might miss them
+    final current = await getCurrentSession();
+    if (current != null) {
+      final merged = response.data.copyWith(
+        id: response.data.id.isNotEmpty ? response.data.id : current.data.id,
+        name: response.data.name.isNotEmpty
+            ? response.data.name
+            : current.data.name,
+        email: response.data.email.isNotEmpty
+            ? response.data.email
+            : current.data.email,
+        token: response.data.token.isNotEmpty
+            ? response.data.token
+            : current.data.token,
+        specialization:
+            (response.data.specialization == null ||
+                response.data.specialization!.isEmpty)
+            ? current.data.specialization
+            : response.data.specialization,
+        yearsOfExperience:
+            response.data.yearsOfExperience ?? current.data.yearsOfExperience,
+        profileImageUrl:
+            response.data.profileImageUrl ?? current.data.profileImageUrl,
+      );
+      final updatedResponse = AuthResponseModel(
+        success: response.success,
+        data: merged,
+      );
+      await _saveSession(updatedResponse);
+      return updatedResponse;
+    }
+
     await _saveSession(response);
     return response;
   }
 
   Future<void> _saveSession(AuthResponseModel response) async {
-    await _storage.saveToken(response.token);
-    await _storage.saveUserId(response.user.id);
-    await _storage.saveUserRole(response.user.role.name);
-    await _storage.saveUserEmail(response.user.email);
-    await _storage.saveUserName(response.user.name);
-    await _storage.saveUserSpecialization(response.data.specialization);
-    await _storage.saveUserYearsExperience(response.data.yearsOfExperience);
-    await _storage.saveUserProfileImageUrl(response.data.profileImageUrl);
+    final d = response.data;
+    await _storage.saveToken(d.token);
+    await _storage.saveUserId(d.id);
+    await _storage.saveUserRole(d.role.name);
+    await _storage.saveUserEmail(d.email);
+    await _storage.saveUserName(d.name);
 
-    await PrefManager.saveToken(response.token);
-    await PrefManager.setUserId(response.user.id);
-    await PrefManager.setUserRole(response.user.role);
+    if (d.specialization != null && d.specialization!.isNotEmpty) {
+      await _storage.saveUserSpecialization(d.specialization);
+    }
+    if (d.yearsOfExperience != null) {
+      await _storage.saveUserYearsExperience(d.yearsOfExperience);
+    }
+    if (d.profileImageUrl != null && d.profileImageUrl!.isNotEmpty) {
+      await _storage.saveUserProfileImageUrl(d.profileImageUrl);
+    }
+
+    await PrefManager.saveToken(d.token);
+    await PrefManager.setUserId(d.id);
+    await PrefManager.setUserRole(d.role);
   }
 }
-

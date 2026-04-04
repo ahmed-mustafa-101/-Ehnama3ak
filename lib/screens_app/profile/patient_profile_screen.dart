@@ -1,7 +1,9 @@
-import 'dart:io';
+// import 'dart:io';
 import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/core/widgets/app_tile.dart';
 import 'package:ehnama3ak/core/widgets/custom_app_button.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
+import 'package:ehnama3ak/core/localization/locale_cubit.dart';
 import 'package:ehnama3ak/screen_tap/settings_screen.dart';
 import 'package:ehnama3ak/screens_app/notifications/notifications_screen.dart';
 import 'package:flutter/material.dart';
@@ -34,15 +36,19 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
 
   String _getFullImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
-    if (url.startsWith('http')) return url;
-    String base = DioClient.baseUrl;
-    String cleanUrl = url.startsWith('/') ? url : '/$url';
-    return '$base$cleanUrl';
+    // Fix backslashes if they come from server
+    String cleanUrl = url.replaceAll('\\', '/');
+    final String fullUrl = cleanUrl.startsWith('http')
+        ? cleanUrl
+        : '${DioClient.baseUrl}${cleanUrl.startsWith('/') ? cleanUrl : '/$cleanUrl'}';
+    // Cache-busting: force Flutter to reload image after avatar update
+    final ts = DateTime.now().millisecondsSinceEpoch ~/ 60000;
+    return '$fullUrl?v=$ts';
   }
 
   void _showEditProfileDialog(ProfileModel profile) {
+    final l10n = AppLocalizations.of(context);
     final nameCtrl = TextEditingController(text: profile.fullName);
-    XFile? pickedImage;
 
     showDialog(
       context: context,
@@ -50,66 +56,19 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Edit Profile'),
+              title: Text(l10n.editProfile),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
-                    onTap: () async {
-                      final ImagePicker picker = ImagePicker();
-                      final XFile? image = await picker.pickImage(
-                        source: ImageSource.gallery,
-                      );
-                      if (image != null) {
-                        setState(() {
-                          pickedImage = image;
-                        });
-                      }
-                    },
-                    child: Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.grey[200],
-                          backgroundImage: pickedImage != null
-                              ? FileImage(File(pickedImage!.path))
-                              : (profile.profileImageUrl.isNotEmpty
-                                    ? NetworkImage(
-                                        _getFullImageUrl(
-                                          profile.profileImageUrl,
-                                        ),
-                                      )
-                                    : const AssetImage(
-                                            'assets/images/user_avatar.png',
-                                          )
-                                          as ImageProvider),
-                          child: null,
-                        ),
-                        const Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: CircleAvatar(
-                            radius: 12,
-                            backgroundColor: primaryColor,
-                            child: Icon(
-                              Icons.camera_alt,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 24),
                   TextField(
                     controller: nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Full Name',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.fullName,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ],
@@ -117,33 +76,26 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: Colors.grey),
-                  ),
+                  child: Text(l10n.cancel,
+                      style: const TextStyle(color: Colors.grey)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                   onPressed: () async {
                     Navigator.pop(context);
-                    // Use unified updateProfile for both Name and Image
-                    await context.read<ProfileCubit>().updateProfile(
-                      fullName: nameCtrl.text,
-                      imagePath: pickedImage?.path,
-                    );
-
-                    // Sync Drawer
+                    final cubit = context.read<ProfileCubit>();
+                    final settingsCubit = context.read<SettingsCubit>();
+                    await cubit.updateProfile(fullName: nameCtrl.text);
                     if (context.mounted) {
-                      context.read<SettingsCubit>().fetchSettings();
+                      settingsCubit.fetchSettings();
                     }
                   },
-                  child: const Text('Save'),
+                  child: Text(l10n.save),
                 ),
               ],
             );
@@ -179,34 +131,33 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return BlocListener<ProfileCubit, ProfileState>(
       listener: (context, state) {
         if (state is UpdateProfileLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Updating profile...'),
-              duration: Duration(milliseconds: 500),
+            SnackBar(
+              content: Text(l10n.updatingProfile),
+              duration: const Duration(milliseconds: 500),
             ),
           );
         } else if (state is UpdateProfileSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.green,
-            ),
+                content: Text(state.message), backgroundColor: Colors.green),
           );
         } else if (state is ProfileError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text(state.message), backgroundColor: Colors.red),
           );
         }
       },
       child: BlocBuilder<ProfileCubit, ProfileState>(
-        buildWhen: (previous, current) {
-          return current is ProfileLoading ||
-              current is ProfileSuccess ||
-              current is ProfileError;
-        },
+        buildWhen: (previous, current) =>
+            current is ProfileLoading ||
+            current is ProfileSuccess ||
+            current is ProfileError,
         builder: (context, state) {
           if (state is ProfileLoading || state is ProfileInitial) {
             return const Center(child: CircularProgressIndicator());
@@ -219,15 +170,14 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text(
-                    state.message,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red),
-                  ),
+                  Text(state.message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red)),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => context.read<ProfileCubit>().loadProfile(),
-                    child: const Text('Try Again'),
+                    onPressed: () =>
+                        context.read<ProfileCubit>().loadProfile(),
+                    child: Text(l10n.tryAgain),
                   ),
                 ],
               ),
@@ -237,7 +187,8 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
           if (state is ProfileSuccess) {
             final profile = state.profile;
             return RefreshIndicator(
-              onRefresh: () async => context.read<ProfileCubit>().loadProfile(),
+              onRefresh: () async =>
+                  context.read<ProfileCubit>().loadProfile(),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(20),
@@ -250,64 +201,50 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                           backgroundColor: Colors.grey[200],
                           backgroundImage: profile.profileImageUrl.isNotEmpty
                               ? NetworkImage(
-                                  _getFullImageUrl(profile.profileImageUrl),
-                                )
+                                  _getFullImageUrl(profile.profileImageUrl))
                               : const AssetImage(
-                                      'assets/images/user_avatar.png',
-                                    )
-                                    as ImageProvider,
-                          child: null,
+                                      'assets/images/user_avatar.png')
+                                  as ImageProvider,
                         ),
                         Positioned(
                           bottom: 0,
                           right: 0,
                           child: GestureDetector(
                             onTap: () async {
-                              final ImagePicker picker = ImagePicker();
+                              final picker = ImagePicker();
                               final XFile? image = await picker.pickImage(
-                                source: ImageSource.gallery,
-                              );
+                                  source: ImageSource.gallery);
                               if (image != null) {
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Uploading image...'),
-                                  ),
+                                  SnackBar(
+                                      content: Text(l10n.uploadingImage)),
                                 );
-                                // Upload image using ProfileCubit to avoid global AuthLoading screen reset!
                                 await context
                                     .read<ProfileCubit>()
                                     .updateProfileImage(image.path);
-
-                                // Sync Drawer instantly
                                 if (!context.mounted) return;
-                                context.read<SettingsCubit>().fetchSettings();
+                                context
+                                    .read<SettingsCubit>()
+                                    .fetchSettings();
                               }
                             },
                             child: Container(
                               padding: const EdgeInsets.all(10),
                               decoration: const BoxDecoration(
-                                color: primaryColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                color: Colors.white,
-                                size: 24,
-                              ),
+                                  color: primaryColor,
+                                  shape: BoxShape.circle),
+                              child: const Icon(Icons.camera_alt,
+                                  color: Colors.white, size: 24),
                             ),
                           ),
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 24),
-
-                    // ===== NAME + EDIT PROFILE =====
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // ===== NAME & EMAIL =====
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,96 +252,82 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                               Text(
                                 profile.fullName.isNotEmpty
                                     ? profile.fullName
-                                    : 'No Name',
+                                    : l10n.noName,
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
-                                  color: Theme.of(
-                                    context,
-                                  ).textTheme.bodyLarge?.color,
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.color,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 profile.email.isNotEmpty
                                     ? profile.email
-                                    : 'No Email',
+                                    : l10n.noEmail,
                                 style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                ),
+                                    color: Colors.grey, fontSize: 14),
                               ),
                             ],
                           ),
                         ),
-
                         CustomSmallButton(
-                          label: 'Edit Profile',
+                          label: l10n.editProfile,
                           icon: Icons.edit,
                           onPressed: () => _showEditProfileDialog(profile),
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 24),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         StatCard(
-                          title: 'Sessions',
-                          value: profile.sessionsCount.toString(),
-                        ),
+                            title: l10n.sessionsLabel,
+                            value: profile.sessionsCount.toString()),
                         StatCard(
-                          title: 'Exercises',
-                          value: profile.exercisesCount.toString(),
-                        ),
+                            title: l10n.exercisesLabel,
+                            value: profile.exercisesCount.toString()),
                         StatCard(
-                          title: 'Days',
-                          value: profile.daysCount.toString(),
-                        ),
+                            title: l10n.daysLabel,
+                            value: profile.daysCount.toString()),
                       ],
                     ),
-
                     const SizedBox(height: 30),
-
                     AppTile(
                       icon: Icons.settings,
-                      title: 'Account Settings',
-                      onTap: () {
-                        Navigator.push(
+                      title: l10n.accountSettings,
+                      onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const SettingsScreen(),
-                          ),
-                        );
-                      },
+                              builder: (_) => const SettingsScreen())),
                     ),
                     AppTile(
                       icon: Icons.notifications,
-                      title: 'Notifications',
-                      onTap: () {
-                        Navigator.push(
+                      title: l10n.notifications,
+                      onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const NotificationsScreen(),
-                          ),
-                        );
-                      },
+                              builder: (_) => const NotificationsScreen())),
                     ),
                     AppTile(
                       icon: Icons.language,
-                      title: 'Language',
-                      onTap: () {},
+                      title: l10n.language,
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const SettingsScreen())),
                     ),
                     AppTile(
                       icon: Icons.bookmark_outline,
-                      title: 'Saved Resources',
+                      title: l10n.savedResources,
                       onTap: _showSavedResources,
                     ),
                     AppTile(
                       icon: Icons.logout,
-                      title: 'Log Out',
+                      title: l10n.logOut,
                       onTap: () => _showLogoutDialog(context),
                     ),
                   ],

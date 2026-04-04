@@ -28,6 +28,9 @@ class AuthResponseModel {
       'Profile',
       'doctor',
       'Doctor',
+      'doctorProfile',
+      'DoctorProfile',
+      'profileData',
     ];
     var copy = Map<String, dynamic>.from(map);
     final merged = <String, dynamic>{};

@@ -11,6 +11,7 @@ class ProfileApiService {
   Future<ProfileModel> getProfile() async {
     try {
       final response = await _dio.get('/api/Profile/me');
+      log('Profile API full response: ${response.data}');
       return ProfileModel.fromJson(response.data);
     } on DioException catch (e) {
       log('DioError getting profile: ${e.response?.statusCode}');
@@ -44,9 +45,9 @@ class ProfileApiService {
   Future<void> updateProfileImage(String imagePath) async {
     try {
       final formData = FormData.fromMap({
-        'ProfileImage': await MultipartFile.fromFile(imagePath),
+        'file': await MultipartFile.fromFile(imagePath),
       });
-      await _dio.post('/api/Profile/update', data: formData);
+      await _dio.post('/api/Profile/upload-avatar', data: formData);
     } on DioException catch (e) {
       log('DioError updating profile image: ${e.response?.statusCode}');
       rethrow;

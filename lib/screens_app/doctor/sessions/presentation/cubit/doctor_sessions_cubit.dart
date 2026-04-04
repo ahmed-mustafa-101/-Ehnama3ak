@@ -52,7 +52,7 @@ class DoctorSessionsCubit extends Cubit<DoctorSessionsState> {
       if (success) {
         emit(DoctorSessionCreateSuccess());
         // Default to refreshing upcoming sessions
-        fetchUpcomingSessions();
+        fetchAllSessions();
       } else {
         emit(
           const DoctorSessionCreateError(

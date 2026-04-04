@@ -18,7 +18,14 @@ class UserSettings extends Equatable {
       id: (json['id'] ?? json['userId'] ?? 0).toString(),
       name: (json['name'] ?? json['userName'] ?? json['fullName'] ?? '').toString(),
       email: (json['email'] ?? json['emailAddress'] ?? '').toString(),
-      profileImageUrl: json['profileImageUrl'] ?? json['imageUrl'] ?? json['image'],
+      profileImageUrl: json['profileImageUrl'] ?? 
+                       json['imageUrl'] ?? 
+                       json['image'] ?? 
+                       json['photoUrl'] ?? 
+                       json['avatarUrl'] ?? 
+                       json['photoPath'] ?? 
+                       json['profileImage'] ?? 
+                       json['profilePicture'],
     );
   }
 

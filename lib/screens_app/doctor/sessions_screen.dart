@@ -6,6 +6,8 @@ import 'sessions/models/doctor_session_model.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_session_screen.dart';
+import '../messages/message_detail_screen.dart';
+import 'sessions/presentation/pages/session_media_viewer.dart';
 
 class DoctorSessionsScreen extends StatefulWidget {
   const DoctorSessionsScreen({super.key});
@@ -22,7 +24,7 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
   }
 
   void _loadSessions() {
-    context.read<DoctorSessionsCubit>().fetchUpcomingSessions();
+    context.read<DoctorSessionsCubit>().fetchAllSessions();
   }
 
   @override
@@ -233,7 +235,7 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -277,9 +279,7 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                     Row(
                       children: [
                         Icon(
-                          sessionType.toLowerCase() == 'chat'
-                              ? Icons.chat_outlined
-                              : Icons.videocam_outlined,
+                          _getSessionIcon(sessionType),
                           size: 16,
                           color: Colors.grey,
                         ),
@@ -300,9 +300,7 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Icon(
-                    sessionType.toLowerCase() == 'chat'
-                        ? Icons.chat
-                        : Icons.videocam,
+                    _getSessionIcon(sessionType, large: true),
                     color: const Color(0xFF0DA5FE),
                     size: 28,
                   ),
@@ -318,6 +316,38 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
+                  final type = session.sessionType?.toLowerCase() ?? '';
+                  final patientId = session.patientId;
+
+                  // 1. If it's a Chat session and we have a patientId, go to chat
+                  if (type.contains('chat') && patientId != null && patientId.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MessageDetailScreen(
+                          receiverId: patientId,
+                          receiverName: session.patientName ?? 'Patient',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  // 2. For Video, Audio, or PDF, use our new Media Viewer
+                  if (type.contains('video') ||
+                      type.contains('audio') ||
+                      type.contains('pdf') ||
+                      type.contains('image')) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SessionMediaViewer(session: session),
+                      ),
+                    );
+                    return;
+                  }
+
+                  // 3. Otherwise try to launch the URL in browser
                   if (session.sessionUrl != null &&
                       session.sessionUrl!.isNotEmpty) {
                     final uri = Uri.tryParse(session.sessionUrl!);
@@ -327,7 +357,7 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text("Could not launch session link"),
+                            content: Text("Could not launch session link. It might be a local path."),
                           ),
                         );
                       }
@@ -383,7 +413,7 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -395,5 +425,20 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
         ),
       ),
     );
+  }
+
+  IconData _getSessionIcon(String type, {bool large = false}) {
+    switch (type.toLowerCase()) {
+      case 'chat':
+        return large ? Icons.chat : Icons.chat_outlined;
+      case 'video':
+        return large ? Icons.videocam : Icons.videocam_outlined;
+      case 'audio':
+        return large ? Icons.mic : Icons.mic_none;
+      case 'pdf':
+        return large ? Icons.description : Icons.description_outlined;
+      default:
+        return large ? Icons.event : Icons.event_outlined;
+    }
   }
 }

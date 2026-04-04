@@ -97,23 +97,74 @@ class FeedApiService {
   }
 
   void _normalizeImageUrl(Map<String, dynamic> map) {
-    // Backend uses 'imageUrl', some old code might use 'image'
-    dynamic imgValue = map['imageUrl'] ?? map['image'];
-    if (imgValue != null && imgValue is String && imgValue.isNotEmpty) {
-      String img = imgValue.trim();
-      // Ignore Swagger/placeholder values
-      if (img.toLowerCase() == 'string' || img.toLowerCase() == 'null' || img.isEmpty) {
-        map['imageUrl'] = null;
-        map['image'] = null;
-        return;
+    const String baseUrl = 'http://e7nama3ak.runasp.net';
+
+    void normalizeKeys(Map<String, dynamic> m, List<String> keys) {
+      for (final key in keys) {
+        dynamic val = m[key];
+        if (val != null && val is String && val.trim().isNotEmpty) {
+          String img = val.trim();
+          if (img.toLowerCase() == 'string' || img.toLowerCase() == 'null') {
+            m[key] = null;
+            continue;
+          }
+          if (!img.startsWith('http') && !img.startsWith('assets/')) {
+            m[key] = img.startsWith('/') ? '$baseUrl$img' : '$baseUrl/$img';
+          }
+        }
       }
-      
-      if (!img.startsWith('http')) {
-        const String baseUrl = 'http://e7nama3ak.runasp.net';
-        final normalized =
-            img.startsWith('/') ? '$baseUrl$img' : '$baseUrl/$img';
-        map['imageUrl'] = normalized;
-        map['image'] = normalized;
+    }
+
+    // 1. Normalize post content images
+    normalizeKeys(map, [
+      'imageUrl',
+      'image',
+      'postImage',
+      'PostImage',
+      'ImageUrl',
+    ]);
+
+    // 2. Normalize root-level user images
+    normalizeKeys(map, [
+      'userProfileImage',
+      'profileImageUrl',
+      'avatarUrl',
+      'userImage',
+      'authorImage',
+      'doctorImage',
+      'patientImage',
+      'photoPath',
+    ]);
+
+    // 3. Normalize nested user/author object images
+    final userKeys = [
+      'user',
+      'User',
+      'author',
+      'Author',
+      'doctor',
+      'Doctor',
+      'patient',
+      'Patient',
+      'creator',
+      'Creator',
+    ];
+    for (final key in userKeys) {
+      if (map[key] is Map) {
+        final userMap = Map<String, dynamic>.from(map[key]);
+        normalizeKeys(userMap, [
+          'profileImageUrl',
+          'ProfileImageUrl',
+          'imageUrl',
+          'image',
+          'avatarUrl',
+          'photoUrl',
+          'ProfileImage',
+          'photoPath',
+          'avatar',
+          'picture',
+        ]);
+        map[key] = userMap;
       }
     }
   }
@@ -144,25 +195,19 @@ class FeedApiService {
       if (imagePath != null &&
           imagePath.isNotEmpty &&
           !imagePath.startsWith('assets/')) {
+        // Handle both / and \ in path for filename
+        final fileName = imagePath.replaceAll('\\', '/').split('/').last;
         final multipartFile = await MultipartFile.fromFile(
           imagePath,
-          filename: imagePath.split('/').last,
+          filename: fileName,
         );
-        // Added 'Image' (capitalized) which is very common in .NET backends
-        data['Image'] = multipartFile;
-        data['imageUrl'] = multipartFile;
+        // Per user curl: -F 'image=...'
         data['image'] = multipartFile;
       }
 
       final formData = FormData.fromMap(data);
 
-      final response = await _dio.post(
-        '/api/Posts',
-        data: formData,
-        options: Options(
-          contentType: 'multipart/form-data',
-        ),
-      );
+      final response = await _dio.post('/api/Posts', data: formData);
 
       final responseData = _toMap(response.data);
       _normalizeImageUrl(responseData);
@@ -196,15 +241,13 @@ class FeedApiService {
   Future<void> likePost(String postId) async {
     try {
       await _dio.post('/api/Likes/$postId');
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   Future<void> unlikePost(String postId, {String? likeId}) async {
     try {
       await _dio.post('/api/Likes/$postId');
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   Future<List<CommentModel>> getComments({
@@ -213,18 +256,44 @@ class FeedApiService {
     int pageSize = 10,
   }) async {
     try {
+      // 1. Try dedicated comments endpoint (very common)
+      try {
+        final response = await _dio.get(
+          '/api/Comments',
+          queryParameters: {'postId': postId},
+        );
+        if (response.data != null) {
+          return _parseCommentsResponse(response.data);
+        }
+      } catch (_) {}
+
+      // 2. Try to get the specific post (might contain comments)
+      try {
+        final response = await _dio.get('/api/Posts/$postId');
+        if (response.data != null) {
+          final data = _toMap(response.data);
+          final comments = data['comments'] ?? data['Comments'];
+          if (comments != null) {
+            return _parseCommentsResponse(comments);
+          }
+        }
+      } catch (_) {}
+
+      // 3. Fallback: Search in the general posts list
       final response = await _dio.get('/api/Posts');
-      
       dynamic postsList = response.data;
       if (postsList is Map) {
-        postsList = postsList['items'] ?? postsList['data'] ?? postsList['posts'] ?? [];
+        postsList =
+            postsList['items'] ?? postsList['data'] ?? postsList['posts'] ?? [];
       }
-      
+
       if (postsList is List) {
         for (var postJson in postsList) {
-          if (postJson['id']?.toString() == postId.toString() ||
-              postJson['postId']?.toString() == postId.toString()) {
-            return _parseCommentsResponse(postJson['comments'] ?? []);
+          final currentPostId = (postJson['id'] ?? postJson['postId'])
+              ?.toString();
+          if (currentPostId == postId.toString()) {
+            final comments = postJson['comments'] ?? postJson['Comments'] ?? [];
+            return _parseCommentsResponse(comments);
           }
         }
       }
@@ -258,10 +327,38 @@ class FeedApiService {
           'content': text,
           'userId': userId,
           'postId': int.tryParse(postId) ?? 0,
-          'createdAt': DateTime.now().toUtc().toIso8601String()
+          'createdAt': DateTime.now().toUtc().toIso8601String(),
         },
       );
       return CommentModel.fromJson(_toMap(response.data));
+    } on DioException catch (e) {
+      throw Exception(parseError(e));
+    }
+  }
+
+  Future<CommentModel> updateComment({
+    required String commentId,
+    required String text,
+    required String userId,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/api/Comments/$commentId',
+        data: {
+          'id': int.tryParse(commentId) ?? 0,
+          'content': text,
+          'userId': userId,
+        },
+      );
+      return CommentModel.fromJson(_toMap(response.data));
+    } on DioException catch (e) {
+      throw Exception(parseError(e));
+    }
+  }
+
+  Future<void> deleteComment(String commentId) async {
+    try {
+      await _dio.delete('/api/Comments/$commentId');
     } on DioException catch (e) {
       throw Exception(parseError(e));
     }

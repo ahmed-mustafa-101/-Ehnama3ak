@@ -1,4 +1,5 @@
 import 'package:ehnama3ak/core/widgets/app_icon_back.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/notifications/presentation/cubit/notification_cubit.dart';
@@ -26,22 +27,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _handleClearAll(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Clear All Notifications'),
-        content: const Text(
-          'Are you sure you want to delete all notifications? This cannot be undone.',
-        ),
+        title: Text(l10n.clearAllNotifications),
+        content: Text(l10n.clearAllConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Clear All', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.clearAll,
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -100,7 +101,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           AppIconBack(top: 5, left: 0),
           const Spacer(),
           Text(
-            'Notifications',
+            AppLocalizations.of(context).notificationsTitle,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -131,8 +132,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               state.status != NotificationStatus.loading)
             GestureDetector(
               onTap: () => _handleClearAll(context),
-              child: const Text(
-                'Clear All',
+              child: Text(
+                AppLocalizations.of(context).clearAll,
                 style: TextStyle(
                   color: Color(0xFF0DA5FE),
                   fontWeight: FontWeight.w600,
@@ -161,8 +162,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return _buildEmptyState(
         isDark: isDark,
         icon: Icons.wifi_off_rounded,
-        title: 'Failed to load notifications',
-        subtitle: state.errorMessage ?? 'Check your connection and try again.',
+        title: AppLocalizations.of(context).failedToLoadNotifications,
+        subtitle: state.errorMessage ?? AppLocalizations.of(context).checkConnection,
         showRetry: true,
         onRetry: () => context.read<NotificationCubit>().loadNotifications(),
       );
@@ -172,8 +173,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return _buildEmptyState(
         isDark: isDark,
         icon: Icons.notifications_off_outlined,
-        title: 'No notifications available',
-        subtitle: 'You have no notifications at the moment.',
+        title: AppLocalizations.of(context).noNotifications,
+        subtitle: AppLocalizations.of(context).noNotificationsSubtitle,
       );
     }
 

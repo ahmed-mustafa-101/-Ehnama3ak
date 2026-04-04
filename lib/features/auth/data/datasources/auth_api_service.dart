@@ -55,21 +55,16 @@ class AuthApiService {
     int? yearsOfExperience,
   }) async {
     final data = <String, dynamic>{
-      'FullName': name,
+      'fullName': name,
       'email': email,
       'password': password,
       'role': role,
     };
     if (specialization != null && specialization.isNotEmpty) {
       data['specialization'] = specialization;
-      // بعض الـ APIs تتوقع PascalCase
-      data['Specialization'] = specialization;
     }
     if (yearsOfExperience != null && yearsOfExperience >= 0) {
-      data['yearsOfExperience'] = yearsOfExperience;
-      // توافق مع موديلات تستخدم yearsExperience أو PascalCase
-      data['yearsExperience'] = yearsOfExperience;
-      data['YearsOfExperience'] = yearsOfExperience;
+      data['experienceYears'] = yearsOfExperience;
     }
 
     final response = await _dio.post('/api/Auth/register', data: data);
@@ -78,11 +73,11 @@ class AuthApiService {
 
   Future<AuthResponseModel> updateProfileImage(String imagePath) async {
     final formData = FormData.fromMap({
-      'image': await MultipartFile.fromFile(imagePath),
+      'file': await MultipartFile.fromFile(imagePath),
     });
 
     final response = await _dio.post(
-      '/api/Auth/update-profile-image',
+      '/api/Profile/upload-avatar',
       data: formData,
     );
     return AuthResponseModel.fromJson(response.data);

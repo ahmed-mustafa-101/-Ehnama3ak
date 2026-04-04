@@ -26,4 +26,10 @@ abstract class FeedRepository {
     required String text,
     required String userId,
   });
+  Future<CommentModel> updateComment({
+    required String commentId,
+    required String text,
+    required String userId,
+  });
+  Future<void> deleteComment(String commentId);
 }

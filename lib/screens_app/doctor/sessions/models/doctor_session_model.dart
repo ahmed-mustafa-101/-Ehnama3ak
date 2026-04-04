@@ -9,6 +9,7 @@ class DoctorSessionModel extends Equatable {
   final double? price;
   final String? status;
   final String? sessionUrl;
+  final String? patientId;
   final DateTime? scheduledAt;
 
   const DoctorSessionModel({
@@ -20,6 +21,7 @@ class DoctorSessionModel extends Equatable {
     this.price,
     this.status,
     this.sessionUrl,
+    this.patientId,
     this.scheduledAt,
   });
 
@@ -27,10 +29,17 @@ class DoctorSessionModel extends Equatable {
     // Robust key matching (handles PascalCase and camelCase)
     dynamic getField(List<String> keys) {
       for (var key in keys) {
-        if (json.containsKey(key)) return json[key];
-        // Also check capitalized version
+        // Check camelCase/original
+        if (json.containsKey(key)) {
+          final value = json[key];
+          if (value != null && value.toString().isNotEmpty) return value;
+        }
+        // Check PascalCase
         String cap = key[0].toUpperCase() + key.substring(1);
-        if (json.containsKey(cap)) return json[cap];
+        if (json.containsKey(cap)) {
+          final value = json[cap];
+          if (value != null && value.toString().isNotEmpty) return value;
+        }
       }
       return null;
     }
@@ -41,6 +50,8 @@ class DoctorSessionModel extends Equatable {
       parsedScheduledAt = DateTime.tryParse(rawScheduledAt.toString());
     }
 
+    final sessionUrl = getField(['sessionUrl', 'url', 'link', 'videoUrl', 'audioUrl', 'pdfUrl', 'imageUrl']);
+
     return DoctorSessionModel(
       id: getField(['id']) as int?,
       patientName: getField(['patientName', 'patient', 'name'])?.toString(),
@@ -49,7 +60,8 @@ class DoctorSessionModel extends Equatable {
       time: getField(['time'])?.toString(),
       price: json['price'] != null ? double.tryParse(json['price'].toString()) : null,
       status: getField(['status', 'state'])?.toString(),
-      sessionUrl: getField(['sessionUrl', 'url', 'link'])?.toString(),
+      patientId: getField(['patientId'])?.toString(),
+      sessionUrl: sessionUrl?.toString(),
       scheduledAt: parsedScheduledAt,
     );
   }
@@ -64,6 +76,7 @@ class DoctorSessionModel extends Equatable {
       'price': price,
       'status': status,
       'sessionUrl': sessionUrl,
+      'patientId': patientId,
       'scheduledAt': scheduledAt?.toIso8601String(),
     };
   }

@@ -15,6 +15,7 @@ class DoctorDashboardCubit extends Cubit<DoctorDashboardState> {
     emit(DoctorDashboardLoading());
     try {
       final stats = await _apiService.getStats();
+      print("Dashboard Stats: Sessions=${stats.sessionsCount}, News=${stats.newsCount}, Patients=${stats.patientsCount}, Upcoming=${stats.upcomingSessionsCount}");
       final activity = await _apiService.getRecentActivity();
       emit(DoctorDashboardSuccess(
         stats: stats,

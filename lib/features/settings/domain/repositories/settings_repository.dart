@@ -2,6 +2,7 @@ import '../../data/models/settings_models.dart';
 
 abstract class SettingsRepository {
   Future<UserSettings> getSettings();
+  Future<void> uploadAvatar(String imagePath);
   Future<void> updateProfile({
     required String name,
     required String email,

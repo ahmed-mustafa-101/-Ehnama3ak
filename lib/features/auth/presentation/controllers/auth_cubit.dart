@@ -23,6 +23,21 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// Refreshes the user state from storage
+  Future<void> reloadUser() async {
+    final currentState = state;
+    try {
+      final session = await _repo.getCurrentSession();
+      if (session != null && session.token.isNotEmpty) {
+        emit(AuthSuccess(session.data));
+      }
+    } catch (_) {
+      if (currentState is AuthSuccess) {
+        emit(AuthSuccess(currentState.user));
+      }
+    }
+  }
+
   Future<void> login(String email, String password) async {
     emit(const AuthLoading());
     try {
@@ -136,9 +151,17 @@ class AuthCubit extends Cubit<AuthState> {
     emit(const AuthLoading());
     try {
       final response = await _repo.updateProfileImage(imagePath);
-      emit(AuthSuccess(response.data));
+      // Merge: if response is partial, use old state fields
+      final newUser = response.data;
+      final mergedUser = currentState.user.copyWith(
+        id: newUser.id.isNotEmpty ? newUser.id : currentState.user.id,
+        name: newUser.name.isNotEmpty ? newUser.name : currentState.user.name,
+        email: newUser.email.isNotEmpty ? newUser.email : currentState.user.email,
+        token: newUser.token.isNotEmpty ? newUser.token : currentState.user.token,
+        profileImageUrl: newUser.profileImageUrl ?? currentState.user.profileImageUrl,
+      );
+      emit(AuthSuccess(mergedUser));
     } catch (e) {
-      // Revert to current user on failure
       emit(AuthSuccess(currentState.user));
     }
   }

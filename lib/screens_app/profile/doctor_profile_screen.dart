@@ -7,6 +7,7 @@ import '../../features/auth/presentation/controllers/auth_cubit.dart';
 import '../../features/auth/presentation/controllers/auth_state.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_cubit.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_state.dart';
+import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/models/upload_models.dart';
 
 class DoctorProfileScreen extends StatefulWidget {
@@ -21,6 +22,17 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   void initState() {
     super.initState();
     context.read<DoctorDashboardCubit>().loadDashboardData();
+  }
+
+  String _getFullImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    String cleanUrl = url.replaceAll('\\', '/');
+    final String fullUrl = cleanUrl.startsWith('http')
+        ? cleanUrl
+        : '${DioClient.baseUrl}${cleanUrl.startsWith('/') ? cleanUrl : '/$cleanUrl'}';
+    // Cache-busting
+    final ts = DateTime.now().millisecondsSinceEpoch ~/ 60000;
+    return '$fullUrl?v=$ts';
   }
 
   void _showAddRecordDialog() {
@@ -235,12 +247,13 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                 backgroundColor: Colors.grey[200],
                                 backgroundImage:
                                     (user?.profileImageUrl != null &&
-                                        user!.profileImageUrl!.isNotEmpty)
-                                    ? NetworkImage(user.profileImageUrl!)
-                                    : const AssetImage(
-                                            'assets/images/user_avatar.png',
-                                          )
-                                          as ImageProvider,
+                                            user!.profileImageUrl!.isNotEmpty)
+                                        ? NetworkImage(_getFullImageUrl(
+                                            user.profileImageUrl!))
+                                        : const AssetImage(
+                                                'assets/images/user_avatar.png',
+                                              )
+                                              as ImageProvider,
                               ),
                             ),
                             SizedBox(width: Responsive.spacing(context, 15)),
@@ -412,30 +425,34 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         _dashboardItem(
                           context,
                           Icons.calendar_month_rounded,
-                          '${stats.sessionsCount} Sessions',
+                          'Sessions',
                           const Color(0xFF0DA5FE),
                           -1,
+                          count: stats.sessionsCount,
                         ),
                         _dashboardItem(
                           context,
                           Icons.notifications_rounded,
-                          '${stats.newsCount} News',
+                          'News',
                           Colors.orange,
                           -1,
+                          count: stats.newsCount,
                         ),
                         _dashboardItem(
                           context,
                           Icons.groups_rounded,
-                          '${stats.patientsCount} Patients',
+                          'Patients',
                           Colors.purple,
                           -1,
+                          count: stats.patientsCount,
                         ),
                         _dashboardItem(
                           context,
                           Icons.chat_bubble_rounded,
-                          '${stats.upcomingSessionsCount} Upcoming Sessions',
+                          'Upcoming Sessions',
                           const Color(0xFF0DA5FE),
                           -1,
+                          count: stats.upcomingSessionsCount,
                         ),
                         _dashboardItem(
                           context,
@@ -557,8 +574,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     IconData icon,
     String label,
     Color color,
-    int targetIndex,
-  ) {
+    int targetIndex, {
+    int count = 0,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
@@ -587,18 +605,18 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: Responsive.iconSize(context, 30)),
+            Icon(icon, color: color, size: Responsive.iconSize(context, 26)),
             SizedBox(height: Responsive.spacing(context, 8)),
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: Responsive.padding(context, 4),
               ),
               child: Text(
-                label,
+                '$count $label',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: Responsive.fontSize(context, 11),
-                  fontWeight: FontWeight.w600,
+                  fontSize: Responsive.fontSize(context, 13),
+                  fontWeight: FontWeight.bold,
                   color: color,
                 ),
                 maxLines: 2,

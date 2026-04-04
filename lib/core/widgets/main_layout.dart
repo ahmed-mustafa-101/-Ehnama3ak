@@ -38,6 +38,7 @@ class MainLayoutState extends State<MainLayout> {
   int _homeSubTab =
       0; // Track which sub-tab is active in HomeScreen for patients
   UserRole? _userRole;
+  String? _profileImageUrl;
   bool _showNotifications = false; // Track if notifications overlay is shown
   bool _showMessages = false;
 
@@ -79,14 +80,17 @@ class MainLayoutState extends State<MainLayout> {
   @override
   void initState() {
     super.initState();
-    _loadRole();
+    PrefManager.trackActiveDay(); // Track this session
+    _loadUserData();
   }
 
-  Future<void> _loadRole() async {
+  Future<void> _loadUserData() async {
     final role = await PrefManager.getUserRole();
+    final imageUrl = await PrefManager.getUserProfileImageUrl();
     if (!mounted) return;
     setState(() {
       _userRole = role;
+      _profileImageUrl = imageUrl;
     });
   }
 
@@ -209,6 +213,7 @@ class MainLayoutState extends State<MainLayout> {
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: _currentIndex,
         onTap: changeTab,
+        profileImageUrl: _profileImageUrl,
       ),
       floatingActionButton:
           (_currentIndex == 0 ||

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'sessions/presentation/cubit/doctor_sessions_cubit.dart';
 import 'sessions/presentation/cubit/doctor_sessions_state.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 
 class AddSessionScreen extends StatefulWidget {
   const AddSessionScreen({super.key});
@@ -17,11 +18,15 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
   final _priceController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
-  XFile? _selectedFile;
+  PlatformFile? _selectedPlatformFile;
+  XFile? _selectedImageOrVideo;
 
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   String _selectedType = "Chat";
+
+  String? get _selectedFilePath => _selectedPlatformFile?.path ?? _selectedImageOrVideo?.path;
+  String? get _selectedFileName => _selectedPlatformFile?.name ?? _selectedImageOrVideo?.name;
 
   @override
   void dispose() {
@@ -53,12 +58,44 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
   }
 
   Future<void> _pickFile() async {
-    final XFile? file = _selectedType == "Video"
-        ? await _picker.pickVideo(source: ImageSource.gallery)
-        : await _picker.pickImage(source: ImageSource.gallery);
-
-    if (file != null) {
-      setState(() => _selectedFile = file);
+    if (_selectedType == "PDF") {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+      if (result != null) {
+        setState(() {
+          _selectedPlatformFile = result.files.first;
+          _selectedImageOrVideo = null;
+        });
+      }
+    } else if (_selectedType == "Audio") {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.audio,
+      );
+      if (result != null) {
+        setState(() {
+          _selectedPlatformFile = result.files.first;
+          _selectedImageOrVideo = null;
+        });
+      }
+    } else if (_selectedType == "Video") {
+      final XFile? file = await _picker.pickVideo(source: ImageSource.gallery);
+      if (file != null) {
+        setState(() {
+          _selectedImageOrVideo = file;
+          _selectedPlatformFile = null;
+        });
+      }
+    } else {
+      // Chat / Image
+      final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+      if (file != null) {
+        setState(() {
+          _selectedImageOrVideo = file;
+          _selectedPlatformFile = null;
+        });
+      }
     }
   }
 
@@ -78,7 +115,7 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
         sessionType: _selectedType,
         scheduledAt: scheduledAt,
         price: double.tryParse(_priceController.text.trim()),
-        filePath: _selectedFile?.path,
+        filePath: _selectedFilePath,
       );
     }
   }
@@ -94,7 +131,7 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context);
+          Navigator.pop(context, true); // Return true to indicate success
         } else if (state is DoctorSessionCreateError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
@@ -130,7 +167,7 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: Colors.black.withOpacity(0.05),
                               blurRadius: 6,
                               offset: const Offset(0, 3),
                             ),
@@ -197,16 +234,20 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
                         Row(
                           children: [
                             _sessionTypeButton("Chat"),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
                             _sessionTypeButton("Video"),
+                            const SizedBox(width: 8),
+                            _sessionTypeButton("Audio"),
+                            const SizedBox(width: 8),
+                            _sessionTypeButton("PDF"),
                           ],
                         ),
 
                         const SizedBox(height: 20),
 
-                        /// Session File (Video/Chat)
+                        /// Session File
                         Text(
-                          _selectedType == "Chat" ? 'Chat File' : 'Video File',
+                          _getFileLabel(),
                           style: const TextStyle(
                             color: Color(0xFF0EA5E9),
                             fontWeight: FontWeight.w600,
@@ -214,11 +255,7 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
                         ),
                         const SizedBox(height: 8),
                         _buildPickerField(
-                          text: _selectedFile != null
-                              ? _selectedFile!.name
-                              : (_selectedType == "Chat"
-                                    ? "upload chat screenshot/image"
-                                    : "upload video file"),
+                          text: _selectedFileName ?? "Upload ${_getFileLabel().toLowerCase()}",
                           onTap: _pickFile,
                         ),
 
@@ -276,25 +313,40 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
 
                         /// Add Button
                         Center(
-                          child: SizedBox(
-                            width: 160,
-                            height: 45,
-                            child: ElevatedButton.icon(
-                              onPressed: _saveSession,
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text(
-                                "Add",
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0EA5E9),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
+                          child: BlocBuilder<DoctorSessionsCubit, DoctorSessionsState>(
+                            builder: (context, state) {
+                              final isLoading = state is DoctorSessionCreating;
+
+                              return SizedBox(
+                                width: 160,
+                                height: 45,
+                                child: ElevatedButton.icon(
+                                  onPressed: isLoading ? null : _saveSession,
+                                  icon: isLoading
+                                      ? const SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Icon(Icons.add, size: 18),
+                                  label: Text(
+                                    isLoading ? "Saving..." : "Add",
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF0EA5E9),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    elevation: 0,
+                                  ),
                                 ),
-                                elevation: 0,
-                              ),
-                            ),
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -352,6 +404,15 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
     );
   }
 
+  String _getFileLabel() {
+    switch (_selectedType) {
+      case "Video": return "Video File";
+      case "Audio": return "Audio File";
+      case "PDF": return "PDF Document";
+      default: return "Chat Image";
+    }
+  }
+
   Widget _sessionTypeButton(String text) {
     final bool isSelected = _selectedType == text;
 
@@ -360,21 +421,25 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
         onTap: () {
           setState(() {
             _selectedType = text;
-            _selectedFile = null; // Clear selected file when type changes
+            _selectedPlatformFile = null;
+            _selectedImageOrVideo = null;
           });
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFF0EA5E9) : Colors.grey.shade300,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(15),
           ),
           alignment: Alignment.center,
           child: Text(
             text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: isSelected ? Colors.white : Colors.black54,
               fontWeight: FontWeight.w500,
+              fontSize: 12,
             ),
           ),
         ),

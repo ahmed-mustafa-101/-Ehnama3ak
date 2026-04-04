@@ -221,7 +221,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
           // ===== شريط الإدخال في الأسفل =====
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 6, 12, 10),
+            padding: const EdgeInsets.fromLTRB(5, 5, 10, 10),
             child: Row(
               children: [
                 // زر إضافة صورة على اليسار
@@ -232,16 +232,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   icon: const Icon(
                     Icons.add_circle_outline_rounded,
                     color: Color(0xFF1E88E5),
-                    size: 50,
+                    size: 46,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
 
                 // حقل الكتابة داخل Container مستطيل
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
-                    height: 48,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: isDark
                           ? const Color(0xFF1E1E1E)
@@ -264,7 +264,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                               hintText: 'Ask Depo ....',
                               hintStyle: TextStyle(
                                 color: Color(0xFF9FB0C0),
-                                fontSize: 20,
+                                fontSize: 18,
                               ),
                             ),
                           ),
@@ -286,8 +286,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 GestureDetector(
                   onTap: _sendMessage,
                   child: Container(
-                    width: 50,
-                    height: 50,
+                    width: 40,
+                    height: 40,
                     decoration: const BoxDecoration(
                       color: Color(0xFF1E88E5),
                       shape: BoxShape.circle,

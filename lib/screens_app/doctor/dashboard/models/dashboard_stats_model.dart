@@ -13,10 +13,20 @@ class DashboardStatsModel {
 
   factory DashboardStatsModel.fromJson(Map<String, dynamic> json) {
     return DashboardStatsModel(
-      sessionsCount: json['sessionsCount'] ?? 0,
-      newsCount: json['newsCount'] ?? 0,
-      patientsCount: json['patientsCount'] ?? 0,
-      upcomingSessionsCount: json['upcomingSessionsCount'] ?? 0,
+      sessionsCount: json['sessionsCount'] ?? 
+                     json['totalSessions'] ?? 
+                     json['sessions'] ?? 
+                     json['count'] ?? 0,
+      newsCount: json['newsCount'] ?? 
+                 json['notificationsCount'] ?? 
+                 json['unreadNotifications'] ?? 
+                 json['news'] ?? 0,
+      patientsCount: json['patientsCount'] ?? 
+                     json['totalPatients'] ?? 
+                     json['patients'] ?? 0,
+      upcomingSessionsCount: json['upcomingSessionsCount'] ?? 
+                             json['upcomingSessions'] ?? 
+                             json['futureSessions'] ?? 0,
     );
   }
 }

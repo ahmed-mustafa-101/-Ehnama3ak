@@ -1,8 +1,10 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
-import 'package:ehnama3ak/screens_app/profile/data/datasources/profile_api_service.dart';
-import 'package:ehnama3ak/screens_app/profile/presentation/cubit/profile_state.dart';
+import 'package:ehnama3ak/core/storage/pref_manager.dart';
 import 'package:ehnama3ak/core/storage/secure_token_storage.dart';
+import 'package:ehnama3ak/screens_app/profile/data/datasources/profile_api_service.dart';
+import 'package:ehnama3ak/screens_app/profile/models/profile_model.dart';
+import 'package:ehnama3ak/screens_app/profile/presentation/cubit/profile_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileApiService _profileApiService;
@@ -18,9 +20,23 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> loadProfile() async {
     emit(ProfileLoading());
     try {
-      final profile = await _profileApiService.getProfile();
+      final apiProfile = await _profileApiService.getProfile();
       // Update cached profile image URL
-      await _tokenStorage.saveUserProfileImageUrl(profile.profileImageUrl);
+      await _tokenStorage.saveUserProfileImageUrl(apiProfile.profileImageUrl);
+
+      // Get local active days count and merge it
+      final localDaysCount = await PrefManager.getActiveDaysCount();
+      
+      // Reconstruct profile with local days count
+      final profile = ProfileModel(
+        fullName: apiProfile.fullName,
+        email: apiProfile.email,
+        profileImageUrl: apiProfile.profileImageUrl,
+        sessionsCount: apiProfile.sessionsCount,
+        exercisesCount: apiProfile.exercisesCount,
+        daysCount: localDaysCount,
+      );
+
       emit(ProfileSuccess(profile));
     } on DioException catch (e) {
       _handleErrors(e);

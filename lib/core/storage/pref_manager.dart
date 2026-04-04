@@ -56,6 +56,33 @@ class PrefManager {
     return null;
   }
 
+  static Future<String?> getUserName() async {
+    return await _secureStorage.getUserName();
+  }
+
+  static Future<String?> getUserProfileImageUrl() async {
+    return await _secureStorage.getUserProfileImageUrl();
+  }
+
+  static const String _activeDaysKey = 'active_days';
+
+  static Future<void> trackActiveDay() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> activeDays = prefs.getStringList(_activeDaysKey) ?? [];
+    final String today = DateTime.now().toIso8601String().split('T')[0];
+    
+    if (!activeDays.contains(today)) {
+      activeDays.add(today);
+      await prefs.setStringList(_activeDaysKey, activeDays);
+    }
+  }
+
+  static Future<int> getActiveDaysCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> activeDays = prefs.getStringList(_activeDaysKey) ?? [];
+    return activeDays.length;
+  }
+
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

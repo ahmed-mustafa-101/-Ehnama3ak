@@ -1,5 +1,7 @@
 import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/core/widgets/logout_dialog.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
+import 'package:ehnama3ak/core/localization/locale_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/models/user_role.dart';
@@ -46,47 +48,51 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
           child: SafeArea(
-            child: Column(
-              children: [
-                _buildPatientHeader(context),
-                const Divider(height: 30),
-                _item(context, Icons.home_rounded, 'Home', 0),
-                _item(context, Icons.autorenew_rounded, 'My Progress', 1),
-                _item(context, Icons.people_alt_outlined, 'Therapists', 2),
-                _item(context, Icons.public, 'Resources', 3),
-                _item(context, Icons.settings_outlined, 'Settings', 4),
-                _item(
-                  context,
-                  Icons.dark_mode_outlined,
-                  'Night Mood',
-                  -1,
-                  onTap: () {
-                    ThemeNotifier.toggleTheme();
-                    Navigator.pop(context);
-                  },
-                ),
-                _item(context, Icons.help_outline, 'Help', 5),
-                const Spacer(),
-
-                _item(
-                  context,
-                  Icons.logout,
-                  'Log Out',
-                  7,
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => LogoutDialog(
-                        onLogout: () async {
-                          Navigator.pop(context);
-                          if (!context.mounted) return;
-                          context.read<AuthCubit>().logout();
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ],
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Column(
+                  children: [
+                    _buildPatientHeader(context),
+                    const Divider(height: 30),
+                    _item(context, Icons.home_rounded, l10n.home, 0),
+                    _item(context, Icons.autorenew_rounded, l10n.myProgress, 1),
+                    _item(context, Icons.people_alt_outlined, l10n.therapists, 2),
+                    _item(context, Icons.public, l10n.resources, 3),
+                    _item(context, Icons.settings_outlined, l10n.settings, 4),
+                    _item(
+                      context,
+                      Icons.dark_mode_outlined,
+                      l10n.nightMood,
+                      -1,
+                      onTap: () {
+                        ThemeNotifier.toggleTheme();
+                        Navigator.pop(context);
+                      },
+                    ),
+                    _item(context, Icons.help_outline, l10n.help, 5),
+                    const Spacer(),
+                    _item(
+                      context,
+                      Icons.logout,
+                      l10n.logOut,
+                      7,
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => LogoutDialog(
+                            onLogout: () async {
+                              Navigator.pop(context);
+                              if (!context.mounted) return;
+                              context.read<AuthCubit>().logout();
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         );
@@ -188,9 +194,12 @@ class AppDrawer extends StatelessWidget {
 
   String _getFullImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
-    if (url.startsWith('http')) return url;
-    String base = DioClient.baseUrl;
-    String cleanUrl = url.startsWith('/') ? url : '/$url';
-    return '$base$cleanUrl';
+    String cleanUrl = url.replaceAll('\\', '/');
+    final String fullUrl = cleanUrl.startsWith('http')
+        ? cleanUrl
+        : '${DioClient.baseUrl}${cleanUrl.startsWith('/') ? cleanUrl : '/$cleanUrl'}';
+    // Cache-busting to ensure drawer image updates immediately
+    final ts = DateTime.now().millisecondsSinceEpoch ~/ 60000;
+    return '$fullUrl?v=$ts';
   }
 }

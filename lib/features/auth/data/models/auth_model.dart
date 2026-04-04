@@ -115,9 +115,10 @@ class AuthModel extends Equatable {
         'Specialty',
       ]),
       yearsOfExperience: _parseYears(
-        json['yearsOfExperience'] ??
+        json['experienceYears'] ??
+            json['experience_years'] ??
+            json['yearsOfExperience'] ??
             json['YearsOfExperience'] ??
-            json['experienceYears'] ??
             json['yearsOfExp'] ??
             json['yearsExperience'] ??
             json['ExperienceYears'] ??
@@ -132,6 +133,13 @@ class AuthModel extends Equatable {
         'Image',
         'picture',
         'Picture',
+        'photoPath',
+        'photoUrl',
+        'avatarUrl',
+        'profileImage',
+        'profilePicture',
+        'url',
+        'avatar',
       ]),
     );
   }

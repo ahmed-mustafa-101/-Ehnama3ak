@@ -98,49 +98,57 @@ class DoctorSessionsApiService {
     required String sessionType,
     required DateTime scheduledAt,
     double? price,
-    String? sessionUrl,
-    String? filePath,
+    String? sessionUrl, 
+    String? filePath,   
   }) async {
-    dynamic body;
+    // Determine the media path (URL or local path)
+    final String mediaPath = sessionUrl ?? filePath ?? "";
+    
+    // Map URL based on session type - Only fill the relevant one, keep others null
+    String? videoUrl;
+    String? audioUrl;
+    String? pdfUrl;
+    String? imageUrl;
 
-    if (filePath != null && filePath.isNotEmpty) {
-      body = FormData.fromMap({
-        "patientName": patientName,
-        "sessionType": sessionType,
-        "scheduledAt": scheduledAt.toUtc().toIso8601String(),
-        "price": price,
-        "sessionUrl": sessionUrl, // Still sending the URL if provided
-        "file": await MultipartFile.fromFile(
-          filePath,
-          filename: filePath.split('/').last,
-        ),
-      });
+    final String lowerType = sessionType.toLowerCase();
+    if (lowerType.contains('video')) {
+      videoUrl = mediaPath;
+    } else if (lowerType.contains('audio')) {
+      audioUrl = mediaPath;
+    } else if (lowerType.contains('pdf')) {
+      pdfUrl = mediaPath;
     } else {
-      body = {
-        "patientName": patientName,
-        "sessionType": sessionType,
-        "scheduledAt": scheduledAt.toUtc().toIso8601String(),
-        "price": price,
-        "sessionUrl": sessionUrl,
-      };
+      imageUrl = mediaPath;
     }
 
-    log(
-      'Creating session at: /api/DoctorSessions with body (keys): ${body is Map ? body.keys : 'FormData'}',
-    );
+    final Map<String, dynamic> body = {
+      "patientName": patientName,
+      "patientId": "P-12345", 
+      "sessionType": sessionType,
+      "scheduledAt": scheduledAt.toUtc().toIso8601String(),
+      "price": price ?? 0,
+      "videoUrl": videoUrl,
+      "audioUrl": audioUrl,
+      "pdfUrl": pdfUrl,
+      "imageUrl": imageUrl,
+    };
 
-    final response = await _dio.post(
-      '/api/DoctorSessions',
-      data: body,
-      options: Options(
-        contentType: body is FormData
-            ? 'multipart/form-data'
-            : 'application/json',
-      ),
-    );
+    log('Creating session at: /api/DoctorSessions with body: $body');
 
-    log('Create response: ${response.statusCode} - ${response.data}');
-    final code = response.statusCode ?? 0;
-    return code >= 200 && code < 300;
+    try {
+      final response = await _dio.post(
+        '/api/DoctorSessions',
+        data: body,
+        options: Options(
+          headers: {'accept': '*/*', 'Content-Type': 'application/json'},
+        ),
+      );
+
+      log('Create response: ${response.statusCode} - ${response.data}');
+      return response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300;
+    } on DioException catch (e) {
+      log('DioError: ${e.response?.statusCode} - ${e.response?.data}');
+      rethrow;
+    }
   }
 }

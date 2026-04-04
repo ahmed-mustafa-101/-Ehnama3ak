@@ -53,4 +53,15 @@ class FeedRepositoryImpl implements FeedRepository {
     required String userId,
   }) =>
       _api.addComment(postId: postId, text: text, userId: userId);
+
+  @override
+  Future<CommentModel> updateComment({
+    required String commentId,
+    required String text,
+    required String userId,
+  }) =>
+      _api.updateComment(commentId: commentId, text: text, userId: userId);
+
+  @override
+  Future<void> deleteComment(String commentId) => _api.deleteComment(commentId);
 }

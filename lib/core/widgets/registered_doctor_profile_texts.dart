@@ -109,8 +109,8 @@ class _RegisteredDoctorProfileTextsState
     final displayName = _resolveDisplayName(u);
 
     final String specializationText;
-    final fromUserSpec = u?.specialization?.trim();
-    if (fromUserSpec != null && fromUserSpec.isNotEmpty) {
+    final fromUserSpec = u?.specializationLine;
+    if (fromUserSpec != null && fromUserSpec.trim() != '—') {
       specializationText = fromUserSpec;
     } else {
       final fromStore = _specializationFromStorage?.trim();
@@ -118,8 +118,14 @@ class _RegisteredDoctorProfileTextsState
           (fromStore != null && fromStore.isNotEmpty) ? fromStore : '—';
     }
 
-    final y = u?.yearsOfExperience ?? _yearsFromStorage;
-    final yearsText = y != null ? '$y Years Exp' : '—';
+    final yearsText;
+    final fromUserYears = u?.yearsExperienceLine;
+    if (fromUserYears != null && fromUserYears.trim() != '—') {
+      yearsText = fromUserYears;
+    } else {
+      final y = _yearsFromStorage;
+      yearsText = y != null ? '$y Years Exp' : '—';
+    }
 
     return Column(
       crossAxisAlignment: widget.crossAxisAlignment,

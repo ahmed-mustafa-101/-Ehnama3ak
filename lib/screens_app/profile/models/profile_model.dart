@@ -19,7 +19,14 @@ class ProfileModel {
     return ProfileModel(
       fullName: json['fullName'] ?? json['FullName'] ?? '',
       email: json['email'] ?? '',
-      profileImageUrl: json['profileImageUrl'] ?? json['ProfileImage'] ?? json['imageUrl'] ?? json['image'] ?? '',
+      profileImageUrl: json['profileImageUrl'] ?? 
+                       json['ProfileImage'] ?? 
+                       json['imageUrl'] ?? 
+                       json['image'] ?? 
+                       json['photoPath'] ?? 
+                       json['profilePicture'] ?? 
+                       json['avatarUrl'] ?? 
+                       json['photoUrl'] ?? '',
       sessionsCount: json['sessionsCount'] ?? 0,
       exercisesCount: json['exercisesCount'] ?? 0,
       daysCount: json['daysCount'] ?? 0,

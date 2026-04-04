@@ -7,6 +7,9 @@ import 'package:ehnama3ak/screens_app/profile/presentation/cubit/profile_cubit.d
 import 'package:ehnama3ak/screens_app/doctor/dashboard/data/datasources/doctor_dashboard_api_service.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/localization/app_localizations.dart';
+import 'core/localization/locale_cubit.dart';
 import 'core/widgets/theme/theme_notifier.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/network/dio_client.dart';
@@ -44,7 +47,8 @@ import 'features/messages/data/datasources/message_api_service.dart';
 import 'features/messages/data/repositories/message_repository_impl.dart';
 import 'features/messages/presentation/controllers/message_cubit.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const EhnaMa3akApp());
 }
 
@@ -74,6 +78,7 @@ class EhnaMa3akApp extends StatelessWidget {
       value: feedRepo,
       child: MultiBlocProvider(
         providers: [
+          BlocProvider(create: (_) => LocaleCubit()..loadSavedLocale()),
           BlocProvider(
             create: (context) =>
                 AuthCubit(AuthRepositoryImpl(apiService, storage)),
@@ -81,7 +86,8 @@ class EhnaMa3akApp extends StatelessWidget {
           BlocProvider(create: (context) => FeedCubit(feedRepo)),
           BlocProvider(create: (context) => PodcastCubit(podcastRepo)),
           BlocProvider(create: (context) => ResourceCubit(resourceRepo)),
-          BlocProvider(create: (context) => SettingsCubit(settingsRepo, storage)),
+          BlocProvider(
+              create: (context) => SettingsCubit(settingsRepo, storage)),
           BlocProvider(create: (context) => HelpCubit(helpRepo)),
           BlocProvider(
             create: (context) => DoctorSessionsCubit(
@@ -94,8 +100,8 @@ class EhnaMa3akApp extends StatelessWidget {
             ),
           ),
           BlocProvider(
-            create: (context) =>
-                DoctorReportsCubit(DoctorReportsApiService(dio: dioClient.dio)),
+            create: (context) => DoctorReportsCubit(
+                DoctorReportsApiService(dio: dioClient.dio)),
           ),
           BlocProvider(
             create: (context) => NotificationCubit(
@@ -134,46 +140,55 @@ class EhnaMa3akApp extends StatelessWidget {
         child: ValueListenableBuilder<ThemeMode>(
           valueListenable: ThemeNotifier.themeMode,
           builder: (context, mode, _) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              title: 'Ehna Ma3ak',
-              themeMode: mode,
-
-              // Light Theme
-              theme: ThemeData(
-                primarySwatch: Colors.blue,
-                fontFamily: 'Roboto',
-                scaffoldBackgroundColor: Colors.white,
-                brightness: Brightness.light,
-                appBarTheme: const AppBarTheme(
-                  backgroundColor: Colors.white,
-                  iconTheme: IconThemeData(color: Colors.black),
-                  titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
-                ),
-              ),
-
-              // Dark Theme
-              darkTheme: ThemeData(
-                primarySwatch: Colors.blue,
-                fontFamily: 'Roboto',
-                scaffoldBackgroundColor: const Color(0xFF121212),
-                brightness: Brightness.dark,
-                colorScheme: const ColorScheme.dark(
-                  primary: Color(0xff0DA5FE),
-                  secondary: Color(0xff0DA5FE),
-                ),
-                appBarTheme: const AppBarTheme(
-                  backgroundColor: Color(0xFF121212),
-                  iconTheme: IconThemeData(color: Colors.white),
-                  titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
-                ),
-                textTheme: const TextTheme(
-                  bodyLarge: TextStyle(color: Colors.white),
-                  bodyMedium: TextStyle(color: Colors.white70),
-                ),
-              ),
-
-              home: const AuthWrapper(),
+            return BlocBuilder<LocaleCubit, Locale>(
+              builder: (context, locale) {
+                return MaterialApp(
+                  debugShowCheckedModeBanner: false,
+                  title: 'Ehna Ma3ak',
+                  themeMode: mode,
+                  locale: locale,
+                  supportedLocales: const [Locale('en'), Locale('ar')],
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+                  theme: ThemeData(
+                    primarySwatch: Colors.blue,
+                    fontFamily: 'Roboto',
+                    scaffoldBackgroundColor: Colors.white,
+                    brightness: Brightness.light,
+                    appBarTheme: const AppBarTheme(
+                      backgroundColor: Colors.white,
+                      iconTheme: IconThemeData(color: Colors.black),
+                      titleTextStyle:
+                          TextStyle(color: Colors.black, fontSize: 20),
+                    ),
+                  ),
+                  darkTheme: ThemeData(
+                    primarySwatch: Colors.blue,
+                    fontFamily: 'Roboto',
+                    scaffoldBackgroundColor: const Color(0xFF121212),
+                    brightness: Brightness.dark,
+                    colorScheme: const ColorScheme.dark(
+                      primary: Color(0xff0DA5FE),
+                      secondary: Color(0xff0DA5FE),
+                    ),
+                    appBarTheme: const AppBarTheme(
+                      backgroundColor: Color(0xFF121212),
+                      iconTheme: IconThemeData(color: Colors.white),
+                      titleTextStyle:
+                          TextStyle(color: Colors.white, fontSize: 20),
+                    ),
+                    textTheme: const TextTheme(
+                      bodyLarge: TextStyle(color: Colors.white),
+                      bodyMedium: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                  home: const AuthWrapper(),
+                );
+              },
             );
           },
         ),

@@ -1,3 +1,4 @@
+import 'package:ehnama3ak/features/feed/data/models/post_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ehnama3ak/core/storage/pref_manager.dart';
 import '../../data/datasources/feed_api_service.dart';
@@ -12,7 +13,15 @@ class FeedCubit extends Cubit<FeedState> {
 
   Future<void> loadFeed({bool refresh = false}) async {
     if (refresh) {
-      emit(state.copyWith(status: FeedStatus.loading, posts: [], currentPage: 1, hasReachedMax: false, clearError: true));
+      emit(
+        state.copyWith(
+          status: FeedStatus.loading,
+          posts: [],
+          currentPage: 1,
+          hasReachedMax: false,
+          clearError: true,
+        ),
+      );
     } else if (state.posts.isEmpty) {
       emit(state.copyWith(status: FeedStatus.loading, clearError: true));
     }
@@ -22,21 +31,28 @@ class FeedCubit extends Cubit<FeedState> {
       final posts = await _repo.getPosts(page: page, pageSize: _pageSize);
 
       final hasReachedMax = posts.length < _pageSize;
-      final newPosts = refresh ? posts : [...state.posts, ...posts];
+      List<PostModel> newPosts = refresh ? posts : [...state.posts, ...posts];
 
-      emit(state.copyWith(
-        status: FeedStatus.loaded,
-        posts: newPosts,
-        currentPage: page + 1,
-        hasReachedMax: hasReachedMax,
-        clearError: true,
-      ));
+      // Sort posts by date (newest first)
+      newPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      emit(
+        state.copyWith(
+          status: FeedStatus.loaded,
+          posts: newPosts,
+          currentPage: page + 1,
+          hasReachedMax: hasReachedMax,
+          clearError: true,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: FeedStatus.error,
-        errorMessage: FeedApiService.parseError(e),
-        clearError: false,
-      ));
+      emit(
+        state.copyWith(
+          status: FeedStatus.error,
+          errorMessage: FeedApiService.parseError(e),
+          clearError: false,
+        ),
+      );
     }
   }
 
@@ -47,21 +63,31 @@ class FeedCubit extends Cubit<FeedState> {
     emit(state.copyWith(status: FeedStatus.loadingMore));
 
     try {
-      final posts = await _repo.getPosts(page: state.currentPage, pageSize: _pageSize);
+      final posts = await _repo.getPosts(
+        page: state.currentPage,
+        pageSize: _pageSize,
+      );
       final hasReachedMax = posts.length < _pageSize;
-      final newPosts = [...state.posts, ...posts];
+      List<PostModel> newPosts = [...state.posts, ...posts];
 
-      emit(state.copyWith(
-        status: FeedStatus.loaded,
-        posts: newPosts,
-        currentPage: state.currentPage + 1,
-        hasReachedMax: hasReachedMax,
-      ));
+      // Keep sorted by date
+      newPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      emit(
+        state.copyWith(
+          status: FeedStatus.loaded,
+          posts: newPosts,
+          currentPage: state.currentPage + 1,
+          hasReachedMax: hasReachedMax,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: FeedStatus.loaded,
-        errorMessage: FeedApiService.parseError(e),
-      ));
+      emit(
+        state.copyWith(
+          status: FeedStatus.loaded,
+          errorMessage: FeedApiService.parseError(e),
+        ),
+      );
     }
   }
 
@@ -82,11 +108,19 @@ class FeedCubit extends Cubit<FeedState> {
         userId: userId,
       );
 
+      final currentName = await PrefManager.getUserName() ?? 'Me';
+      final currentAvatar = await PrefManager.getUserProfileImageUrl() ?? '';
+
       final newPost = responsePost.copyWith(
-        userName: 'Me',
-        userProfileImage: 'assets/images/image_patient.png',
-        imageUrl: (responsePost.imageUrl != null && responsePost.imageUrl!.isNotEmpty) 
-            ? responsePost.imageUrl 
+        userName: (responsePost.userName != 'Unknown')
+            ? responsePost.userName
+            : currentName,
+        userProfileImage: (responsePost.userProfileImage.isNotEmpty)
+            ? responsePost.userProfileImage
+            : currentAvatar,
+        imageUrl:
+            (responsePost.imageUrl != null && responsePost.imageUrl!.isNotEmpty)
+            ? responsePost.imageUrl
             : imagePath,
       );
 
@@ -101,7 +135,11 @@ class FeedCubit extends Cubit<FeedState> {
     if (userId.isEmpty) return;
 
     try {
-      await _repo.updatePost(postId: postId, content: content.trim(), userId: userId);
+      await _repo.updatePost(
+        postId: postId,
+        content: content.trim(),
+        userId: userId,
+      );
       final updated = state.posts.map((p) {
         if (p.id == postId) return p.copyWith(content: content.trim());
         return p;
@@ -115,10 +153,12 @@ class FeedCubit extends Cubit<FeedState> {
   Future<void> deletePost(String postId) async {
     try {
       await _repo.deletePost(postId);
-      emit(state.copyWith(
-        posts: state.posts.where((p) => p.id != postId).toList(),
-        clearError: true,
-      ));
+      emit(
+        state.copyWith(
+          posts: state.posts.where((p) => p.id != postId).toList(),
+          clearError: true,
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(errorMessage: FeedApiService.parseError(e)));
     }
@@ -158,7 +198,12 @@ class FeedCubit extends Cubit<FeedState> {
         }
         return p;
       }).toList();
-      emit(state.copyWith(posts: reverted, errorMessage: FeedApiService.parseError(e)));
+      emit(
+        state.copyWith(
+          posts: reverted,
+          errorMessage: FeedApiService.parseError(e),
+        ),
+      );
     }
   }
 
@@ -176,16 +221,30 @@ class FeedCubit extends Cubit<FeedState> {
       await _repo.addComment(postId: postId, text: text.trim(), userId: userId);
     } catch (e) {
       final reverted = state.posts.map((p) {
-        if (p.id == postId) return p.copyWith(commentsCount: p.commentsCount - 1);
+        if (p.id == postId)
+          return p.copyWith(commentsCount: p.commentsCount - 1);
         return p;
       }).toList();
-      emit(state.copyWith(posts: reverted, errorMessage: FeedApiService.parseError(e)));
+      emit(
+        state.copyWith(
+          posts: reverted,
+          errorMessage: FeedApiService.parseError(e),
+        ),
+      );
     }
   }
 
   void incrementCommentCount(String postId) {
     final updated = state.posts.map((p) {
       if (p.id == postId) return p.copyWith(commentsCount: p.commentsCount + 1);
+      return p;
+    }).toList();
+    emit(state.copyWith(posts: updated));
+  }
+
+  void incrementShareCount(String postId) {
+    final updated = state.posts.map((p) {
+      if (p.id == postId) return p.copyWith(sharesCount: p.sharesCount + 1);
       return p;
     }).toList();
     emit(state.copyWith(posts: updated));

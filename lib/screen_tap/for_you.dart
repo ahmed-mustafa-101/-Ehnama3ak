@@ -3,6 +3,7 @@ import 'package:ehnama3ak/core/storage/pref_manager.dart';
 import 'package:ehnama3ak/core/widgets/post_options_menu.dart';
 import 'package:ehnama3ak/core/utils/responsive.dart';
 import 'package:ehnama3ak/core/network/dio_client.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:ehnama3ak/features/feed/data/models/comment_model.dart';
 import 'package:ehnama3ak/features/feed/data/models/post_model.dart';
 import 'package:ehnama3ak/features/feed/domain/repositories/feed_repository.dart';
@@ -150,7 +151,7 @@ class _ForYouViewState extends State<ForYouView> {
                                 onPressed: () => context
                                     .read<FeedCubit>()
                                     .loadFeed(refresh: true),
-                                child: const Text('إعادة المحاولة'),
+                                child: Text(AppLocalizations.of(context).retry),
                               ),
                             ],
                           ),
@@ -209,6 +210,10 @@ class _ForYouViewState extends State<ForYouView> {
                               post.id,
                               post.commentsCount,
                             ),
+                            onShare: () {
+                              Share.share('${post.userName} posted:\n${post.content}');
+                              context.read<FeedCubit>().incrementShareCount(post.id);
+                            },
                           ),
                         ),
                       ),
@@ -230,6 +235,7 @@ class _ForYouViewState extends State<ForYouView> {
   }
 
   void _onEditPost(BuildContext context, String postId, String currentContent) {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: currentContent);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -237,24 +243,21 @@ class _ForYouViewState extends State<ForYouView> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        title: Text(
-          'تعديل المنشور',
-          style: TextStyle(color: isDark ? Colors.white : Colors.black),
-        ),
+        title: Text(l10n.editPost,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black)),
         content: TextField(
           controller: controller,
           maxLines: 4,
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
-            hintText: 'محتوى المنشور',
+            hintText: l10n.postContent,
             border: const OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء'),
-          ),
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () {
               final text = controller.text.trim();
@@ -263,7 +266,7 @@ class _ForYouViewState extends State<ForYouView> {
                 Navigator.pop(ctx);
               }
             },
-            child: const Text('حفظ'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -332,11 +335,7 @@ class _ForYouViewState extends State<ForYouView> {
                 children: [
                   CircleAvatar(
                     radius: Responsive.iconSize(context, 22),
-                    backgroundImage: (user?.profileImageUrl != null &&
-                            user!.profileImageUrl!.isNotEmpty)
-                        ? NetworkImage(_getFullImageUrl(user.profileImageUrl!))
-                        : const AssetImage('assets/images/user_avatar.png')
-                              as ImageProvider,
+                    backgroundImage: buildUserProfileImageProvider(user?.profileImageUrl ?? ''),
                   ),
                   SizedBox(width: Responsive.spacing(context, 12)),
               Expanded(
@@ -346,7 +345,7 @@ class _ForYouViewState extends State<ForYouView> {
                     TextField(
                       controller: _postController,
                       decoration: InputDecoration(
-                        hintText: "What's on your mind?",
+                        hintText: AppLocalizations.of(context).whatsOnYourMind,
                         hintStyle: TextStyle(
                           fontSize: Responsive.fontSize(context, 16),
                           color: isDark
@@ -426,7 +425,9 @@ class _ForYouViewState extends State<ForYouView> {
                     size: Responsive.iconSize(context, 18),
                   ),
                   label: Text(
-                    _selectedImage == null ? "Photo" : "Change",
+                    _selectedImage == null
+                        ? AppLocalizations.of(context).photo
+                        : AppLocalizations.of(context).change,
                     style: TextStyle(
                       color: const Color(0xFF1E88E5),
                       fontWeight: FontWeight.w500,
@@ -453,8 +454,8 @@ class _ForYouViewState extends State<ForYouView> {
                       FocusScope.of(context).unfocus();
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please enter text or select an image'),
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context).pleaseEnterText),
                         ),
                       );
                     }
@@ -473,7 +474,7 @@ class _ForYouViewState extends State<ForYouView> {
                     ),
                     child: Center(
                       child: Text(
-                        "Post",
+                        AppLocalizations.of(context).post,
                         style: TextStyle(
                           fontSize: Responsive.fontSize(context, 8),
                           color: Colors.white,
@@ -502,6 +503,7 @@ class PostCard extends StatelessWidget {
   final void Function(String) onDelete;
   final VoidCallback onLike;
   final VoidCallback onComment;
+  final VoidCallback onShare;
 
   const PostCard({
     super.key,
@@ -511,14 +513,21 @@ class PostCard extends StatelessWidget {
     required this.onDelete,
     required this.onLike,
     required this.onComment,
+    required this.onShare,
   });
 
   String _formatTime(DateTime time) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes} mins';
+    // API times are usually in UTC, so we compare with toUtc() for accuracy
+    final diff = DateTime.now().toUtc().difference(time.toUtc());
+    
+    if (diff.inSeconds < 10) return 'Just now';
+    if (diff.inSeconds < 60) return '${diff.inSeconds} sec';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} mins';
     if (diff.inHours < 24) return '${diff.inHours} hours';
-    return '${diff.inDays} days';
+    if (diff.inDays < 7) return '${diff.inDays} days';
+    
+    // Fallback for older posts
+    return '${time.day}/${time.month}/${time.year}';
   }
 
   Widget _buildPostImage(BuildContext context, String imagePath) {
@@ -634,14 +643,9 @@ class PostCard extends StatelessWidget {
     );
   }
 
+  // Moved to top-level helper function for reuse in _CommentTile
   ImageProvider? _buildUserProfileImageProvider(String path) {
-    if (path.isEmpty) return null;
-    if (path.startsWith('assets/')) return AssetImage(path);
-    if (path.startsWith('http')) return NetworkImage(path);
-
-    const String baseUrl = 'http://e7nama3ak.runasp.net';
-    final fullUrl = path.startsWith('/') ? '$baseUrl$path' : '$baseUrl/$path';
-    return NetworkImage(fullUrl);
+    return buildUserProfileImageProvider(path);
   }
 
   @override
@@ -680,12 +684,7 @@ class PostCard extends StatelessWidget {
                 backgroundColor: isDark
                     ? const Color(0xFF2C2C2C)
                     : const Color(0xFFCFD8DC),
-                backgroundImage: post.userProfileImage.isNotEmpty
-                    ? _buildUserProfileImageProvider(post.userProfileImage)
-                    : null,
-                child: post.userProfileImage.isEmpty
-                    ? const Icon(Icons.person, color: Colors.white)
-                    : null,
+                backgroundImage: buildUserProfileImageProvider(post.userProfileImage),
               ),
               SizedBox(width: Responsive.spacing(context, 10)),
               Expanded(
@@ -784,9 +783,7 @@ class PostCard extends StatelessWidget {
               ),
               SizedBox(width: Responsive.spacing(context, 18)),
               InkWell(
-                onTap: () {
-                  Share.share('${post.userName} posted:\n${post.content}');
-                },
+                onTap: onShare,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -796,6 +793,13 @@ class PostCard extends StatelessWidget {
                       color: Colors.grey,
                     ),
                     SizedBox(width: Responsive.spacing(context, 4)),
+                    Text(
+                      '${post.sharesCount}',
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black87,
+                        fontSize: Responsive.fontSize(context, 14),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -825,11 +829,18 @@ class _CommentsSheet extends StatefulWidget {
 class _CommentsSheetState extends State<_CommentsSheet> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _loadUserId();
+  }
+
+  Future<void> _loadUserId() async {
+    final id = await PrefManager.getUserId();
+    if (mounted) setState(() => _currentUserId = id);
   }
 
   void _onScroll() {
@@ -862,7 +873,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
             child: Row(
               children: [
                 Text(
-                  'Comments',
+                  AppLocalizations.of(context).comments,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -920,6 +931,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                     return _CommentTile(
                       comment: comments[index],
                       isDark: widget.isDark,
+                      currentUserId: _currentUserId,
                     );
                   },
                 );
@@ -943,7 +955,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                       color: widget.isDark ? Colors.white : Colors.black,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Write a comment...',
+                      hintText: AppLocalizations.of(context).writeAComment,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),
@@ -979,11 +991,75 @@ class _CommentsSheetState extends State<_CommentsSheet> {
 class _CommentTile extends StatelessWidget {
   final CommentModel comment;
   final bool isDark;
+  final String? currentUserId;
 
-  const _CommentTile({required this.comment, required this.isDark});
+  const _CommentTile({
+    required this.comment, 
+    required this.isDark,
+    this.currentUserId,
+  });
+
+  void _showEditDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final controller = TextEditingController(text: comment.text);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.editComment),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: InputDecoration(hintText: l10n.enterCommentText),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newText = controller.text.trim();
+              if (newText.isNotEmpty && newText != comment.text) {
+                context.read<CommentsCubit>().updateComment(comment.id, newText);
+              }
+              Navigator.pop(ctx);
+            },
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteComment),
+        content: Text(l10n.deleteCommentConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<CommentsCubit>().deleteComment(comment.id);
+              Navigator.pop(ctx);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bool isMyComment = currentUserId != null && currentUserId == comment.userId;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -994,25 +1070,63 @@ class _CommentTile extends StatelessWidget {
             backgroundColor: isDark
                 ? const Color(0xFF2C2C2C)
                 : const Color(0xFFCFD8DC),
-            backgroundImage: comment.userProfileImage.isNotEmpty
-                ? AssetImage(comment.userProfileImage)
-                : null,
-            child: comment.userProfileImage.isEmpty
-                ? const Icon(Icons.person, color: Colors.white, size: 18)
-                : null,
+            backgroundImage: buildUserProfileImageProvider(comment.userProfileImage),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  comment.userName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      comment.userName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    if (isMyComment)
+                      PopupMenuButton<String>(
+                        icon: Icon(
+                          Icons.more_vert,
+                          size: 16,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            _showEditDialog(context);
+                          } else if (value == 'delete') {
+                            _confirmDelete(context);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.edit, size: 18),
+                                const SizedBox(width: 8),
+                                Text(AppLocalizations.of(context).edit),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.delete, size: 18, color: Colors.red),
+                                const SizedBox(width: 8),
+                                Text(AppLocalizations.of(context).delete,
+                                    style: const TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -1029,4 +1143,22 @@ class _CommentTile extends StatelessWidget {
       ),
     );
   }
+}
+
+// Helper function to build ImageProvider for user profile pictures
+ImageProvider buildUserProfileImageProvider(String path) {
+  if (path.isEmpty || path.toLowerCase() == 'null' || path.toLowerCase() == 'string') {
+    return const AssetImage('assets/images/user_avatar.png');
+  }
+  
+  // Normalize path if it contains backslashes (common in some backends) or is malformed
+  String normalizedPath = path.trim().replaceAll('\\', '/');
+  
+  if (normalizedPath.startsWith('assets/')) return AssetImage(normalizedPath);
+  if (normalizedPath.startsWith('http')) return NetworkImage(normalizedPath);
+
+  const String baseUrl = 'http://e7nama3ak.runasp.net';
+  // Ensure we don't have double slashes if the path already starts with one
+  final cleanPath = normalizedPath.startsWith('/') ? normalizedPath : '/$normalizedPath';
+  return NetworkImage('$baseUrl$cleanPath');
 }
