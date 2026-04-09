@@ -1,5 +1,6 @@
 import 'package:ehnama3ak/core/widgets/app_button.dart';
 import 'package:ehnama3ak/core/utils/responsive.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../core/widgets/app_icon_back.dart';
 import 'chatbot_screen.dart';
@@ -27,7 +28,7 @@ class ChatbotIntroScreen extends StatelessWidget {
           ),
           SizedBox(height: Responsive.spacing(context, 10)),
           Text(
-            "Your AI Assistant",
+            AppLocalizations.of(context).chatbotTitle,
             style: TextStyle(
               fontSize: Responsive.fontSize(context, 26),
               fontWeight: FontWeight.w700,
@@ -49,7 +50,7 @@ class ChatbotIntroScreen extends StatelessWidget {
                           horizontal: Responsive.padding(context, 10),
                         ),
                         child: Text(
-                          "Chat with me, you can ask questions and receive articles using artificial intelligent assistant",
+                          AppLocalizations.of(context).chatbotDesc,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: Responsive.fontSize(context, 15),
@@ -81,7 +82,7 @@ class ChatbotIntroScreen extends StatelessWidget {
                             horizontal: Responsive.padding(context, 10),
                           ),
                           child: Text(
-                            "Chat with me, you can ask questions and receive articles using artificial intelligent assistant",
+                            AppLocalizations.of(context).chatbotDesc,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: Responsive.fontSize(context, 15),
@@ -133,8 +134,8 @@ class ChatbotIntroScreen extends StatelessWidget {
                 desktop: 130,
               ),
             ),
-            child: AppButton(
-              label: "Get Started",
+              child: AppButton(
+              label: AppLocalizations.of(context).getStarted,
               height: Responsive.height(context, 0.05).clamp(45, 55),
               width: Responsive.width(context, 0.4),
               textStyle: TextStyle(

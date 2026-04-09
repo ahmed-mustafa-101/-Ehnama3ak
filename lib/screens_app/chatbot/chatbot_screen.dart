@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:image_picker/image_picker.dart';
 
@@ -75,11 +76,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           _messages.add(
             _ChatMessage(text: "", isUser: true, image: File(pickedFile.path)),
           );
-
-          // البوت يرد برسالة تلقائية بعد استقبال الصورة
           _messages.add(
             _ChatMessage(
-              text: "I've received your image. How can I help you with it?",
+              text: AppLocalizations.of(context).imageReceived,
               isUser: false,
             ),
           );
@@ -103,9 +102,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "Select Image Source",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              AppLocalizations.of(context).selectImageSource,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Row(
@@ -113,19 +112,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               children: [
                 _buildOption(
                   icon: Icons.camera_alt,
-                  label: "Camera",
-                  onTap: () {
-                    Navigator.pop(context);
-                    _pickImage(ImageSource.camera);
-                  },
+                  label: AppLocalizations.of(context).camera,
+                  onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
                 ),
                 _buildOption(
                   icon: Icons.photo_library,
-                  label: "Gallery",
-                  onTap: () {
-                    Navigator.pop(context);
-                    _pickImage(ImageSource.gallery);
-                  },
+                  label: AppLocalizations.of(context).gallery,
+                  onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
                 ),
               ],
             ),
@@ -167,11 +160,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     setState(() {
       _messages.add(_ChatMessage(text: text, isUser: true));
       _inputCtrl.clear();
-
       _messages.add(
         _ChatMessage(
-          text:
-              "Thank you for sharing this.\nCan you tell me a bit more about how this makes you feel?",
+          text: AppLocalizations.of(context).botReply,
           isUser: false,
         ),
       );
@@ -259,9 +250,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         Expanded(
                           child: TextField(
                             controller: _inputCtrl,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               border: InputBorder.none,
-                              hintText: 'Ask Depo ....',
+                              hintText: AppLocalizations.of(context).askDepo,
                               hintStyle: TextStyle(
                                 color: Color(0xFF9FB0C0),
                                 fontSize: 18,
@@ -391,7 +382,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 await Clipboard.setData(ClipboardData(text: msg.text));
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied to clipboard')),
+                    SnackBar(content: Text(AppLocalizations.of(context).copiedToClipboard)),
                   );
                 }
               },

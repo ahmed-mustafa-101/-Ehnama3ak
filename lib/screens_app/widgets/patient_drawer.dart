@@ -1,7 +1,6 @@
 import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/core/widgets/logout_dialog.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
-import 'package:ehnama3ak/core/localization/locale_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/models/user_role.dart';
@@ -57,7 +56,12 @@ class AppDrawer extends StatelessWidget {
                     const Divider(height: 30),
                     _item(context, Icons.home_rounded, l10n.home, 0),
                     _item(context, Icons.autorenew_rounded, l10n.myProgress, 1),
-                    _item(context, Icons.people_alt_outlined, l10n.therapists, 2),
+                    _item(
+                      context,
+                      Icons.people_alt_outlined,
+                      l10n.therapists,
+                      2,
+                    ),
                     _item(context, Icons.public, l10n.resources, 3),
                     _item(context, Icons.settings_outlined, l10n.settings, 4),
                     _item(
@@ -178,17 +182,20 @@ class AppDrawer extends StatelessWidget {
                     ? Colors.white
                     : Colors.black87));
 
-    return ListTile(
-      leading: Icon(icon, size: 30, color: itemColor),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: logout || selected ? FontWeight.w600 : FontWeight.w400,
-          color: itemColor,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10, left: 2),
+      child: ListTile(
+        leading: Icon(icon, size: 28, color: itemColor),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: logout || selected ? FontWeight.bold : FontWeight.w500,
+            color: itemColor,
+          ),
         ),
+        onTap: onTap ?? () => onSelect(index),
       ),
-      onTap: onTap ?? () => onSelect(index),
     );
   }
 

@@ -102,7 +102,7 @@ class CustomAppBar extends StatelessWidget {
             },
           ),
 
-          const SizedBox(width: 4),
+          const SizedBox(width: 2),
 
           // Messenger icon with unread badge
           BlocBuilder<MessageCubit, MessageState>(

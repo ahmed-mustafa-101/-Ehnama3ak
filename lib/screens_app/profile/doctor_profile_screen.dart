@@ -1,6 +1,7 @@
 import 'package:ehnama3ak/core/utils/responsive.dart';
 import 'package:ehnama3ak/core/widgets/registered_doctor_profile_texts.dart';
 import 'package:ehnama3ak/core/widgets/main_layout.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/auth/presentation/controllers/auth_cubit.dart';
@@ -12,7 +13,6 @@ import 'package:ehnama3ak/screens_app/doctor/dashboard/models/upload_models.dart
 
 class DoctorProfileScreen extends StatefulWidget {
   const DoctorProfileScreen({super.key});
-
   @override
   State<DoctorProfileScreen> createState() => _DoctorProfileScreenState();
 }
@@ -30,12 +30,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     final String fullUrl = cleanUrl.startsWith('http')
         ? cleanUrl
         : '${DioClient.baseUrl}${cleanUrl.startsWith('/') ? cleanUrl : '/$cleanUrl'}';
-    // Cache-busting
     final ts = DateTime.now().millisecondsSinceEpoch ~/ 60000;
     return '$fullUrl?v=$ts';
   }
 
   void _showAddRecordDialog() {
+    final l10n = AppLocalizations.of(context);
     final patientIdCtrl = TextEditingController();
     final diagnosisCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
@@ -44,26 +44,26 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Patient Record'),
+        title: Text(l10n.addPatientRecord),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: patientIdCtrl,
-                decoration: const InputDecoration(labelText: 'Patient ID'),
+                decoration: InputDecoration(labelText: l10n.patientId),
               ),
               TextField(
                 controller: diagnosisCtrl,
-                decoration: const InputDecoration(labelText: 'Diagnosis'),
+                decoration: InputDecoration(labelText: l10n.diagnosis),
               ),
               TextField(
                 controller: notesCtrl,
-                decoration: const InputDecoration(labelText: 'Notes'),
+                decoration: InputDecoration(labelText: l10n.notes),
               ),
               TextField(
                 controller: treatmentPlanCtrl,
-                decoration: const InputDecoration(labelText: 'Treatment Plan'),
+                decoration: InputDecoration(labelText: l10n.treatmentPlan),
               ),
             ],
           ),
@@ -71,7 +71,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -85,7 +89,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 ),
               );
             },
-            child: const Text('Add'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.add),
           ),
         ],
       ),
@@ -93,6 +101,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   }
 
   void _showUploadReportDialog() {
+    final l10n = AppLocalizations.of(context);
     final patientIdCtrl = TextEditingController();
     final typeCtrl = TextEditingController();
     final urlCtrl = TextEditingController();
@@ -100,28 +109,32 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Upload Medical Report'),
+        title: Text(l10n.uploadMedicalReport),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: patientIdCtrl,
-              decoration: const InputDecoration(labelText: 'Patient ID'),
+              decoration: InputDecoration(labelText: l10n.patientId),
             ),
             TextField(
               controller: typeCtrl,
-              decoration: const InputDecoration(labelText: 'Report Type'),
+              decoration: InputDecoration(labelText: l10n.reportType),
             ),
             TextField(
               controller: urlCtrl,
-              decoration: const InputDecoration(labelText: 'File URL'),
+              decoration: InputDecoration(labelText: l10n.fileUrl),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -129,7 +142,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               context.read<DoctorDashboardCubit>().uploadReport(
                 UploadReportModel(
                   id: 0,
-                  doctorId: "", // Backend usually gets this from token
+                  doctorId: "",
                   patientId: patientIdCtrl.text,
                   type: typeCtrl.text,
                   fileUrl: urlCtrl.text,
@@ -137,7 +150,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 ),
               );
             },
-            child: const Text('Upload'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.upload),
           ),
         ],
       ),
@@ -147,14 +164,15 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return BlocListener<DoctorDashboardCubit, DoctorDashboardState>(
       listener: (context, state) {
         if (state is ActionLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Processing...'),
-              duration: Duration(milliseconds: 500),
+            SnackBar(
+              content: Text(l10n.processing),
+              duration: const Duration(milliseconds: 500),
             ),
           );
         } else if (state is ActionSuccess) {
@@ -194,7 +212,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     onPressed: () => context
                         .read<DoctorDashboardCubit>()
                         .loadDashboardData(),
-                    child: const Text('Retry'),
+                    child: Text(l10n.retry),
                   ),
                 ],
               ),
@@ -217,7 +235,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ===== Header Row =====
+                    // Header
                     BlocBuilder<AuthCubit, AuthState>(
                       buildWhen: (prev, curr) {
                         if (curr is AuthSuccess) {
@@ -247,13 +265,14 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                 backgroundColor: Colors.grey[200],
                                 backgroundImage:
                                     (user?.profileImageUrl != null &&
-                                            user!.profileImageUrl!.isNotEmpty)
-                                        ? NetworkImage(_getFullImageUrl(
-                                            user.profileImageUrl!))
-                                        : const AssetImage(
-                                                'assets/images/user_avatar.png',
-                                              )
-                                              as ImageProvider,
+                                        user!.profileImageUrl!.isNotEmpty)
+                                    ? NetworkImage(
+                                        _getFullImageUrl(user.profileImageUrl!),
+                                      )
+                                    : const AssetImage(
+                                            'assets/images/user_avatar.png',
+                                          )
+                                          as ImageProvider,
                               ),
                             ),
                             SizedBox(width: Responsive.spacing(context, 15)),
@@ -291,8 +310,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                   SizedBox(
                                     height: Responsive.spacing(context, 8),
                                   ),
-
-                                  // Stars and Available badge
                                   Wrap(
                                     spacing: Responsive.spacing(context, 8),
                                     runSpacing: Responsive.spacing(context, 8),
@@ -353,7 +370,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                               ),
                                             ),
                                             Text(
-                                              'Available',
+                                              l10n.available,
                                               style: TextStyle(
                                                 color: const Color(0xFF0DA5FE),
                                                 fontWeight: FontWeight.bold,
@@ -377,7 +394,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     ),
                     SizedBox(height: Responsive.spacing(context, 30)),
 
-                    // ===== Up Next Appointment =====
+                    // Dashboard Stats
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(Responsive.padding(context, 16)),
@@ -393,7 +410,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Dashboard Stats',
+                            l10n.dashboardStats,
                             style: TextStyle(
                               fontSize: Responsive.fontSize(context, 18),
                               fontWeight: FontWeight.bold,
@@ -401,7 +418,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                           ),
                           SizedBox(height: Responsive.spacing(context, 8)),
                           Text(
-                            'Upcoming: ${stats.upcomingSessionsCount} Sessions',
+                            '${l10n.upcoming}: ${stats.upcomingSessionsCount} ${l10n.sessionsTitle}',
                             style: TextStyle(
                               fontSize: Responsive.fontSize(context, 16),
                               color: isDark ? Colors.white70 : Colors.black87,
@@ -413,7 +430,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     ),
                     SizedBox(height: Responsive.spacing(context, 30)),
 
-                    // ===== Dashboard Grid =====
+                    // Grid
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -425,7 +442,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         _dashboardItem(
                           context,
                           Icons.calendar_month_rounded,
-                          'Sessions',
+                          l10n.sessionsTitle,
                           const Color(0xFF0DA5FE),
                           -1,
                           count: stats.sessionsCount,
@@ -433,7 +450,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         _dashboardItem(
                           context,
                           Icons.notifications_rounded,
-                          'News',
+                          l10n.news,
                           Colors.orange,
                           -1,
                           count: stats.newsCount,
@@ -441,7 +458,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         _dashboardItem(
                           context,
                           Icons.groups_rounded,
-                          'Patients',
+                          l10n.patients,
                           Colors.purple,
                           -1,
                           count: stats.patientsCount,
@@ -449,7 +466,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         _dashboardItem(
                           context,
                           Icons.chat_bubble_rounded,
-                          'Upcoming Sessions',
+                          l10n.upcomingSessions,
                           const Color(0xFF0DA5FE),
                           -1,
                           count: stats.upcomingSessionsCount,
@@ -457,24 +474,24 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         _dashboardItem(
                           context,
                           Icons.person_pin_rounded,
-                          'Add Record',
+                          l10n.addRecord,
                           const Color(0xFF1E88E5),
-                          -2, // Special code for Add Record
+                          -2,
                         ),
                         _dashboardItem(
                           context,
                           Icons.analytics_rounded,
-                          'Upload Report',
+                          l10n.upload,
                           const Color(0xFF43A047),
-                          -3, // Special code for Upload Report
+                          -3,
                         ),
                       ],
                     ),
                     SizedBox(height: Responsive.spacing(context, 40)),
 
-                    // ===== Recent Activity =====
+                    // Recent Activity
                     Text(
-                      'Recent Activity',
+                      l10n.recentActivity,
                       style: TextStyle(
                         fontSize: Responsive.fontSize(context, 22),
                         fontWeight: FontWeight.bold,
@@ -482,12 +499,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     ),
                     SizedBox(height: Responsive.spacing(context, 15)),
                     activity.isEmpty
-                        ? const Padding(
-                            padding: EdgeInsets.all(20.0),
+                        ? Padding(
+                            padding: const EdgeInsets.all(20.0),
                             child: Center(
                               child: Text(
-                                'No recent activity.',
-                                style: TextStyle(color: Colors.grey),
+                                l10n.noRecentActivity,
+                                style: const TextStyle(color: Colors.grey),
                               ),
                             ),
                           )
@@ -511,34 +528,32 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                           ),
                     SizedBox(height: Responsive.spacing(context, 40)),
 
-                    // ===== Medical Reports =====
+                    // Medical Reports
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Medical Reports',
+                          l10n.medicalReports,
                           style: TextStyle(
                             fontSize: Responsive.fontSize(context, 22),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         TextButton(
-                          onPressed: () {
-                            _showUploadReportDialog();
-                          },
-                          child: const Text('Upload New'),
+                          onPressed: _showUploadReportDialog,
+                          child: Text(l10n.uploadNew),
                         ),
                       ],
                     ),
                     SizedBox(height: Responsive.spacing(context, 15)),
                     (state.medicalReports == null ||
                             state.medicalReports!.isEmpty)
-                        ? const Padding(
-                            padding: EdgeInsets.all(20.0),
+                        ? Padding(
+                            padding: const EdgeInsets.all(20.0),
                             child: Center(
                               child: Text(
-                                'No medical reports.',
-                                style: TextStyle(color: Colors.grey),
+                                l10n.noMedicalReports,
+                                style: const TextStyle(color: Colors.grey),
                               ),
                             ),
                           )

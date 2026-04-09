@@ -1,5 +1,6 @@
 import 'package:ehnama3ak/core/widgets/app_icon_back.dart';
 import 'package:ehnama3ak/core/widgets/main_layout.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../welcome/welcome_screen.dart';
 import '../../core/widgets/app_background.dart';
@@ -40,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final maxContentWidth = Responsive.getMaxContentWidth(context);
+    final l10n = AppLocalizations.of(context);
 
     return Theme(
       data: ThemeData.light(),
@@ -93,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           SizedBox(height: Responsive.spacing(context, 16)),
                           Text(
-                            'Enter your email & password',
+                            l10n.loginTitle,
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: Responsive.fontSize(context, 20),
@@ -118,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   // Email
                                   AppTextField(
                                     controller: emailCtrl,
-                                    hintText: 'Email',
+                                    hintText: l10n.emailHint,
                                     prefixIcon: Icons.email_outlined,
                                     keyboardType: TextInputType.emailAddress,
                                     borderRadius: Responsive.borderRadius(
@@ -132,14 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       fontSize: Responsive.fontSize(context, 16),
                                     ),
                                     validator: (v) {
-                                      if (v == null || v.trim().isEmpty) {
-                                        return 'Enter email';
-                                      }
-                                      if (!RegExp(
-                                        r'^[^@]+@[^@]+\.[^@]+',
-                                      ).hasMatch(v.trim())) {
-                                        return 'Enter valid email';
-                                      }
+                                      if (v == null || v.trim().isEmpty) return l10n.enterEmail;
+                                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v.trim())) return l10n.enterValidEmail;
                                       return null;
                                     },
                                   ),
@@ -149,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   // Password
                                   AppTextField(
                                     controller: passCtrl,
-                                    hintText: 'Password',
+                                    hintText: l10n.passwordHint,
                                     prefixIcon: Icons.lock_outline,
                                     obscureText: _obscure,
                                     showObscureToggle: true,
@@ -166,12 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       fontSize: Responsive.fontSize(context, 16),
                                     ),
                                     validator: (v) {
-                                      if (v == null || v.isEmpty) {
-                                        return 'Enter password';
-                                      }
-                                      if (v.length < 6) {
-                                        return 'Password must be >= 6 chars';
-                                      }
+                                      if (v == null || v.isEmpty) return l10n.enterPassword;
+                                      if (v.length < 6) return l10n.passwordMin;
                                       return null;
                                     },
                                   ),
@@ -212,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       SizedBox(
                                           width: Responsive.spacing(context, 8)),
                                       Text(
-                                        'Remember Me',
+                                        l10n.rememberMe,
                                         style: TextStyle(
                                           color: Colors.black,
                                           fontSize:
@@ -222,8 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       const Spacer(),
                                       TextButton(
                                         onPressed: () {},
-                                        child: Text(
-                                          'Forgot Password?',
+                                        child: Text(l10n.forgotPassword,
                                           style: TextStyle(
                                             color: const Color(0xFF1E88E5),
                                             fontSize:

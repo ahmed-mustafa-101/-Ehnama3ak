@@ -69,7 +69,9 @@ class DoctorSettingsScreen extends StatelessWidget {
                       child: Text(
                         l10n.editProfile,
                         style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   );
@@ -81,9 +83,12 @@ class DoctorSettingsScreen extends StatelessWidget {
                 Icons.notifications_active_outlined,
                 l10n.notifications,
                 hasDivider: true,
-                onTap: () => Navigator.push(context,
-                    MaterialPageRoute(
-                        builder: (_) => const NotificationsScreen())),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationsScreen(),
+                  ),
+                ),
               ),
               _buildSettingItem(
                 context,
@@ -166,9 +171,13 @@ class DoctorSettingsScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(l10n.selectLanguage,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  l10n.selectLanguage,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 _LanguageTile(
                   label: 'English',
@@ -209,7 +218,10 @@ class DoctorSettingsScreen extends StatelessWidget {
   }
 
   Widget _buildDoctorHeader(
-      BuildContext context, bool isDark, AppLocalizations l10n) {
+    BuildContext context,
+    bool isDark,
+    AppLocalizations l10n,
+  ) {
     return BlocBuilder<AuthCubit, AuthState>(
       buildWhen: (prev, curr) {
         if (curr is AuthSuccess) {
@@ -225,14 +237,15 @@ class DoctorSettingsScreen extends StatelessWidget {
             GestureDetector(
               onTap: () async {
                 final picker = ImagePicker();
-                final XFile? image =
-                    await picker.pickImage(source: ImageSource.gallery);
+                final XFile? image = await picker.pickImage(
+                  source: ImageSource.gallery,
+                );
                 if (image != null) {
                   if (!context.mounted) return;
                   context.read<AuthCubit>().updateProfileImage(image.path);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.uploadingImage)),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(l10n.uploadingImage)));
                 }
               },
               child: Stack(
@@ -248,11 +261,14 @@ class DoctorSettingsScreen extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 60,
                       backgroundColor: Colors.grey[200],
-                      backgroundImage: (user?.profileImageUrl != null &&
+                      backgroundImage:
+                          (user?.profileImageUrl != null &&
                               user!.profileImageUrl!.isNotEmpty)
-                          ? NetworkImage(_getFullImageUrl(user.profileImageUrl!))
+                          ? NetworkImage(
+                              _getFullImageUrl(user.profileImageUrl!),
+                            )
                           : const AssetImage('assets/images/user_avatar.png')
-                              as ImageProvider,
+                                as ImageProvider,
                     ),
                   ),
                   Positioned(
@@ -264,8 +280,11 @@ class DoctorSettingsScreen extends StatelessWidget {
                         color: Color(0xFF0DA5FE),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.camera_alt,
-                          color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -281,10 +300,11 @@ class DoctorSettingsScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87,
               ),
-              specializationStyle:
-                  TextStyle(color: Colors.grey.shade600, fontSize: 16),
-              yearsStyle:
-                  TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              specializationStyle: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 16,
+              ),
+              yearsStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
             const SizedBox(height: 8),
             Row(
@@ -293,30 +313,40 @@ class DoctorSettingsScreen extends StatelessWidget {
                 Row(
                   children: List.generate(
                     10,
-                    (index) => Icon(Icons.star,
-                        size: 16,
-                        color: index < 7
-                            ? const Color(0xFF0DA5FE)
-                            : Colors.grey.shade400),
+                    (index) => Icon(
+                      Icons.star,
+                      size: 16,
+                      color: index < 7
+                          ? const Color(0xFF0DA5FE)
+                          : Colors.grey.shade400,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 15),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
-                      const CircleAvatar(radius: 4, backgroundColor: Colors.green),
+                      const CircleAvatar(
+                        radius: 4,
+                        backgroundColor: Colors.green,
+                      ),
                       const SizedBox(width: 5),
-                      Text(AppLocalizations.of(context).available,
-                          style: TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12)),
+                      Text(
+                        AppLocalizations.of(context).available,
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -355,9 +385,11 @@ class DoctorSettingsScreen extends StatelessWidget {
       child: Column(
         children: [
           ListTile(
-            leading: Icon(icon,
-                color: isLogout ? Colors.red : const Color(0xFF0DA5FE),
-                size: 28),
+            leading: Icon(
+              icon,
+              color: isLogout ? Colors.red : const Color(0xFF0DA5FE),
+              size: 28,
+            ),
             title: Text(
               title,
               style: TextStyle(
@@ -372,12 +404,16 @@ class DoctorSettingsScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (trailingText != null)
-                  Text(trailingText,
-                      style:
-                          const TextStyle(color: Colors.grey, fontSize: 14)),
+                  Text(
+                    trailingText,
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
                 const SizedBox(width: 5),
-                const Icon(Icons.arrow_forward_ios,
-                    size: 16, color: Colors.grey),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey,
+                ),
               ],
             ),
             onTap: onTap ?? () {},
@@ -386,7 +422,9 @@ class DoctorSettingsScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Divider(
-                  height: 1, color: Colors.grey.withValues(alpha: 0.2)),
+                height: 1,
+                color: Colors.grey.withValues(alpha: 0.2),
+              ),
             ),
         ],
       ),
@@ -394,13 +432,19 @@ class DoctorSettingsScreen extends StatelessWidget {
   }
 
   void _showEditProfileDialog(
-      BuildContext context, AuthModel? user, AppLocalizations l10n) {
-    final nameController =
-        TextEditingController(text: user?.displayNameLine ?? '');
-    final specController =
-        TextEditingController(text: (user?.specialization ?? '').trim());
-    final yearsController =
-        TextEditingController(text: user?.yearsOfExperience?.toString() ?? '');
+    BuildContext context,
+    AuthModel? user,
+    AppLocalizations l10n,
+  ) {
+    final nameController = TextEditingController(
+      text: user?.displayNameLine ?? '',
+    );
+    final specController = TextEditingController(
+      text: (user?.specialization ?? '').trim(),
+    );
+    final yearsController = TextEditingController(
+      text: user?.yearsOfExperience?.toString() ?? '',
+    );
 
     showDialog(
       context: context,
@@ -421,8 +465,9 @@ class DoctorSettingsScreen extends StatelessWidget {
               ),
               TextField(
                 controller: yearsController,
-                decoration:
-                    const InputDecoration(labelText: 'Years of experience'),
+                decoration: const InputDecoration(
+                  labelText: 'Years of experience',
+                ),
                 keyboardType: TextInputType.number,
                 readOnly: true,
               ),
@@ -447,7 +492,9 @@ class DoctorSettingsScreen extends StatelessWidget {
               final settingsCubit = context.read<SettingsCubit>();
               final authCubit = context.read<AuthCubit>();
               await settingsCubit.updateProfile(
-                  name: newName, email: user?.email ?? '');
+                name: newName,
+                email: user?.email ?? '',
+              );
               if (context.mounted) await authCubit.reloadUser();
             },
             child: Text(l10n.save),
@@ -457,8 +504,7 @@ class DoctorSettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showChangePasswordDialog(
-      BuildContext context, AppLocalizations l10n) {
+  void _showChangePasswordDialog(BuildContext context, AppLocalizations l10n) {
     final cpCtrl = TextEditingController();
     final npCtrl = TextEditingController();
     showDialog(
@@ -469,41 +515,46 @@ class DoctorSettingsScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-                controller: cpCtrl,
-                obscureText: true,
-                decoration:
-                    InputDecoration(labelText: l10n.currentPassword)),
+              controller: cpCtrl,
+              obscureText: true,
+              decoration: InputDecoration(labelText: l10n.currentPassword),
+            ),
             TextField(
-                controller: npCtrl,
-                obscureText: true,
-                decoration: InputDecoration(labelText: l10n.newPassword)),
+              controller: npCtrl,
+              obscureText: true,
+              decoration: InputDecoration(labelText: l10n.newPassword),
+            ),
           ],
         ),
         actions: [
-          Row(children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(diagContext),
-                child: Text(l10n.cancel),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(diagContext),
+                  child: Text(l10n.cancel),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  if (cpCtrl.text.isEmpty || npCtrl.text.isEmpty) return;
-                  context.read<SettingsCubit>().changePassword(
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (cpCtrl.text.isEmpty || npCtrl.text.isEmpty) return;
+                    context.read<SettingsCubit>().changePassword(
                       currentPassword: cpCtrl.text.trim(),
-                      newPassword: npCtrl.text.trim());
-                  Navigator.pop(diagContext);
-                },
-                style: ElevatedButton.styleFrom(
+                      newPassword: npCtrl.text.trim(),
+                    );
+                    Navigator.pop(diagContext);
+                  },
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0DA5FE),
-                    foregroundColor: Colors.white),
-                child: Text(l10n.update),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(l10n.update),
+                ),
               ),
-            ),
-          ]),
+            ],
+          ),
         ],
       ),
     );
@@ -518,9 +569,10 @@ class DoctorSettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Text(l10n.privacyPolicy,
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              l10n.privacyPolicy,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const Divider(),
             const Expanded(
               child: SingleChildScrollView(
@@ -541,15 +593,19 @@ class DoctorSettingsScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(l10n.supportCenter,
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              l10n.supportCenter,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const Divider(),
             const ListTile(
-                leading: Icon(Icons.email),
-                title: Text('support@doctorapp.com')),
+              leading: Icon(Icons.email),
+              title: Text('am6888122@gmail.com.com'),
+            ),
             const ListTile(
-                leading: Icon(Icons.phone), title: Text('+20 100 000 0000')),
+              leading: Icon(Icons.phone),
+              title: Text('+201099876619'),
+            ),
           ],
         ),
       ),
@@ -604,15 +660,16 @@ class _LanguageTile extends StatelessWidget {
           children: [
             Text(flag, style: const TextStyle(fontSize: 22)),
             const SizedBox(width: 12),
-            Text(label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected
-                      ? const Color(0xFF0DA5FE)
-                      : Theme.of(context).textTheme.bodyLarge?.color,
-                )),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? const Color(0xFF0DA5FE)
+                    : Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+            ),
             const Spacer(),
             if (isSelected)
               const Icon(Icons.check_circle, color: Color(0xFF0DA5FE)),

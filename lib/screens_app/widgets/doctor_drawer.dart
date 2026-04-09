@@ -26,8 +26,8 @@ class DoctorDrawer extends StatelessWidget {
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
-          topRight: Radius.circular(40),
-          bottomRight: Radius.circular(40),
+          topRight: Radius.circular(28),
+          bottomRight: Radius.circular(28),
         ),
       ),
       child: SafeArea(
@@ -40,30 +40,68 @@ class DoctorDrawer extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 5),
                 children: [
-                  _buildItem(context, 0, Icons.home_rounded,
-                      AppLocalizations.of(context).home, selectedIndex == 0),
-                  _buildItem(context, 1, Icons.chat_bubble_outline_rounded,
-                      AppLocalizations.of(context).sessions, selectedIndex == 1),
-                  _buildItem(context, 2, Icons.people_outline_rounded,
-                      AppLocalizations.of(context).patients, selectedIndex == 2),
-                  _buildItem(context, 3, Icons.trending_up_rounded,
-                      AppLocalizations.of(context).reports, selectedIndex == 3),
-                  _buildItem(context, 4, Icons.settings_outlined,
-                      AppLocalizations.of(context).settings, selectedIndex == 4),
-                  _buildItem(context, -2, Icons.dark_mode_outlined,
-                      AppLocalizations.of(context).nightMood, false,
-                      onTap: () {
-                        ThemeNotifier.toggleTheme();
-                        Navigator.pop(context);
-                      }),
-                  _buildItem(context, 5, Icons.help_outline_rounded,
-                      AppLocalizations.of(context).help, selectedIndex == 5),
+                  _buildItem(
+                    context,
+                    0,
+                    Icons.home_rounded,
+                    AppLocalizations.of(context).home,
+                    selectedIndex == 0,
+                  ),
+                  _buildItem(
+                    context,
+                    1,
+                    Icons.chat_bubble_outline_rounded,
+                    AppLocalizations.of(context).sessions,
+                    selectedIndex == 1,
+                  ),
+                  _buildItem(
+                    context,
+                    2,
+                    Icons.people_outline_rounded,
+                    AppLocalizations.of(context).patients,
+                    selectedIndex == 2,
+                  ),
+                  _buildItem(
+                    context,
+                    3,
+                    Icons.trending_up_rounded,
+                    AppLocalizations.of(context).reports,
+                    selectedIndex == 3,
+                  ),
+                  _buildItem(
+                    context,
+                    4,
+                    Icons.settings_outlined,
+                    AppLocalizations.of(context).settings,
+                    selectedIndex == 4,
+                  ),
+                  _buildItem(
+                    context,
+                    -2,
+                    Icons.dark_mode_outlined,
+                    AppLocalizations.of(context).nightMood,
+                    false,
+                    onTap: () {
+                      ThemeNotifier.toggleTheme();
+                      Navigator.pop(context);
+                    },
+                  ),
+                  _buildItem(
+                    context,
+                    5,
+                    Icons.help_outline_rounded,
+                    AppLocalizations.of(context).help,
+                    selectedIndex == 5,
+                  ),
                 ],
               ),
             ),
             _buildItem(
-              context, 7, Icons.logout,
-              AppLocalizations.of(context).logOut, false,
+              context,
+              7,
+              Icons.logout,
+              AppLocalizations.of(context).logOut,
+              false,
               onTap: () {
                 showDialog(
                   context: context,
@@ -115,10 +153,10 @@ class DoctorDrawer extends StatelessWidget {
                   backgroundColor: Colors.grey[200],
                   backgroundImage:
                       (user?.profileImageUrl != null &&
-                              user!.profileImageUrl!.isNotEmpty)
-                          ? NetworkImage(_getFullImageUrl(user.profileImageUrl!))
-                          : const AssetImage('assets/images/user_avatar.png')
-                                as ImageProvider,
+                          user!.profileImageUrl!.isNotEmpty)
+                      ? NetworkImage(_getFullImageUrl(user.profileImageUrl!))
+                      : const AssetImage('assets/images/user_avatar.png')
+                            as ImageProvider,
                 ),
               ),
               const SizedBox(width: 15),

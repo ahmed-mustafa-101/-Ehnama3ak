@@ -1,5 +1,6 @@
 import 'package:ehnama3ak/core/widgets/app_button.dart';
 import 'package:ehnama3ak/core/utils/responsive.dart';
+import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:ehnama3ak/screen_tap/help_screen/widgets/help_item.dart';
 import 'package:ehnama3ak/screen_tap/help_screen/widgets/support_widget.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,6 @@ import 'package:ehnama3ak/features/help_support/presentation/controllers/help_st
 
 class DoctorHelpScreen extends StatefulWidget {
   const DoctorHelpScreen({super.key});
-
   @override
   State<DoctorHelpScreen> createState() => _HelpScreenState();
 }
@@ -26,27 +26,22 @@ class _HelpScreenState extends State<DoctorHelpScreen> {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not launch $url')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not launch $url')));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       body: BlocConsumer<HelpCubit, HelpState>(
         listener: (context, state) {
-          if (state.status == HelpStatus.failure &&
-              state.errorMessage != null) {
+          if (state.status == HelpStatus.failure && state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errorMessage!),
-                backgroundColor: Colors.red,
-              ),
+              SnackBar(content: Text(state.errorMessage!), backgroundColor: Colors.red),
             );
             context.read<HelpCubit>().resetStatus();
           }
@@ -58,121 +53,76 @@ class _HelpScreenState extends State<DoctorHelpScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
-                  child: Text(
-                    'Help',
-                    style: TextStyle(
-                      fontSize: Responsive.fontSize(context, 28),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: Text(l10n.helpTitle,
+                      style: TextStyle(fontSize: Responsive.fontSize(context, 28), fontWeight: FontWeight.w600)),
                 ),
                 SizedBox(height: Responsive.spacing(context, 30)),
-
                 HelpItem(
                   icon: Icons.help_outline,
-                  title: 'FAQs',
-                  subtitle: 'find answers to common questions',
-                  onTap: () => _showFaqs(context),
+                  title: l10n.faqs,
+                  subtitle: l10n.findAnswers,
+                  onTap: () => _showFaqs(context, l10n),
                 ),
                 HelpItem(
                   icon: Icons.chat_bubble_outline,
-                  title: 'Chat With Us',
-                  subtitle: 'get support via live chat',
+                  title: l10n.chatWithUs,
+                  subtitle: l10n.getSupportChat,
                   onTap: () => _launchUrl('https://wa.me/yournumber'),
                 ),
                 HelpItem(
                   icon: Icons.call_outlined,
-                  title: 'Call Us',
-                  subtitle: 'reach our support team',
+                  title: l10n.callUs,
+                  subtitle: l10n.reachSupport,
                   onTap: () {
-                    if (state.contactInfo != null) {
-                      _launchUrl('tel:${state.contactInfo!.phone}');
-                    }
+                    if (state.contactInfo != null) _launchUrl('tel:${state.contactInfo!.phone}');
                   },
                 ),
                 HelpItem(
                   icon: Icons.support_agent,
-                  title: 'Support Tickets',
-                  subtitle: 'manage your support requests',
-                  onTap: () => _showTickets(context),
+                  title: l10n.supportTickets,
+                  subtitle: l10n.manageRequests,
+                  onTap: () => _showTickets(context, l10n),
                 ),
                 SizedBox(height: Responsive.spacing(context, 30)),
-
                 Center(
-                  child: Text(
-                    'Prefer To Email Or Call ?',
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                      fontSize: Responsive.fontSize(context, 16),
-                    ),
-                  ),
+                  child: Text(l10n.preferEmailOrCall,
+                      style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color,
+                          fontSize: Responsive.fontSize(context, 16))),
                 ),
                 SizedBox(height: Responsive.spacing(context, 16)),
-
-                // Responsive button layout
                 screenWidth < 400
-                    ? Column(
-                        children: [
-                          _emailButton(context),
-                          SizedBox(height: Responsive.spacing(context, 12)),
-                          _callButton(context, state.contactInfo?.phone),
-                        ],
-                      )
-                    : Row(
-                        children: [
-                          Expanded(child: _emailButton(context)),
-                          SizedBox(width: Responsive.spacing(context, 15)),
-                          Expanded(
-                            child: _callButton(
-                              context,
-                              state.contactInfo?.phone,
-                            ),
-                          ),
-                        ],
-                      ),
+                    ? Column(children: [
+                        _emailButton(context, l10n),
+                        SizedBox(height: Responsive.spacing(context, 12)),
+                        _callButton(context, state.contactInfo?.phone, l10n),
+                      ])
+                    : Row(children: [
+                        Expanded(child: _emailButton(context, l10n)),
+                        SizedBox(width: Responsive.spacing(context, 15)),
+                        Expanded(child: _callButton(context, state.contactInfo?.phone, l10n)),
+                      ]),
                 SizedBox(height: Responsive.spacing(context, 30)),
-
-                Text(
-                  'Contact Support',
-                  style: TextStyle(
-                    fontSize: Responsive.fontSize(context, 18),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text(l10n.contactSupport,
+                    style: TextStyle(fontSize: Responsive.fontSize(context, 18), fontWeight: FontWeight.w600)),
                 SizedBox(height: Responsive.spacing(context, 16)),
-
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.padding(context, 20),
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: Responsive.padding(context, 20)),
                   child: ContactItem(
                     icon: Icons.email,
                     text: state.contactInfo?.email ?? 'support@gmail.com',
-                    onTap: () {
-                      _launchUrl(
-                        'mailto:${state.contactInfo?.email ?? 'support@gmail.com'}',
-                      );
-                    },
+                    onTap: () => _launchUrl('mailto:${state.contactInfo?.email ?? 'support@gmail.com'}'),
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.padding(context, 20),
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: Responsive.padding(context, 20)),
                   child: const Divider(),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.padding(context, 20),
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: Responsive.padding(context, 20)),
                   child: ContactItem(
                     icon: Icons.call,
                     text: state.contactInfo?.phone ?? '+44 123 456 789',
-                    onTap: () {
-                      _launchUrl(
-                        'tel:${state.contactInfo?.phone ?? '+44123456789'}',
-                      );
-                    },
+                    onTap: () => _launchUrl('tel:${state.contactInfo?.phone ?? '+44123456789'}'),
                   ),
                 ),
               ],
@@ -183,123 +133,85 @@ class _HelpScreenState extends State<DoctorHelpScreen> {
     );
   }
 
-  Widget _emailButton(BuildContext context) {
+  Widget _emailButton(BuildContext context, AppLocalizations l10n) {
     return AppButton(
-      label: 'Send Email',
-      onPressed: () => _showSendEmailDialog(context),
+      label: l10n.sendEmail,
+      onPressed: () => _showSendEmailDialog(context, l10n),
       icon: Icons.email_rounded,
       height: Responsive.height(context, 0.05).clamp(40, 50),
       radius: Responsive.borderRadius(context, 10),
       iconSize: Responsive.iconSize(context, 15),
-      textStyle: TextStyle(
-        fontSize: Responsive.fontSize(context, 13),
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
+      textStyle: TextStyle(fontSize: Responsive.fontSize(context, 13), color: Colors.white, fontWeight: FontWeight.bold),
     );
   }
 
-  Widget _callButton(BuildContext context, String? phone) {
+  Widget _callButton(BuildContext context, String? phone, AppLocalizations l10n) {
     return AppButton(
-      label: 'Call Us',
-      onPressed: () {
-        if (phone != null) _launchUrl('tel:$phone');
-      },
+      label: l10n.callUs,
+      onPressed: () { if (phone != null) _launchUrl('tel:$phone'); },
       icon: Icons.call,
       height: Responsive.height(context, 0.05).clamp(40, 50),
       radius: Responsive.borderRadius(context, 10),
       iconSize: Responsive.iconSize(context, 15),
-      textStyle: TextStyle(
-        fontSize: Responsive.fontSize(context, 14),
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
+      textStyle: TextStyle(fontSize: Responsive.fontSize(context, 14), color: Colors.white, fontWeight: FontWeight.bold),
     );
   }
 
-  void _showFaqs(BuildContext context) {
+  void _showFaqs(BuildContext context, AppLocalizations l10n) {
     context.read<HelpCubit>().fetchFaqs();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (_) => BlocBuilder<HelpCubit, HelpState>(
-        builder: (context, state) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.7,
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                const Text(
-                  'FAQs',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const Divider(),
-                Expanded(
-                  child: state.status == HelpStatus.loading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                          itemCount: state.faqs.length,
-                          itemBuilder: (context, index) {
-                            final faq = state.faqs[index];
-                            return ExpansionTile(
-                              title: Text(
-                                faq.question,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Text(faq.answer),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                ),
-              ],
+        builder: (context, state) => Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          padding: const EdgeInsets.all(20),
+          child: Column(children: [
+            Text(l10n.faqs, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Divider(),
+            Expanded(
+              child: state.status == HelpStatus.loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: state.faqs.length,
+                      itemBuilder: (context, index) {
+                        final faq = state.faqs[index];
+                        return ExpansionTile(
+                          title: Text(faq.question, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          children: [Padding(padding: const EdgeInsets.all(16), child: Text(faq.answer))],
+                        );
+                      },
+                    ),
             ),
-          );
-        },
+          ]),
+        ),
       ),
     );
   }
 
-  void _showTickets(BuildContext context) {
+  void _showTickets(BuildContext context, AppLocalizations l10n) {
     context.read<HelpCubit>().fetchUserTickets();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (_) => BlocBuilder<HelpCubit, HelpState>(
-        builder: (context, state) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.8,
-            padding: const EdgeInsets.all(20),
-            child: Column(
+        builder: (context, state) => Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: const EdgeInsets.all(20),
+          child: Column(children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Support Tickets',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () => _showCreateTicketDialog(context),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                Expanded(
-                  child: state.status == HelpStatus.loading
-                      ? const Center(child: CircularProgressIndicator())
-                      : state.tickets.isEmpty
-                      ? const Center(child: Text('No tickets found'))
+                Text(l10n.supportTickets, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                IconButton(icon: const Icon(Icons.add), onPressed: () => _showCreateTicketDialog(context, l10n)),
+              ],
+            ),
+            const Divider(),
+            Expanded(
+              child: state.status == HelpStatus.loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : state.tickets.isEmpty
+                      ? Center(child: Text(l10n.noTicketsFound))
                       : ListView.builder(
                           itemCount: state.tickets.length,
                           itemBuilder: (context, index) {
@@ -311,93 +223,63 @@ class _HelpScreenState extends State<DoctorHelpScreen> {
                             );
                           },
                         ),
-                ),
-              ],
             ),
-          );
-        },
+          ]),
+        ),
       ),
     );
   }
 
-  void _showCreateTicketDialog(BuildContext context) {
-    final subjectController = TextEditingController();
-    final descController = TextEditingController();
-
+  void _showCreateTicketDialog(BuildContext context, AppLocalizations l10n) {
+    final subjectCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
-        title: const Text('Create Ticket'),
+        title: Text(l10n.createTicket),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: subjectController,
-              decoration: const InputDecoration(labelText: 'Subject'),
-            ),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(labelText: 'Description'),
-              maxLines: 3,
-            ),
+            TextField(controller: subjectCtrl, decoration: InputDecoration(labelText: l10n.subject)),
+            TextField(controller: descCtrl, decoration: InputDecoration(labelText: l10n.descriptionLabel), maxLines: 3),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(diagContext),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () {
-              context.read<HelpCubit>().createTicket(
-                subjectController.text,
-                descController.text,
-              );
+              context.read<HelpCubit>().createTicket(subjectCtrl.text, descCtrl.text);
               Navigator.pop(diagContext);
             },
-            child: const Text('Submit'),
+            child: Text(l10n.submit),
           ),
         ],
       ),
     );
   }
 
-  void _showSendEmailDialog(BuildContext context) {
-    final subjectController = TextEditingController();
-    final messageController = TextEditingController();
-
+  void _showSendEmailDialog(BuildContext context, AppLocalizations l10n) {
+    final subjectCtrl = TextEditingController();
+    final messageCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
-        title: const Text('Send Support Email'),
+        title: Text(l10n.sendSupportEmail),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: subjectController,
-              decoration: const InputDecoration(labelText: 'Subject'),
-            ),
-            TextField(
-              controller: messageController,
-              decoration: const InputDecoration(labelText: 'Message'),
-              maxLines: 5,
-            ),
+            TextField(controller: subjectCtrl, decoration: InputDecoration(labelText: l10n.subject)),
+            TextField(controller: messageCtrl, decoration: InputDecoration(labelText: l10n.messageLabel), maxLines: 5),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(diagContext),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () {
-              context.read<HelpCubit>().sendSupportEmail(
-                subjectController.text,
-                messageController.text,
-              );
+              context.read<HelpCubit>().sendSupportEmail(subjectCtrl.text, messageCtrl.text);
               Navigator.pop(diagContext);
             },
-            child: const Text('Send'),
+            child: Text(l10n.send),
           ),
         ],
       ),
