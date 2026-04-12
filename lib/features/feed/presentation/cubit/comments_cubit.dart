@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ehnama3ak/core/storage/pref_manager.dart';
 import '../../data/datasources/feed_api_service.dart';
 import '../../domain/repositories/feed_repository.dart';
+import '../../data/models/comment_model.dart';
 import 'comments_state.dart';
 
 class CommentsCubit extends Cubit<CommentsState> {
@@ -10,6 +11,46 @@ class CommentsCubit extends Cubit<CommentsState> {
   static const int _pageSize = 10;
 
   CommentsCubit(this._repo, this.postId) : super(const CommentsState());
+
+  Future<List<CommentModel>> _enrichComments(List<CommentModel> list) async {
+    final currentUserId = await PrefManager.getUserId() ?? '';
+    final currentUserName = await PrefManager.getUserName();
+    final currentUserImage = await PrefManager.getUserProfileImageUrl();
+
+    if (currentUserId.isEmpty || (currentUserName == null && currentUserImage == null)) {
+      return list;
+    }
+
+    return list.map((c) {
+      if (c.userId == currentUserId) {
+        String newName = c.userName;
+        String newImage = c.userProfileImage;
+        bool changed = false;
+        
+        if (newName == 'Unknown' || newName.isEmpty) {
+          newName = currentUserName ?? 'Unknown';
+          changed = true;
+        }
+        if (newImage.isEmpty && currentUserImage != null && currentUserImage.isNotEmpty) {
+          newImage = currentUserImage;
+          changed = true;
+        }
+        
+        if (changed) {
+          return CommentModel(
+            id: c.id,
+            postId: c.postId,
+            userId: c.userId,
+            userName: newName,
+            userProfileImage: newImage,
+            text: c.text,
+            createdAt: c.createdAt,
+          );
+        }
+      }
+      return c;
+    }).toList();
+  }
 
   Future<void> loadComments({bool refresh = false}) async {
     emit(state.copyWith(
@@ -23,9 +64,13 @@ class CommentsCubit extends Cubit<CommentsState> {
     try {
       final page = refresh ? 1 : state.currentPage;
       final comments = await _repo.getComments(postId: postId, page: page, pageSize: _pageSize);
-
+      final enrichedComments = await _enrichComments(comments);
       final hasReachedMax = comments.length < _pageSize;
-      final newComments = refresh ? comments : [...state.comments, ...comments];
+
+      // Group replies if needed (simple flat list for now or nested?)
+      // For now keep it simple: flat list is fine as we'll show "@user" or indentation.
+      
+      final newComments = refresh ? enrichedComments : [...state.comments, ...enrichedComments];
 
       emit(state.copyWith(
         status: CommentsStatus.loaded,
@@ -52,8 +97,9 @@ class CommentsCubit extends Cubit<CommentsState> {
         page: state.currentPage,
         pageSize: _pageSize,
       );
+      final enrichedComments = await _enrichComments(comments);
       final hasReachedMax = comments.length < _pageSize;
-      final newComments = [...state.comments, ...comments];
+      final newComments = [...state.comments, ...enrichedComments];
 
       emit(state.copyWith(
         status: CommentsStatus.loaded,
@@ -78,14 +124,25 @@ class CommentsCubit extends Cubit<CommentsState> {
         postId: postId,
         text: text.trim(),
         userId: userId,
+        parentId: state.replyToComment?.id,
       );
+      final enrichedComment = (await _enrichComments([comment])).first;
       emit(state.copyWith(
-        comments: [comment, ...state.comments],
+        comments: [enrichedComment, ...state.comments],
         clearError: true,
+        clearReplyTo: true,
       ));
     } catch (e) {
       emit(state.copyWith(errorMessage: FeedApiService.parseError(e)));
     }
+  }
+
+  void setReplyTo(CommentModel comment) {
+    emit(state.copyWith(replyToComment: comment));
+  }
+
+  void clearReplyTo() {
+    emit(state.copyWith(clearReplyTo: true));
   }
 
   void clearError() => emit(state.copyWith(clearError: true));

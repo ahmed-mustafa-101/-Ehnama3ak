@@ -516,18 +516,9 @@ class PostCard extends StatelessWidget {
     required this.onShare,
   });
 
+  // Post relative time formatter
   String _formatTime(DateTime time) {
-    // API times are usually in UTC, so we compare with toUtc() for accuracy
-    final diff = DateTime.now().toUtc().difference(time.toUtc());
-    
-    if (diff.inSeconds < 10) return 'Just now';
-    if (diff.inSeconds < 60) return '${diff.inSeconds} sec';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} mins';
-    if (diff.inHours < 24) return '${diff.inHours} hours';
-    if (diff.inDays < 7) return '${diff.inDays} days';
-    
-    // Fallback for older posts
-    return '${time.day}/${time.month}/${time.year}';
+    return formatRelativeTime(time);
   }
 
   Widget _buildPostImage(BuildContext context, String imagePath) {
@@ -939,6 +930,48 @@ class _CommentsSheetState extends State<_CommentsSheet> {
             ),
           ),
           const Divider(height: 1),
+          BlocBuilder<CommentsCubit, CommentsState>(
+            builder: (context, state) {
+              if (state.replyToComment == null) return const SizedBox.shrink();
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: widget.isDark 
+                    ? const Color(0xFF1E88E5).withValues(alpha: 0.15) 
+                    : const Color(0xFF1E88E5).withValues(alpha: 0.08),
+                  border: Border(
+                    top: BorderSide(color: widget.isDark ? Colors.white10 : Colors.black12),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.reply,
+                      size: 16,
+                      color: widget.isDark ? const Color(0xFF64B5F6) : const Color(0xFF1E88E5),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Replying to ${state.replyToComment!.userName}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: widget.isDark ? const Color(0xFF64B5F6) : const Color(0xFF1E88E5),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () => context.read<CommentsCubit>().clearReplyTo(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           Padding(
             padding: EdgeInsets.only(
               left: 16,
@@ -1058,18 +1091,21 @@ class _CommentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMyComment = currentUserId != null && currentUserId == comment.userId;
+    final bool isMyComment =
+        currentUserId != null && currentUserId == comment.userId;
+    final timeStr = formatRelativeTime(comment.createdAt);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(
+        bottom: 14,
+        left: comment.parentId != null ? 32 : 0,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            radius: 18,
-            backgroundColor: isDark
-                ? const Color(0xFF2C2C2C)
-                : const Color(0xFFCFD8DC),
+            radius: 17,
+            backgroundColor: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFCFD8DC),
             backgroundImage: buildUserProfileImageProvider(comment.userProfileImage),
           ),
           const SizedBox(width: 10),
@@ -1077,65 +1113,119 @@ class _CommentTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      comment.userName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(0),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: const Radius.circular(16),
+                      bottomRight: const Radius.circular(16),
                     ),
-                    if (isMyComment)
-                      PopupMenuButton<String>(
-                        icon: Icon(
-                          Icons.more_vert,
-                          size: 16,
-                          color: isDark ? Colors.white70 : Colors.black54,
-                        ),
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            _showEditDialog(context);
-                          } else if (value == 'delete') {
-                            _confirmDelete(context);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.edit, size: 18),
-                                const SizedBox(width: 8),
-                                Text(AppLocalizations.of(context).edit),
-                              ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              comment.userName,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
                             ),
                           ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.delete, size: 18, color: Colors.red),
-                                const SizedBox(width: 8),
-                                Text(AppLocalizations.of(context).delete,
-                                    style: const TextStyle(color: Colors.red)),
-                              ],
-                            ),
-                          ),
+                          if (isMyComment)
+                            _buildOptionsButton(context),
                         ],
                       ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  comment.text,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.white70 : Colors.black87,
+                      const SizedBox(height: 2),
+                      Text(
+                        comment.text,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, top: 4),
+                  child: Row(
+                    children: [
+                      Text(
+                        timeStr,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isDark ? Colors.white38 : Colors.grey.shade500,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      InkWell(
+                        onTap: () => context.read<CommentsCubit>().setReplyTo(comment),
+                        child: Text(
+                          AppLocalizations.of(context).reply, 
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? const Color(0xFF64B5F6) : const Color(0xFF1E88E5),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOptionsButton(BuildContext context) {
+    return SizedBox(
+      height: 20,
+      width: 20,
+      child: PopupMenuButton<String>(
+        padding: EdgeInsets.zero,
+        icon: Icon(
+          Icons.more_horiz,
+          size: 16,
+          color: isDark ? Colors.white38 : Colors.grey.shade600,
+        ),
+        onSelected: (value) {
+          if (value == 'edit') {
+            _showEditDialog(context);
+          } else if (value == 'delete') {
+            _confirmDelete(context);
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'edit',
+            child: Row(
+              children: [
+                const Icon(Icons.edit, size: 16),
+                const SizedBox(width: 8),
+                Text(AppLocalizations.of(context).edit, style: const TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                const Icon(Icons.delete, size: 16, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(AppLocalizations.of(context).delete,
+                    style: const TextStyle(color: Colors.red, fontSize: 13)),
               ],
             ),
           ),
@@ -1151,14 +1241,21 @@ ImageProvider buildUserProfileImageProvider(String path) {
     return const AssetImage('assets/images/user_avatar.png');
   }
   
-  // Normalize path if it contains backslashes (common in some backends) or is malformed
   String normalizedPath = path.trim().replaceAll('\\', '/');
-  
   if (normalizedPath.startsWith('assets/')) return AssetImage(normalizedPath);
   if (normalizedPath.startsWith('http')) return NetworkImage(normalizedPath);
 
   const String baseUrl = 'http://e7nama3ak.runasp.net';
-  // Ensure we don't have double slashes if the path already starts with one
   final cleanPath = normalizedPath.startsWith('/') ? normalizedPath : '/$normalizedPath';
   return NetworkImage('$baseUrl$cleanPath');
+}
+
+String formatRelativeTime(DateTime time) {
+  final diff = DateTime.now().toUtc().difference(time.toUtc());
+  if (diff.inSeconds < 10) return 'Just now';
+  if (diff.inSeconds < 60) return '${diff.inSeconds} sec';
+  if (diff.inMinutes < 60) return '${diff.inMinutes} mins';
+  if (diff.inHours < 24) return '${diff.inHours} hours';
+  if (diff.inDays < 7) return '${diff.inDays} days';
+  return '${time.day}/${time.month}/${time.year}';
 }

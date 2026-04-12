@@ -25,6 +25,7 @@ abstract class FeedRepository {
     required String postId,
     required String text,
     required String userId,
+    String? parentId,
   });
   Future<CommentModel> updateComment({
     required String commentId,

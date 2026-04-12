@@ -256,27 +256,42 @@ class FeedApiService {
     int pageSize = 10,
   }) async {
     try {
-      // 1. Try dedicated comments endpoint (very common)
       try {
-        final response = await _dio.get(
-          '/api/Comments',
-          queryParameters: {'postId': postId},
-        );
-        if (response.data != null) {
-          return _parseCommentsResponse(response.data);
-        }
-      } catch (_) {}
+        // We'll try several common REST patterns for comments
+        final List<String> variants = [
+          '/api/Comments?postId=$postId',
+          '/api/Comments?PostId=$postId',
+          '/api/Comments/$postId',
+          '/api/Posts/$postId/comments',
+          '/api/Posts/$postId/Comments',
+        ];
 
-      // 2. Try to get the specific post (might contain comments)
-      try {
-        final response = await _dio.get('/api/Posts/$postId');
-        if (response.data != null) {
-          final data = _toMap(response.data);
-          final comments = data['comments'] ?? data['Comments'];
-          if (comments != null) {
-            return _parseCommentsResponse(comments);
-          }
+        for (final url in variants) {
+          try {
+            final response = await _dio.get(url);
+            if (response.data != null) {
+              final results = _parseCommentsResponse(response.data);
+              if (results.isNotEmpty) return results;
+            }
+          } catch (_) {}
         }
+
+        // 2. Try to get the specific post (might contain comments nested inside)
+        try {
+          final response = await _dio.get('/api/Posts/$postId');
+          if (response.data != null) {
+            final data = _toMap(response.data);
+            final nested = data['comments'] ?? 
+                           data['Comments'] ?? 
+                           data['items'] ?? 
+                           data['data'] ?? 
+                           data['results'];
+            if (nested != null) {
+              final results = _parseCommentsResponse(nested);
+              if (results.isNotEmpty) return results;
+            }
+          }
+        } catch (_) {}
       } catch (_) {}
 
       // 3. Fallback: Search in the general posts list
@@ -302,13 +317,27 @@ class FeedApiService {
   }
 
   List<CommentModel> _parseCommentsResponse(dynamic data) {
+    if (data == null) return [];
+    
     if (data is List) {
       return data.map((e) => CommentModel.fromJson(_toMap(e))).toList();
     }
+    
     if (data is Map) {
-      final items = data['items'] ?? data['data'] ?? data['comments'];
+      final items = data['items'] ?? 
+                    data['data'] ?? 
+                    data['comments'] ?? 
+                    data['Comments'] ?? 
+                    data['item'] ?? 
+                    data['List'] ?? 
+                    data['list'];
       if (items is List) {
         return items.map((e) => CommentModel.fromJson(_toMap(e))).toList();
+      }
+      
+      // If the map itself looks like a single comment, wrap it (though unlikely for a list endpoint)
+      if (data.containsKey('id') || data.containsKey('text') || data.containsKey('content')) {
+        return [CommentModel.fromJson(Map<String, dynamic>.from(data))];
       }
     }
     return [];
@@ -318,6 +347,7 @@ class FeedApiService {
     required String postId,
     required String text,
     required String userId,
+    String? parentId,
   }) async {
     try {
       final response = await _dio.post(
@@ -326,7 +356,8 @@ class FeedApiService {
           'id': 0,
           'content': text,
           'userId': userId,
-          'postId': int.tryParse(postId) ?? 0,
+          'postId': int.tryParse(postId) ?? postId,
+          if (parentId != null) 'parentId': int.tryParse(parentId) ?? parentId,
           'createdAt': DateTime.now().toUtc().toIso8601String(),
         },
       );

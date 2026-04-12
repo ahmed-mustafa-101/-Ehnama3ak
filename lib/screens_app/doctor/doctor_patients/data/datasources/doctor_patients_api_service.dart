@@ -9,13 +9,33 @@ class DoctorPatientsApiService {
 
   /// GET all doctor patients
   Future<List<DoctorPatientModel>> getDoctorPatients() async {
-    return _fetchPatients('/api/DoctorPatients');
+    final variants = [
+      '/api/DoctorPatients/patients',
+      '/api/DoctorPatients',
+      '/api/DoctorDashboard/patients',
+      '/api/Doctor/Patients',
+    ];
+
+    Object? lastError;
+    for (final endpoint in variants) {
+      try {
+        return await _fetchPatients(endpoint);
+      } on DioException catch (e) {
+        lastError = e;
+        if (e.response?.statusCode == 404) continue;
+        rethrow;
+      } catch (e) {
+        lastError = e;
+        continue;
+      }
+    }
+    throw lastError ?? Exception('Failed to load patients');
   }
 
   /// GET search doctor patients
   Future<List<DoctorPatientModel>> searchDoctorPatients(String query) async {
     return _fetchPatients(
-      '/api/DoctorPatients/search',
+      '/api/DoctorPatients/search-doctors',
       queryParameters: {'query': query},
     );
   }

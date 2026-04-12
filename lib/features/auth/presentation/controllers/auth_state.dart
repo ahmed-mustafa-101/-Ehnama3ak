@@ -41,3 +41,13 @@ class AuthFailure extends AuthState {
 class AuthLoggedOut extends AuthState {
   const AuthLoggedOut();
 }
+
+class AuthForgotPasswordSuccess extends AuthState {
+  final String message;
+  const AuthForgotPasswordSuccess([this.message = '']);
+}
+
+class AuthResetPasswordSuccess extends AuthState {
+  final String message;
+  const AuthResetPasswordSuccess([this.message = '']);
+}

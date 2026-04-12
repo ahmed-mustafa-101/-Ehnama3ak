@@ -45,7 +45,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     if (response.token.isEmpty) {
-      throw Exception('لم يتم استلام رمز الدخول. حاول مرة أخرى.');
+      throw Exception('Did not receive access token. Please try again.');
     }
     await _saveSession(response);
     return response;
@@ -109,7 +109,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String confirmPassword,
   ) async {
     if (password != confirmPassword) {
-      throw Exception('كلمات المرور غير متطابقة');
+      throw Exception('Passwords do not match');
     }
     var response = await _apiService.register(
       name: name,
@@ -120,7 +120,7 @@ class AuthRepositoryImpl implements AuthRepository {
     response = _enrichFromToken(response);
     if (response.token.isEmpty) {
       throw Exception(
-        'تم التسجيل بنجاح ولكن لم يتم استلام رمز الدخول. جرب تسجيل الدخول.',
+        'Registered successfully but did not receive access token. Try logging in.',
       );
     }
     final updated = _ensureRole(response, UserRole.patient);
@@ -138,7 +138,7 @@ class AuthRepositoryImpl implements AuthRepository {
     int yearsOfExperience,
   ) async {
     if (password != confirmPassword) {
-      throw Exception('كلمات المرور غير متطابقة');
+      throw Exception('Passwords do not match');
     }
     var response = await _apiService.register(
       name: name,
@@ -151,7 +151,7 @@ class AuthRepositoryImpl implements AuthRepository {
     response = _enrichFromToken(response);
     if (response.token.isEmpty) {
       throw Exception(
-        'تم التسجيل بنجاح ولكن لم يتم استلام رمز الدخول. جرب تسجيل الدخول.',
+        'Registered successfully but did not receive access token. Try logging in.',
       );
     }
     final merged = _mergeDoctorProfileFromSignup(
@@ -282,6 +282,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
     await _saveSession(response);
     return response;
+  }
+
+  @override
+  Future<void> forgotPassword(String email) async {
+    await _apiService.forgotPassword(email);
+  }
+
+  @override
+  Future<void> resetPassword(String email, String code, String newPassword) async {
+    await _apiService.resetPassword(email, code, newPassword);
   }
 
   Future<void> _saveSession(AuthResponseModel response) async {

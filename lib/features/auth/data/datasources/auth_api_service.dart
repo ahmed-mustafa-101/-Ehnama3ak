@@ -71,6 +71,24 @@ class AuthApiService {
     return AuthResponseModel.fromJson(response.data);
   }
 
+  Future<void> forgotPassword(String email) async {
+    await _dio.post(
+      '/api/Auth/forgot-password',
+      data: {'email': email},
+    );
+  }
+
+  Future<void> resetPassword(String email, String code, String newPassword) async {
+    await _dio.post(
+      '/api/Auth/reset-password',
+      data: {
+        'email': email,
+        'code': code,
+        'newPassword': newPassword,
+      },
+    );
+  }
+
   Future<AuthResponseModel> updateProfileImage(String imagePath) async {
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(imagePath),
@@ -125,12 +143,12 @@ class AuthApiService {
         }
       }
       if (error.response?.statusCode == 401) {
-        return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        return 'Invalid email or password';
       }
       if (error.response?.statusCode == 500) {
-        return 'خطأ في السيرفر. يرجى المحاولة لاحقاً';
+        return 'Server error. Please try again later';
       }
-      return error.message ?? 'خطأ في الاتصال. تحقق من الإنترنت';
+      return error.message ?? 'Connection error. Please check your internet connection';
     }
     return error.toString();
   }

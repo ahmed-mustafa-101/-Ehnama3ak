@@ -24,5 +24,9 @@ abstract class AuthRepository {
   Future<void> logout();
 
   Future<AuthResponseModel> updateProfileImage(String imagePath);
+
+  Future<void> forgotPassword(String email);
+  
+  Future<void> resetPassword(String email, String code, String newPassword);
 }
 

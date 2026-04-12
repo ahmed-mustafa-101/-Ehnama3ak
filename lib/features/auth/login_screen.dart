@@ -10,6 +10,7 @@ import '../../core/utils/responsive.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'presentation/controllers/auth_cubit.dart';
 import 'presentation/controllers/auth_state.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -213,7 +214,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                       const Spacer(),
                                       TextButton(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const ForgotPasswordScreen(),
+                                            ),
+                                          );
+                                        },
                                         child: Text(l10n.forgotPassword,
                                           style: TextStyle(
                                             color: const Color(0xFF1E88E5),

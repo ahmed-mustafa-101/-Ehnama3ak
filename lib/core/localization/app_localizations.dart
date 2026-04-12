@@ -107,6 +107,7 @@ class AppLocalizations {
   String get delete => translate('delete');
   String get enterCommentText => translate('enter_comment_text');
   String get available => translate('available');
+  String get reply => translate('reply');
 
   String get notificationsTitle => translate('notifications_title');
   String get clearAll => translate('clear_all');

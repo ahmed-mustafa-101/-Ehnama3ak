@@ -31,7 +31,16 @@ class FeedCubit extends Cubit<FeedState> {
       final posts = await _repo.getPosts(page: page, pageSize: _pageSize);
 
       final hasReachedMax = posts.length < _pageSize;
-      List<PostModel> newPosts = refresh ? posts : [...state.posts, ...posts];
+      
+      List<PostModel> newPosts;
+      if (refresh) {
+        newPosts = posts;
+      } else {
+        // De-duplicate by ID when appending
+        final existingIds = state.posts.map((p) => p.id).toSet();
+        final uniqueNewPosts = posts.where((p) => !existingIds.contains(p.id)).toList();
+        newPosts = [...state.posts, ...uniqueNewPosts];
+      }
 
       // Sort posts by date (newest first)
       newPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -68,7 +77,11 @@ class FeedCubit extends Cubit<FeedState> {
         pageSize: _pageSize,
       );
       final hasReachedMax = posts.length < _pageSize;
-      List<PostModel> newPosts = [...state.posts, ...posts];
+      
+      // De-duplicate by ID
+      final existingIds = state.posts.map((p) => p.id).toSet();
+      final uniqueNewPosts = posts.where((p) => !existingIds.contains(p.id)).toList();
+      List<PostModel> newPosts = [...state.posts, ...uniqueNewPosts];
 
       // Keep sorted by date
       newPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));

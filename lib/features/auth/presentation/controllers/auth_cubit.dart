@@ -65,19 +65,19 @@ class AuthCubit extends Cubit<AuthState> {
     required String confirmPassword,
   }) async {
     if (name.trim().isEmpty) {
-      emit(const AuthFailure('الاسم مطلوب'));
+      emit(const AuthFailure('Name is required'));
       return;
     }
     if (email.trim().isEmpty || !email.contains('@')) {
-      emit(const AuthFailure('البريد الإلكتروني غير صحيح'));
+      emit(const AuthFailure('Invalid email address'));
       return;
     }
     if (password.length < 6) {
-      emit(const AuthFailure('كلمة المرور يجب أن تكون 6 أحرف على الأقل'));
+      emit(const AuthFailure('Password must be at least 6 characters'));
       return;
     }
     if (password != confirmPassword) {
-      emit(const AuthFailure('كلمات المرور غير متطابقة'));
+      emit(const AuthFailure('Passwords do not match'));
       return;
     }
 
@@ -104,27 +104,27 @@ class AuthCubit extends Cubit<AuthState> {
     required int yearsOfExperience,
   }) async {
     if (name.trim().isEmpty) {
-      emit(const AuthFailure('الاسم مطلوب'));
+      emit(const AuthFailure('Name is required'));
       return;
     }
     if (email.trim().isEmpty || !email.contains('@')) {
-      emit(const AuthFailure('البريد الإلكتروني غير صحيح'));
+      emit(const AuthFailure('Invalid email address'));
       return;
     }
     if (password.length < 6) {
-      emit(const AuthFailure('كلمة المرور يجب أن تكون 6 أحرف على الأقل'));
+      emit(const AuthFailure('Password must be at least 6 characters'));
       return;
     }
     if (password != confirmPassword) {
-      emit(const AuthFailure('كلمات المرور غير متطابقة'));
+      emit(const AuthFailure('Passwords do not match'));
       return;
     }
     if (specialization.trim().isEmpty) {
-      emit(const AuthFailure('التخصص مطلوب'));
+      emit(const AuthFailure('Specialization is required'));
       return;
     }
     if (yearsOfExperience < 0) {
-      emit(const AuthFailure('سنوات الخبرة غير صحيحة'));
+      emit(const AuthFailure('Invalid years of experience'));
       return;
     }
 
@@ -163,6 +163,26 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthSuccess(mergedUser));
     } catch (e) {
       emit(AuthSuccess(currentState.user));
+    }
+  }
+
+  Future<void> forgotPassword(String email) async {
+    emit(const AuthLoading());
+    try {
+      await _repo.forgotPassword(email.trim());
+      emit(const AuthForgotPasswordSuccess('Password reset code sent successfully. Please check your email.'));
+    } catch (e) {
+      emit(AuthFailure(AuthApiService.parseApiError(e)));
+    }
+  }
+
+  Future<void> resetPassword(String email, String code, String newPassword) async {
+    emit(const AuthLoading());
+    try {
+      await _repo.resetPassword(email.trim(), code.trim(), newPassword);
+      emit(const AuthResetPasswordSuccess('Password changed successfully. You can now login.'));
+    } catch (e) {
+      emit(AuthFailure(AuthApiService.parseApiError(e)));
     }
   }
 }

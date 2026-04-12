@@ -9,6 +9,7 @@ class CommentsState extends Equatable {
   final String? errorMessage;
   final bool hasReachedMax;
   final int currentPage;
+  final CommentModel? replyToComment;
 
   const CommentsState({
     this.status = CommentsStatus.initial,
@@ -16,6 +17,7 @@ class CommentsState extends Equatable {
     this.errorMessage,
     this.hasReachedMax = false,
     this.currentPage = 1,
+    this.replyToComment,
   });
 
   CommentsState copyWith({
@@ -24,7 +26,9 @@ class CommentsState extends Equatable {
     String? errorMessage,
     bool? hasReachedMax,
     int? currentPage,
+    CommentModel? replyToComment,
     bool clearError = false,
+    bool clearReplyTo = false,
   }) {
     return CommentsState(
       status: status ?? this.status,
@@ -32,9 +36,10 @@ class CommentsState extends Equatable {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
       currentPage: currentPage ?? this.currentPage,
+      replyToComment: clearReplyTo ? null : (replyToComment ?? this.replyToComment),
     );
   }
 
   @override
-  List<Object?> get props => [status, comments, errorMessage, hasReachedMax, currentPage];
+  List<Object?> get props => [status, comments, errorMessage, hasReachedMax, currentPage, replyToComment];
 }

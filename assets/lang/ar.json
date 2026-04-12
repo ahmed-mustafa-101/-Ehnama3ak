@@ -26,7 +26,7 @@
   "cancel": "إلغاء",
   "save": "حفظ",
   "edit": "تعديل",
-  "edit_profile": "تعديل الملف الشخصي",
+  "edit_profile": "تعديل",
   "full_name": "الاسم الكامل",
   "email": "البريد الإلكتروني",
   "name": "الاسم",
@@ -83,6 +83,7 @@
   "enter_comment_text": "أدخل نص التعليق...",
   "no_posts_error": "حدث خطأ",
   "available": "متاح",
+  "reply": "رد",
 
   "notifications_title": "الإشعارات",
   "clear_all": "مسح الكل",

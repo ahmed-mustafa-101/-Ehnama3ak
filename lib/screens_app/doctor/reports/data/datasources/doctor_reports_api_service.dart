@@ -9,49 +9,50 @@ class DoctorReportsApiService {
 
   /// GET all doctor reports
   Future<List<DoctorReportModel>> getDoctorReports() async {
-    try {
-      log('GET Request to: /api/DoctorReports');
-      final response = await _dio.get('/api/DoctorReports');
+    final variants = [
+      '/api/DoctorReports/reports',
+      '/api/DoctorReports',
+      '/api/DoctorDashboard/medical-reports',
+      '/api/DoctorDashboard/reports',
+      '/api/Doctor/Reports',
+    ];
 
-      log('Response status: ${response.statusCode}');
-      log('Response data: ${response.data}');
+    Object? lastError;
+    for (final endpoint in variants) {
+      try {
+        log('GET Request to: $endpoint');
+        final response = await _dio.get(endpoint);
 
-      final dynamic data = response.data;
+        log('Response status: ${response.statusCode}');
+        log('Response data: ${response.data}');
 
-      if (data == null) return [];
+        final dynamic data = response.data;
+        if (data == null) return [];
 
-      // Handle direct List response
-      if (data is List) {
-        return data
-            .map(
-              (json) =>
-                  DoctorReportModel.fromJson(Map<String, dynamic>.from(json)),
-            )
-            .toList();
-      }
-
-      // Handle response containing 'data' or 'items' keys
-      if (data is Map) {
-        final dynamic items = data['items'] ?? data['data'] ?? data['reports'];
-        if (items is List) {
-          return items
-              .map(
-                (json) =>
-                    DoctorReportModel.fromJson(Map<String, dynamic>.from(json)),
-              )
+        if (data is List) {
+          return data
+              .map((json) => DoctorReportModel.fromJson(Map<String, dynamic>.from(json)))
               .toList();
         }
-      }
 
-      return [];
-    } on DioException catch (e) {
-      log(
-        'DioError in getDoctorReports: ${e.response?.statusCode} - ${e.response?.data}',
-      );
-      rethrow;
-    } catch (e) {
-      log('General Error in getDoctorReports: $e');
-      rethrow;
+        if (data is Map) {
+          final dynamic items = data['items'] ?? data['data'] ?? data['reports'];
+          if (items is List) {
+            return items
+                .map((json) => DoctorReportModel.fromJson(Map<String, dynamic>.from(json)))
+                .toList();
+          }
+        }
+        return [];
+      } on DioException catch (e) {
+        lastError = e;
+        if (e.response?.statusCode == 404) continue;
+        rethrow;
+      } catch (e) {
+        lastError = e;
+        continue;
+      }
     }
+    throw lastError ?? Exception('Failed to load reports');
   }
 }

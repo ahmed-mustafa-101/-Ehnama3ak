@@ -5,6 +5,7 @@ import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:ehnama3ak/screen_tap/therapist/presentation/cubit/doctor_cubit.dart';
 import 'package:ehnama3ak/screen_tap/therapist/presentation/cubit/doctor_state.dart';
 import 'package:ehnama3ak/screen_tap/therapist/models/doctor_model.dart';
+import 'package:ehnama3ak/screens_app/messages/message_detail_screen.dart';
 
 class TherapistsPage extends StatefulWidget {
   const TherapistsPage({super.key});
@@ -250,15 +251,33 @@ class _TherapistsPageState extends State<TherapistsPage> {
                     ])),
                   ]),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                      onPressed: () => _showBookingDialog(doctor),
-                      child: Text(l10n.bookSession),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                          onPressed: () => _showBookingDialog(doctor),
+                          child: Text(l10n.bookSession),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                        onPressed: () {
+                           Navigator.push(context, MaterialPageRoute(
+                               builder: (_) => MessageDetailScreen(
+                                 receiverId: doctor.id.toString(),
+                                 receiverName: doctor.name,
+                                 receiverProfileImage: doctor.imageUrl,
+                               )));
+                        },
+                        child: const Icon(Icons.chat_bubble_outline),
+                      ),
+                    ],
                   ),
                 ],
               ),
