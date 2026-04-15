@@ -14,6 +14,8 @@ class AuthModel extends Equatable {
   final int? yearsOfExperience;
 
   final String? profileImageUrl;
+  final String? bio;
+  final double? sessionPrice;
 
   const AuthModel({
     required this.id,
@@ -24,6 +26,8 @@ class AuthModel extends Equatable {
     this.specialization,
     this.yearsOfExperience,
     this.profileImageUrl,
+    this.bio,
+    this.sessionPrice,
   });
 
   /// Header: registered name, then email, then generic label.
@@ -141,6 +145,12 @@ class AuthModel extends Equatable {
         'url',
         'avatar',
       ]),
+      bio: _pickString(json, ['bio', 'Bio', 'biography', 'Biography']),
+      sessionPrice: json['sessionPrice'] != null
+          ? double.tryParse(json['sessionPrice'].toString())
+          : (json['SessionPrice'] != null
+              ? double.tryParse(json['SessionPrice'].toString())
+              : null),
     );
   }
 
@@ -153,6 +163,8 @@ class AuthModel extends Equatable {
         if (specialization != null) 'specialization': specialization,
         if (yearsOfExperience != null) 'yearsOfExperience': yearsOfExperience,
         if (profileImageUrl != null) 'profileImageUrl': profileImageUrl,
+        if (bio != null) 'bio': bio,
+        if (sessionPrice != null) 'sessionPrice': sessionPrice,
       };
 
   AuthModel copyWith({
@@ -164,6 +176,8 @@ class AuthModel extends Equatable {
     String? specialization,
     int? yearsOfExperience,
     String? profileImageUrl,
+    String? bio,
+    double? sessionPrice,
   }) {
     return AuthModel(
       id: id ?? this.id,
@@ -174,6 +188,8 @@ class AuthModel extends Equatable {
       specialization: specialization ?? this.specialization,
       yearsOfExperience: yearsOfExperience ?? this.yearsOfExperience,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      bio: bio ?? this.bio,
+      sessionPrice: sessionPrice ?? this.sessionPrice,
     );
   }
 
@@ -186,7 +202,9 @@ class AuthModel extends Equatable {
         token,
         specialization,
         yearsOfExperience,
-        profileImageUrl
+        profileImageUrl,
+        bio,
+        sessionPrice
       ];
 }
 

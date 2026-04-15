@@ -37,10 +37,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         return;
       }
       context.read<AuthCubit>().resetPassword(
-            widget.email,
-            _codeCtrl.text.trim(),
-            _passCtrl.text.trim(),
-          );
+        widget.email,
+        _codeCtrl.text.trim(),
+        _passCtrl.text.trim(),
+      );
     }
   }
 
@@ -82,158 +82,232 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 }
               },
               builder: (context, state) {
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxContentWidth),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            height: Responsive.height(context, 0.36),
-                            width: double.infinity,
-                            child: Stack(
-                              children: [
-                                Center(
-                                  child: Image.asset(
-                                    'assets/images/image_patient.png',
-                                    width: Responsive.width(context, 0.8),
-                                    height: Responsive.height(context, 0.25),
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                                AppIconBack(
-                                  top: Responsive.spacing(context, 10),
-                                  left: Responsive.spacing(context, 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: Responsive.spacing(context, 16)),
-                          Text(
-                            'Reset Password',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: Responsive.fontSize(context, 20),
-                            ),
-                          ),
-                          SizedBox(height: Responsive.spacing(context, 18)),
-
-                          // FORM
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: Responsive.valueByDevice(
-                                context: context,
-                                mobile: 30,
-                                tablet: 80,
-                                desktop: 120,
-                              ),
-                            ),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'Enter the code sent to your email',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: Responsive.fontSize(context, 14),
-                                    ),
-                                  ),
-                                  SizedBox(height: Responsive.spacing(context, 20)),
-                                  AppTextField(
-                                    controller: _codeCtrl,
-                                    hintText: 'Code',
-                                    prefixIcon: Icons.qr_code,
-                                    borderRadius: Responsive.borderRadius(context, 18.0),
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: Responsive.padding(context, 20),
-                                      vertical: Responsive.padding(context, 18),
-                                    ),
-                                    hintStyle: TextStyle(
-                                      color: const Color(0xFF9FB9CF),
-                                      fontSize: Responsive.fontSize(context, 16),
-                                    ),
-                                    validator: (v) {
-                                      if (v == null || v.trim().isEmpty) return 'Please enter the code';
-                                      return null;
-                                    },
-                                  ),
-                                  SizedBox(height: Responsive.spacing(context, 20)),
-
-                                  // New Password
-                                  AppTextField(
-                                    controller: _passCtrl,
-                                    hintText: 'New Password',
-                                    prefixIcon: Icons.lock_outline,
-                                    obscureText: _obscurePass,
-                                    showObscureToggle: true,
-                                    onObscureToggle: () => setState(() => _obscurePass = !_obscurePass),
-                                    borderRadius: Responsive.borderRadius(context, 18.0),
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: Responsive.padding(context, 20),
-                                      vertical: Responsive.padding(context, 18),
-                                    ),
-                                    hintStyle: TextStyle(
-                                      color: const Color(0xFF9FB9CF),
-                                      fontSize: Responsive.fontSize(context, 16),
-                                    ),
-                                    validator: (v) {
-                                      if (v == null || v.isEmpty) return 'Please enter a password';
-                                      if (v.length < 6) return 'Password is too short';
-                                      return null;
-                                    },
-                                  ),
-                                  SizedBox(height: Responsive.spacing(context, 20)),
-
-                                  // Confirm New Password
-                                  AppTextField(
-                                    controller: _confirmPassCtrl,
-                                    hintText: 'Confirm New Password',
-                                    prefixIcon: Icons.lock_outline,
-                                    obscureText: _obscureConfirm,
-                                    showObscureToggle: true,
-                                    onObscureToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                                    borderRadius: Responsive.borderRadius(context, 18.0),
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: Responsive.padding(context, 20),
-                                      vertical: Responsive.padding(context, 18),
-                                    ),
-                                    hintStyle: TextStyle(
-                                      color: const Color(0xFF9FB9CF),
-                                      fontSize: Responsive.fontSize(context, 16),
-                                    ),
-                                    validator: (v) {
-                                      if (v == null || v.isEmpty) return 'Please confirm the password';
-                                      return null;
-                                    },
-                                  ),
-                                  SizedBox(height: Responsive.spacing(context, 30)),
-
-                                  // Reset Button
-                                  if (state is AuthLoading)
-                                    const CircularProgressIndicator()
-                                  else
-                                    AppButton(
-                                      width: double.infinity,
-                                      height: Responsive.height(context, 0.065).clamp(48, 60),
-                                      radius: Responsive.borderRadius(context, 12),
-                                      textStyle: TextStyle(
-                                        fontSize: Responsive.fontSize(context, 18),
-                                        color: Colors.white,
+                return Stack(
+                  children: [
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: maxContentWidth),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: Responsive.height(context, 0.36),
+                                width: double.infinity,
+                                child: Stack(
+                                  children: [
+                                    Center(
+                                      child: Image.asset(
+                                        'assets/images/resetpassword.png',
+                                        width: Responsive.width(context, 0.8),
+                                        height: Responsive.height(
+                                          context,
+                                          0.25,
+                                        ),
+                                        fit: BoxFit.contain,
                                       ),
-                                      onPressed: _onResetPassword,
-                                      label: 'Change Password',
                                     ),
-                                  SizedBox(height: Responsive.spacing(context, 40)),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
+                              SizedBox(height: Responsive.spacing(context, 16)),
+                              // Text(
+                              //   'Reset Password',
+                              //   style: TextStyle(
+                              //     color: Colors.black,
+                              //     fontSize: Responsive.fontSize(context, 20),
+                              //   ),
+                              // ),
+                              SizedBox(height: Responsive.spacing(context, 18)),
+
+                              // FORM
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: Responsive.valueByDevice(
+                                    context: context,
+                                    mobile: 30,
+                                    tablet: 80,
+                                    desktop: 120,
+                                  ),
+                                ),
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'Enter the code sent to your email',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.black54,
+                                          fontSize: Responsive.fontSize(
+                                            context,
+                                            14,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: Responsive.spacing(context, 20),
+                                      ),
+                                      AppTextField(
+                                        controller: _codeCtrl,
+                                        hintText: 'Code',
+                                        prefixIcon: Icons.qr_code,
+                                        borderRadius: Responsive.borderRadius(
+                                          context,
+                                          18.0,
+                                        ),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: Responsive.padding(
+                                            context,
+                                            20,
+                                          ),
+                                          vertical: Responsive.padding(
+                                            context,
+                                            18,
+                                          ),
+                                        ),
+                                        hintStyle: TextStyle(
+                                          color: const Color(0xFF9FB9CF),
+                                          fontSize: Responsive.fontSize(
+                                            context,
+                                            16,
+                                          ),
+                                        ),
+                                        validator: (v) {
+                                          if (v == null || v.trim().isEmpty)
+                                            return 'Please enter the code';
+                                          return null;
+                                        },
+                                      ),
+                                      SizedBox(
+                                        height: Responsive.spacing(context, 20),
+                                      ),
+
+                                      // New Password
+                                      AppTextField(
+                                        controller: _passCtrl,
+                                        hintText: 'New Password',
+                                        prefixIcon: Icons.lock_outline,
+                                        obscureText: _obscurePass,
+                                        showObscureToggle: true,
+                                        onObscureToggle: () => setState(
+                                          () => _obscurePass = !_obscurePass,
+                                        ),
+                                        borderRadius: Responsive.borderRadius(
+                                          context,
+                                          18.0,
+                                        ),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: Responsive.padding(
+                                            context,
+                                            20,
+                                          ),
+                                          vertical: Responsive.padding(
+                                            context,
+                                            18,
+                                          ),
+                                        ),
+                                        hintStyle: TextStyle(
+                                          color: const Color(0xFF9FB9CF),
+                                          fontSize: Responsive.fontSize(
+                                            context,
+                                            16,
+                                          ),
+                                        ),
+                                        validator: (v) {
+                                          if (v == null || v.isEmpty)
+                                            return 'Please enter a password';
+                                          if (v.length < 6)
+                                            return 'Password is too short';
+                                          return null;
+                                        },
+                                      ),
+                                      SizedBox(
+                                        height: Responsive.spacing(context, 20),
+                                      ),
+
+                                      // Confirm New Password
+                                      AppTextField(
+                                        controller: _confirmPassCtrl,
+                                        hintText: 'Confirm New Password',
+                                        prefixIcon: Icons.lock_outline,
+                                        obscureText: _obscureConfirm,
+                                        showObscureToggle: true,
+                                        onObscureToggle: () => setState(
+                                          () => _obscureConfirm =
+                                              !_obscureConfirm,
+                                        ),
+                                        borderRadius: Responsive.borderRadius(
+                                          context,
+                                          18.0,
+                                        ),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: Responsive.padding(
+                                            context,
+                                            20,
+                                          ),
+                                          vertical: Responsive.padding(
+                                            context,
+                                            18,
+                                          ),
+                                        ),
+                                        hintStyle: TextStyle(
+                                          color: const Color(0xFF9FB9CF),
+                                          fontSize: Responsive.fontSize(
+                                            context,
+                                            16,
+                                          ),
+                                        ),
+                                        validator: (v) {
+                                          if (v == null || v.isEmpty)
+                                            return 'Please confirm the password';
+                                          return null;
+                                        },
+                                      ),
+                                      SizedBox(
+                                        height: Responsive.spacing(context, 30),
+                                      ),
+
+                                      // Reset Button
+                                      if (state is AuthLoading)
+                                        const CircularProgressIndicator()
+                                      else
+                                        AppButton(
+                                          width: double.infinity,
+                                          height: Responsive.height(
+                                            context,
+                                            0.065,
+                                          ).clamp(48, 60),
+                                          radius: Responsive.borderRadius(
+                                            context,
+                                            12,
+                                          ),
+                                          textStyle: TextStyle(
+                                            fontSize: Responsive.fontSize(
+                                              context,
+                                              18,
+                                            ),
+                                            color: Colors.white,
+                                          ),
+                                          onPressed: _onResetPassword,
+                                          label: 'Change Password',
+                                        ),
+                                      SizedBox(
+                                        height: Responsive.spacing(context, 40),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    AppIconBack(
+                      top: Responsive.spacing(context, 50),
+                      left: Responsive.spacing(context, 12),
+                    ),
+                  ],
                 );
               },
             ),

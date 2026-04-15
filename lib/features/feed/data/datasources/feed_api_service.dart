@@ -19,17 +19,17 @@ class FeedApiService {
     if (error is DioException) {
       final code = error.response?.statusCode;
       if (code == 400) {
-        return _parseValidationError(error.response?.data) ?? 'طلب غير صالح';
+        return _parseValidationError(error.response?.data) ?? 'Invalid request';
       }
-      if (code == 401) return 'يجب تسجيل الدخول للمتابعة';
-      if (code == 403) return 'غير مصرح لك بهذا الإجراء';
-      if (code == 500) return 'خطأ في السيرفر. يرجى المحاولة لاحقاً';
+      if (code == 401) return 'You must be logged in to continue';
+      if (code == 403) return 'You are not authorized for this action';
+      if (code == 500) return 'Server error. Please try again later';
 
       if (error.response?.data != null) {
         final msg = _parseValidationError(error.response!.data);
         if (msg != null && msg.isNotEmpty) return msg;
       }
-      return error.message ?? 'خطأ في الاتصال';
+      return error.message ?? 'Connection error';
     }
     return error.toString();
   }
@@ -179,11 +179,11 @@ class FeedApiService {
   }) async {
     final trimmedContent = content.trim();
     if (trimmedContent.isEmpty) {
-      throw Exception('محتوى المنشور لا يمكن أن يكون فارغاً');
+      throw Exception('Post content cannot be empty');
     }
 
     if (userId.isEmpty) {
-      throw Exception('يجب تسجيل الدخول أولاً');
+      throw Exception('You must login first');
     }
 
     try {
@@ -216,7 +216,7 @@ class FeedApiService {
     } on DioException catch (e) {
       throw Exception(parseError(e));
     } catch (e) {
-      throw Exception('حدث خطأ أثناء إنشاء المنشور: ${e.toString()}');
+      throw Exception('An error occurred while creating the post: ${e.toString()}');
     }
   }
 

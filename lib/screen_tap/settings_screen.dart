@@ -102,6 +102,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   backgroundColor: Colors.red),
             );
             context.read<SettingsCubit>().resetStatus();
+          } else if (state.status == SettingsStatus.success) {
+            if (state.isPasswordChanging) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.passwordUpdatedSuccess),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+            context.read<SettingsCubit>().resetStatus();
           }
         },
         builder: (context, state) {
@@ -236,47 +246,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final npCtrl = TextEditingController();
     showDialog(
       context: context,
-      builder: (diagContext) => AlertDialog(
-        title: Text(l10n.changePassword),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-                controller: cpCtrl,
-                decoration: InputDecoration(labelText: l10n.currentPassword),
-                obscureText: true),
-            TextField(
-                controller: npCtrl,
-                decoration: InputDecoration(labelText: l10n.newPassword),
-                obscureText: true),
-          ],
+      builder: (diagContext) => BlocProvider.value(
+        value: context.read<SettingsCubit>(),
+        child: BlocListener<SettingsCubit, SettingsState>(
+          listener: (context, state) {
+            if (state.status == SettingsStatus.success &&
+                state.isPasswordChanging) {
+              Navigator.pop(diagContext);
+            }
+          },
+          child: BlocBuilder<SettingsCubit, SettingsState>(
+            builder: (context, state) {
+              return AlertDialog(
+                title: Text(l10n.changePassword),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                        controller: cpCtrl,
+                        decoration:
+                            InputDecoration(labelText: l10n.currentPassword),
+                        obscureText: true),
+                    TextField(
+                        controller: npCtrl,
+                        decoration:
+                            InputDecoration(labelText: l10n.newPassword),
+                        obscureText: true),
+                  ],
+                ),
+                actions: [
+                  Row(children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: state.isPasswordChanging
+                            ? null
+                            : () => Navigator.pop(diagContext),
+                        child: Text(l10n.cancel),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: state.isPasswordChanging
+                            ? null
+                            : () {
+                                if (cpCtrl.text.isEmpty || npCtrl.text.isEmpty)
+                                  return;
+                                context.read<SettingsCubit>().changePassword(
+                                    currentPassword: cpCtrl.text.trim(),
+                                    newPassword: npCtrl.text.trim());
+                              },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0DA5FE),
+                            foregroundColor: Colors.white),
+                        child: state.isPasswordChanging
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2))
+                            : Text(l10n.update),
+                      ),
+                    ),
+                  ]),
+                ],
+              );
+            },
+          ),
         ),
-        actions: [
-          Row(children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(diagContext),
-                child: Text(l10n.cancel),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  if (cpCtrl.text.isEmpty || npCtrl.text.isEmpty) return;
-                  context.read<SettingsCubit>().changePassword(
-                      currentPassword: cpCtrl.text.trim(),
-                      newPassword: npCtrl.text.trim());
-                  Navigator.pop(diagContext);
-                },
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0DA5FE),
-                    foregroundColor: Colors.white),
-                child: Text(l10n.update),
-              ),
-            ),
-          ]),
-        ],
       ),
     );
   }

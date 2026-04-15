@@ -33,6 +33,16 @@ class DoctorSettingsScreen extends StatelessWidget {
             ),
           );
           context.read<SettingsCubit>().resetStatus();
+        } else if (state.status == SettingsStatus.success) {
+          if (state.isPasswordChanging) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.passwordUpdatedSuccess),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+          context.read<SettingsCubit>().resetStatus();
         }
       },
       builder: (context, state) {
@@ -101,7 +111,7 @@ class DoctorSettingsScreen extends StatelessWidget {
               const SizedBox(height: 20),
               _buildSettingItem(
                 context,
-                Icons.verified_user_outlined,
+                Icons.security,
                 l10n.security,
                 onTap: () => _showChangePasswordDialog(context, l10n),
               ),
@@ -436,70 +446,142 @@ class DoctorSettingsScreen extends StatelessWidget {
     AuthModel? user,
     AppLocalizations l10n,
   ) {
-    final nameController = TextEditingController(
-      text: user?.displayNameLine ?? '',
-    );
+    final nameController = TextEditingController(text: user?.name ?? '');
     final specController = TextEditingController(
-      text: (user?.specialization ?? '').trim(),
+      text: user?.specialization ?? '',
     );
     final yearsController = TextEditingController(
       text: user?.yearsOfExperience?.toString() ?? '',
     );
+    final bioController = TextEditingController(text: user?.bio ?? '');
+    final priceController = TextEditingController(
+      text: user?.sessionPrice?.toString() ?? '',
+    );
 
     showDialog(
       context: context,
-      builder: (diagContext) => AlertDialog(
-        title: Text(l10n.editProfile),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: l10n.fullName),
-              ),
-              TextField(
-                controller: specController,
-                decoration: const InputDecoration(labelText: 'Specialization'),
-                readOnly: true,
-              ),
-              TextField(
-                controller: yearsController,
-                decoration: const InputDecoration(
-                  labelText: 'Years of experience',
+      builder: (diagContext) => BlocProvider.value(
+        value: context.read<SettingsCubit>(),
+        child: BlocListener<SettingsCubit, SettingsState>(
+          listener: (context, state) {
+            if (state.status == SettingsStatus.success &&
+                !state.isPasswordChanging) {
+              Navigator.pop(diagContext);
+            }
+          },
+          child: BlocBuilder<SettingsCubit, SettingsState>(
+            builder: (context, state) {
+              return AlertDialog(
+                title: Text(l10n.editProfile),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: nameController,
+                        decoration: InputDecoration(labelText: l10n.fullName),
+                      ),
+                      TextField(
+                        controller: specController,
+                        decoration: InputDecoration(
+                          labelText: l10n.specialization,
+                        ),
+                      ),
+                      TextField(
+                        controller: yearsController,
+                        decoration: InputDecoration(
+                          labelText: l10n.experienceYears,
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      TextField(
+                        controller: priceController,
+                        decoration: InputDecoration(
+                          labelText: l10n.sessionPrice,
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: bioController,
+                        decoration: InputDecoration(
+                          labelText: l10n.bio,
+                          border: const OutlineInputBorder(),
+                          alignLabelWithHint: true,
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
                 ),
-                keyboardType: TextInputType.number,
-                readOnly: true,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Profile data comes from your account.',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
-            ],
+                actions: [
+                  TextButton(
+                    onPressed: state.isUpdating
+                        ? null
+                        : () => Navigator.pop(diagContext),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0DA5FE),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(l10n.cancel),
+                  ),
+                  ElevatedButton(
+                    onPressed: state.isUpdating
+                        ? null
+                        : () async {
+                            final name = nameController.text.trim();
+                            final spec = specController.text.trim();
+                            final years =
+                                int.tryParse(yearsController.text.trim()) ?? 0;
+                            final bio = bioController.text.trim();
+                            final price =
+                                double.tryParse(priceController.text.trim()) ??
+                                0.0;
+
+                            if (name.isEmpty) return;
+
+                            await context
+                                .read<SettingsCubit>()
+                                .updateDoctorProfile(
+                                  fullName: name,
+                                  specialization: spec,
+                                  experienceYears: years,
+                                  bio: bio,
+                                  sessionPrice: price,
+                                );
+
+                            if (context.mounted) {
+                              await context
+                                  .read<AuthCubit>()
+                                  .updateDoctorProfileLocally(
+                                    name: name,
+                                    specialization: spec,
+                                    yearsOfExperience: years,
+                                    bio: bio,
+                                    sessionPrice: price,
+                                  );
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0DA5FE),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: state.isUpdating
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(l10n.save),
+                  ),
+                ],
+              );
+            },
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(diagContext),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final newName = nameController.text.trim();
-              if (newName.isEmpty) return;
-              Navigator.pop(diagContext);
-              final settingsCubit = context.read<SettingsCubit>();
-              final authCubit = context.read<AuthCubit>();
-              await settingsCubit.updateProfile(
-                name: newName,
-                email: user?.email ?? '',
-              );
-              if (context.mounted) await authCubit.reloadUser();
-            },
-            child: Text(l10n.save),
-          ),
-        ],
       ),
     );
   }
@@ -509,53 +591,85 @@ class DoctorSettingsScreen extends StatelessWidget {
     final npCtrl = TextEditingController();
     showDialog(
       context: context,
-      builder: (diagContext) => AlertDialog(
-        title: Text(l10n.changePassword),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: cpCtrl,
-              obscureText: true,
-              decoration: InputDecoration(labelText: l10n.currentPassword),
-            ),
-            TextField(
-              controller: npCtrl,
-              obscureText: true,
-              decoration: InputDecoration(labelText: l10n.newPassword),
-            ),
-          ],
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(diagContext),
-                  child: Text(l10n.cancel),
+      builder: (diagContext) => BlocProvider.value(
+        value: context.read<SettingsCubit>(),
+        child: BlocListener<SettingsCubit, SettingsState>(
+          listener: (context, state) {
+            if (state.status == SettingsStatus.success &&
+                state.isPasswordChanging) {
+              Navigator.pop(diagContext);
+            }
+          },
+          child: BlocBuilder<SettingsCubit, SettingsState>(
+            builder: (context, state) {
+              return AlertDialog(
+                title: Text(l10n.changePassword),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: cpCtrl,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: l10n.currentPassword,
+                      ),
+                    ),
+                    TextField(
+                      controller: npCtrl,
+                      obscureText: true,
+                      decoration: InputDecoration(labelText: l10n.newPassword),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (cpCtrl.text.isEmpty || npCtrl.text.isEmpty) return;
-                    context.read<SettingsCubit>().changePassword(
-                      currentPassword: cpCtrl.text.trim(),
-                      newPassword: npCtrl.text.trim(),
-                    );
-                    Navigator.pop(diagContext);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0DA5FE),
-                    foregroundColor: Colors.white,
+                actions: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: state.isPasswordChanging
+                              ? null
+                              : () => Navigator.pop(diagContext),
+                          child: Text(l10n.cancel),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: state.isPasswordChanging
+                              ? null
+                              : () {
+                                  if (cpCtrl.text.isEmpty ||
+                                      npCtrl.text.isEmpty) {
+                                    return;
+                                  }
+                                  context.read<SettingsCubit>().changePassword(
+                                    currentPassword: cpCtrl.text.trim(),
+                                    newPassword: npCtrl.text.trim(),
+                                  );
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0DA5FE),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: state.isPasswordChanging
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(l10n.update),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Text(l10n.update),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
-        ],
+        ),
       ),
     );
   }

@@ -12,6 +12,13 @@ abstract class SettingsRepository {
     required String currentPassword,
     required String newPassword,
   });
+  Future<void> updateDoctorProfile({
+    required String fullName,
+    required String specialization,
+    required num experienceYears,
+    required String bio,
+    required num sessionPrice,
+  });
   Future<PrivacyPolicy> getPrivacyPolicy();
   Future<SupportInfo> getSupportInfo();
 }

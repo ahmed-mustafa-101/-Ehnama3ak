@@ -35,6 +35,12 @@
   "new_password": "كلمة المرور الجديدة",
   "change_password": "تغيير كلمة المرور",
   "update": "تحديث",
+  "age": "العمر",
+  "gender": "الجنس",
+  "specialization": "التخصص",
+  "experience_years": "سنوات الخبرة",
+  "bio": "النبذة التعريفية",
+  "session_price": "سعر الجلسة",
 
   "general": "عام",
   "support": "الدعم",
@@ -50,6 +56,7 @@
   "updating_profile": "جاري تحديث الملف الشخصي...",
   "profile_updated": "تم تحديث الملف الشخصي بنجاح",
   "image_updated": "تم تحديث صورة الملف الشخصي بنجاح",
+  "password_updated_success": "تم تحديث كلمة المرور بنجاح",
 
   "whats_on_your_mind": "ما الذي يدور في ذهنك؟",
   "photo": "صورة",

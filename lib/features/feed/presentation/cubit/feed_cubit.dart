@@ -110,7 +110,7 @@ class FeedCubit extends Cubit<FeedState> {
     var userId = await PrefManager.getUserId() ?? '';
     final token = await PrefManager.getToken();
     if (userId.isEmpty && (token == null || token.isEmpty)) {
-      emit(state.copyWith(errorMessage: 'يجب تسجيل الدخول أولاً'));
+      emit(state.copyWith(errorMessage: 'You must login first'));
       return;
     }
 

@@ -285,6 +285,28 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> updateDoctorProfileLocally({
+    required String name,
+    required String specialization,
+    required int yearsOfExperience,
+    String? bio,
+    double? sessionPrice,
+  }) async {
+    final current = await getCurrentSession();
+    if (current == null) return;
+
+    final updatedModel = current.data.copyWith(
+      name: name,
+      specialization: specialization,
+      yearsOfExperience: yearsOfExperience,
+      bio: bio,
+      sessionPrice: sessionPrice,
+    );
+
+    await _saveSession(AuthResponseModel(success: true, data: updatedModel));
+  }
+
+  @override
   Future<void> forgotPassword(String email) async {
     await _apiService.forgotPassword(email);
   }

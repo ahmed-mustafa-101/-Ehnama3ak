@@ -35,6 +35,12 @@
   "new_password": "New Password",
   "change_password": "Change Password",
   "update": "Update",
+  "age": "Age",
+  "gender": "Gender",
+  "specialization": "Specialization",
+  "experience_years": "Experience Years",
+  "bio": "Bio",
+  "session_price": "Session Price",
 
   "general": "General",
   "support": "Support",
@@ -50,6 +56,7 @@
   "updating_profile": "Updating profile...",
   "profile_updated": "Profile updated successfully",
   "image_updated": "Profile image updated successfully",
+  "password_updated_success": "Password updated successfully",
 
   "whats_on_your_mind": "What's on your mind?",
   "photo": "Photo",

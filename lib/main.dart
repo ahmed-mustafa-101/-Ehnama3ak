@@ -45,7 +45,9 @@ import 'features/notifications/data/repositories/notification_repository_impl.da
 import 'features/notifications/presentation/cubit/notification_cubit.dart';
 import 'features/messages/data/datasources/message_api_service.dart';
 import 'features/messages/data/repositories/message_repository_impl.dart';
-import 'features/messages/presentation/controllers/message_cubit.dart';
+import 'package:ehnama3ak/features/messages/presentation/controllers/message_cubit.dart';
+import 'package:ehnama3ak/screens_app/chatbot/chat_service.dart';
+import 'package:ehnama3ak/screens_app/chatbot/chat_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,7 +89,8 @@ class EhnaMa3akApp extends StatelessWidget {
           BlocProvider(create: (context) => PodcastCubit(podcastRepo)),
           BlocProvider(create: (context) => ResourceCubit(resourceRepo)),
           BlocProvider(
-              create: (context) => SettingsCubit(settingsRepo, storage)),
+            create: (context) => SettingsCubit(settingsRepo, storage),
+          ),
           BlocProvider(create: (context) => HelpCubit(helpRepo)),
           BlocProvider(
             create: (context) => DoctorSessionsCubit(
@@ -100,8 +103,8 @@ class EhnaMa3akApp extends StatelessWidget {
             ),
           ),
           BlocProvider(
-            create: (context) => DoctorReportsCubit(
-                DoctorReportsApiService(dio: dioClient.dio)),
+            create: (context) =>
+                DoctorReportsCubit(DoctorReportsApiService(dio: dioClient.dio)),
           ),
           BlocProvider(
             create: (context) => NotificationCubit(
@@ -136,6 +139,7 @@ class EhnaMa3akApp extends StatelessWidget {
               apiService: DoctorDashboardApiService(dio: dioClient.dio),
             ),
           ),
+          BlocProvider(create: (context) => ChatCubit(ChatService())),
         ],
         child: ValueListenableBuilder<ThemeMode>(
           valueListenable: ThemeNotifier.themeMode,
@@ -162,8 +166,10 @@ class EhnaMa3akApp extends StatelessWidget {
                     appBarTheme: const AppBarTheme(
                       backgroundColor: Colors.white,
                       iconTheme: IconThemeData(color: Colors.black),
-                      titleTextStyle:
-                          TextStyle(color: Colors.black, fontSize: 20),
+                      titleTextStyle: TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                      ),
                     ),
                   ),
                   darkTheme: ThemeData(
@@ -178,8 +184,10 @@ class EhnaMa3akApp extends StatelessWidget {
                     appBarTheme: const AppBarTheme(
                       backgroundColor: Color(0xFF121212),
                       iconTheme: IconThemeData(color: Colors.white),
-                      titleTextStyle:
-                          TextStyle(color: Colors.white, fontSize: 20),
+                      titleTextStyle: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
                     ),
                     textTheme: const TextTheme(
                       bodyLarge: TextStyle(color: Colors.white),

@@ -35,6 +35,8 @@ class ProfileCubit extends Cubit<ProfileState> {
         sessionsCount: apiProfile.sessionsCount,
         exercisesCount: apiProfile.exercisesCount,
         daysCount: localDaysCount,
+        age: apiProfile.age,
+        gender: apiProfile.gender,
       );
 
       emit(ProfileSuccess(profile));
@@ -45,19 +47,30 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  Future<void> updateProfile({required String fullName, String? imagePath}) async {
+  Future<void> updateProfile({
+    required String fullName,
+    int age = 0,
+    String gender = '',
+  }) async {
     final currentState = state;
     emit(UpdateProfileLoading());
     try {
-      await _profileApiService.updateProfile(fullName: fullName, imagePath: imagePath);
+      await _profileApiService.updateProfile(
+        fullName: fullName,
+        age: age,
+        gender: gender,
+      );
       emit(UpdateProfileSuccess('Profile updated successfully'));
       await loadProfile();
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        emit(ProfileError(message: 'Unauthorized. Please login again.', isUnauthorized: true));
+        emit(ProfileError(
+            message: 'Unauthorized. Please login again.',
+            isUnauthorized: true));
       } else {
         final detail = e.response?.data?.toString() ?? e.message;
-        emit(ProfileError(message: 'Failed (${e.response?.statusCode}): $detail'));
+        emit(ProfileError(
+            message: 'Failed (${e.response?.statusCode}): $detail'));
       }
       if (currentState is ProfileSuccess) {
         emit(ProfileSuccess(currentState.profile));

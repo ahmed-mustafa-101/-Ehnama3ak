@@ -25,6 +25,14 @@ abstract class AuthRepository {
 
   Future<AuthResponseModel> updateProfileImage(String imagePath);
 
+  Future<void> updateDoctorProfileLocally({
+    required String name,
+    required String specialization,
+    required int yearsOfExperience,
+    String? bio,
+    double? sessionPrice,
+  });
+
   Future<void> forgotPassword(String email);
   
   Future<void> resetPassword(String email, String code, String newPassword);

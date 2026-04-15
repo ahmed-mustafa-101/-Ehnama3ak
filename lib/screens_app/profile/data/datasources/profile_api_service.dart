@@ -24,15 +24,18 @@ class ProfileApiService {
 
   Future<void> updateProfile({
     required String fullName,
-    String? imagePath,
+    int age = 0,
+    String gender = '',
   }) async {
     try {
-      final formData = FormData.fromMap({
-        'FullName': fullName,
-        if (imagePath != null)
-          'ProfileImage': await MultipartFile.fromFile(imagePath),
-      });
-      await _dio.post('/api/Profile/update', data: formData);
+      await _dio.post(
+        '/api/Profile/update-info',
+        data: {
+          'fullName': fullName,
+          'age': age,
+          'gender': gender,
+        },
+      );
     } on DioException catch (e) {
       log('DioError updating profile: ${e.response?.statusCode}');
       rethrow;

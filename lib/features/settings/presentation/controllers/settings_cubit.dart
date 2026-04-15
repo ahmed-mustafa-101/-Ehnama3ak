@@ -30,6 +30,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     try {
       await _repo.uploadAvatar(imagePath);
       await fetchSettings();
+      emit(state.copyWith(status: SettingsStatus.success));
       emit(state.copyWith(isUpdating: false));
     } catch (e) {
       emit(state.copyWith(
@@ -54,7 +55,8 @@ class SettingsCubit extends Cubit<SettingsState> {
       );
       // Refresh settings to get updated info
       await fetchSettings();
-      emit(state.copyWith(isUpdating: false, status: SettingsStatus.success));
+      emit(state.copyWith(status: SettingsStatus.success));
+      emit(state.copyWith(isUpdating: false));
     } catch (e) {
       emit(state.copyWith(
         isUpdating: false,
@@ -74,13 +76,38 @@ class SettingsCubit extends Cubit<SettingsState> {
         currentPassword: currentPassword,
         newPassword: newPassword,
       );
-      emit(state.copyWith(
-        isPasswordChanging: false,
-        status: SettingsStatus.success,
-      ));
+      emit(state.copyWith(status: SettingsStatus.success));
+      emit(state.copyWith(isPasswordChanging: false));
     } catch (e) {
       emit(state.copyWith(
         isPasswordChanging: false,
+        status: SettingsStatus.failure,
+        errorMessage: SettingsApiService.parseError(e),
+      ));
+    }
+  }
+
+  Future<void> updateDoctorProfile({
+    required String fullName,
+    required String specialization,
+    required num experienceYears,
+    required String bio,
+    required num sessionPrice,
+  }) async {
+    emit(state.copyWith(isUpdating: true));
+    try {
+      await _repo.updateDoctorProfile(
+        fullName: fullName,
+        specialization: specialization,
+        experienceYears: experienceYears,
+        bio: bio,
+        sessionPrice: sessionPrice,
+      );
+      emit(state.copyWith(status: SettingsStatus.success));
+      emit(state.copyWith(isUpdating: false));
+    } catch (e) {
+      emit(state.copyWith(
+        isUpdating: false,
         status: SettingsStatus.failure,
         errorMessage: SettingsApiService.parseError(e),
       ));

@@ -48,13 +48,61 @@ class SettingsApiService {
     }
   }
 
+  Future<void> updateDoctorProfile({
+    required String fullName,
+    required String specialization,
+    required num experienceYears,
+    required String bio,
+    required num sessionPrice,
+  }) async {
+    final endpoints = [
+      '/api/Doctors/update-profile',
+      '/api/Doctor/update-profile',
+      '/api/Doctors/Update-Profile',
+      '/api/Doctor/Update-Profile',
+      '/api/Doctors/profile',
+      '/api/Doctor/profile',
+      '/api/Settings/doctor-profile',
+    ];
+
+    Object? lastError;
+    for (final endpoint in endpoints) {
+      try {
+        print("Attempting doctor profile update at: $endpoint");
+        await _dio.put(
+          endpoint,
+          data: {
+            'fullName': fullName,
+            'specialization': specialization,
+            'experienceYears': experienceYears,
+            'bio': bio,
+            'sessionPrice': sessionPrice,
+          },
+        );
+        print("Successfully updated doctor profile at: $endpoint");
+        return; // Success
+      } on DioException catch (e) {
+        lastError = e;
+        if (e.response?.statusCode == 404) {
+          print("404 at $endpoint, trying next variant...");
+          continue;
+        }
+        rethrow;
+      } catch (e) {
+        lastError = e;
+        continue;
+      }
+    }
+    if (lastError != null) throw lastError;
+  }
+
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
     try {
       await _dio.put('/api/Settings/password', data: {
-        'oldPassword': currentPassword,
+        'currentPassword': currentPassword,
         'newPassword': newPassword,
       });
     } catch (e) {
@@ -82,8 +130,25 @@ class SettingsApiService {
 
   static String parseError(dynamic e) {
     if (e is DioException) {
-      if (e.response?.data != null && e.response?.data is Map) {
-        return e.response?.data['message'] ?? e.response?.data['Message'] ?? 'An error occurred';
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map) {
+          if (data['errors'] != null) {
+            final errors = data['errors'];
+            if (errors is Map) {
+              return errors.values
+                  .map((v) => (v is List) ? v.join('\n') : v.toString())
+                  .join('\n');
+            }
+            return errors.toString();
+          }
+          return data['message'] ?? 
+                 data['Message'] ?? 
+                 data['title'] ?? 
+                 data['detail'] ?? 
+                 'An error occurred (${e.response?.statusCode})';
+        }
+        return data.toString();
       }
       return e.message ?? 'Connection error';
     }

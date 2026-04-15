@@ -139,7 +139,7 @@ class _ForYouViewState extends State<ForYouView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                state.errorMessage ?? 'حدث خطأ',
+                                state.errorMessage ?? AppLocalizations.of(context).serverConnectionError,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.error,
@@ -172,7 +172,7 @@ class _ForYouViewState extends State<ForYouView> {
                               ),
                               SizedBox(height: Responsive.spacing(context, 16)),
                               Text(
-                                'لا توجد منشورات بعد',
+                                AppLocalizations.of(context).noPostsYet,
                                 style: TextStyle(
                                   fontSize: Responsive.fontSize(context, 18),
                                   color: Colors.grey.shade600,
@@ -180,7 +180,7 @@ class _ForYouViewState extends State<ForYouView> {
                               ),
                               SizedBox(height: Responsive.spacing(context, 8)),
                               Text(
-                                'كن أول من يشارك!',
+                                AppLocalizations.of(context).beFirstToShare,
                                 style: TextStyle(
                                   fontSize: Responsive.fontSize(context, 14),
                                   color: Colors.grey.shade500,
@@ -211,8 +211,12 @@ class _ForYouViewState extends State<ForYouView> {
                               post.commentsCount,
                             ),
                             onShare: () {
-                              Share.share('${post.userName} posted:\n${post.content}');
-                              context.read<FeedCubit>().incrementShareCount(post.id);
+                              Share.share(
+                                '${post.userName} posted:\n${post.content}',
+                              );
+                              context
+                                  .read<FeedCubit>()
+                                  .incrementShareCount(post.id);
                             },
                           ),
                         ),
@@ -297,13 +301,6 @@ class _ForYouViewState extends State<ForYouView> {
     );
   }
 
-  String _getFullImageUrl(String? url) {
-    if (url == null || url.isEmpty) return '';
-    if (url.startsWith('http')) return url;
-    String base = DioClient.baseUrl;
-    String cleanUrl = url.startsWith('/') ? url : '/$url';
-    return '$base$cleanUrl';
-  }
 
   Widget _buildHeader(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -635,9 +632,6 @@ class PostCard extends StatelessWidget {
   }
 
   // Moved to top-level helper function for reuse in _CommentTile
-  ImageProvider? _buildUserProfileImageProvider(String path) {
-    return buildUserProfileImageProvider(path);
-  }
 
   @override
   Widget build(BuildContext context) {

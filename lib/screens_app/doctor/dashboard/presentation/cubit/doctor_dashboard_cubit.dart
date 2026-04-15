@@ -1,3 +1,6 @@
+import 'package:ehnama3ak/screens_app/doctor/dashboard/models/dashboard_stats_model.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/models/medical_report_model.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/models/recent_activity_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/data/datasources/doctor_dashboard_api_service.dart';
@@ -8,19 +11,29 @@ class DoctorDashboardCubit extends Cubit<DoctorDashboardState> {
   final DoctorDashboardApiService _apiService;
 
   DoctorDashboardCubit({required DoctorDashboardApiService apiService})
-      : _apiService = apiService,
-        super(DoctorDashboardInitial());
+    : _apiService = apiService,
+      super(DoctorDashboardInitial());
 
   Future<void> loadDashboardData() async {
     emit(DoctorDashboardLoading());
     try {
-      final stats = await _apiService.getStats();
-      print("Dashboard Stats: Sessions=${stats.sessionsCount}, News=${stats.newsCount}, Patients=${stats.patientsCount}, Upcoming=${stats.upcomingSessionsCount}");
-      final activity = await _apiService.getRecentActivity();
-      emit(DoctorDashboardSuccess(
-        stats: stats,
-        recentActivity: activity,
-      ));
+      final results = await Future.wait([
+        _apiService.getStats(),
+        _apiService.getRecentActivity(),
+        _apiService.getMedicalReports(),
+      ]);
+
+      final stats = results[0] as DashboardStatsModel;
+      final activity = results[1] as List<RecentActivityModel>;
+      final reports = results[2] as List<MedicalReportModel>;
+
+      emit(
+        DoctorDashboardSuccess(
+          stats: stats,
+          recentActivity: activity,
+          medicalReports: reports,
+        ),
+      );
     } on DioException catch (e) {
       _handleErrors(e);
     } catch (e) {
@@ -47,18 +60,24 @@ class DoctorDashboardCubit extends Cubit<DoctorDashboardState> {
   Future<void> loadReports() async {
     final currentState = state;
     if (currentState is! DoctorDashboardSuccess) {
-       emit(DoctorDashboardLoading());
+      emit(DoctorDashboardLoading());
     }
     try {
-      final stats = currentState is DoctorDashboardSuccess ? currentState.stats : await _apiService.getStats();
-      final activity = currentState is DoctorDashboardSuccess ? currentState.recentActivity : await _apiService.getRecentActivity();
+      final stats = currentState is DoctorDashboardSuccess
+          ? currentState.stats
+          : await _apiService.getStats();
+      final activity = currentState is DoctorDashboardSuccess
+          ? currentState.recentActivity
+          : await _apiService.getRecentActivity();
       final reports = await _apiService.getMedicalReports();
-      
-      emit(DoctorDashboardSuccess(
-        stats: stats,
-        recentActivity: activity,
-        medicalReports: reports,
-      ));
+
+      emit(
+        DoctorDashboardSuccess(
+          stats: stats,
+          recentActivity: activity,
+          medicalReports: reports,
+        ),
+      );
     } on DioException catch (e) {
       _handleErrors(e);
     } catch (e) {
@@ -84,13 +103,24 @@ class DoctorDashboardCubit extends Cubit<DoctorDashboardState> {
 
   void _handleErrors(DioException e) {
     if (e.response?.statusCode == 401) {
-      emit(DoctorDashboardError(message: 'Unauthorized. Please login again.', isUnauthorized: true));
-    } else if (e.type == DioExceptionType.connectionTimeout || 
-               e.type == DioExceptionType.receiveTimeout) {
-      emit(DoctorDashboardError(message: 'Connection timeout. Please try again.'));
+      emit(
+        DoctorDashboardError(
+          message: 'Unauthorized. Please login again.',
+          isUnauthorized: true,
+        ),
+      );
+    } else if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      emit(
+        DoctorDashboardError(message: 'Connection timeout. Please try again.'),
+      );
     } else {
       final detail = e.response?.data?.toString() ?? e.message;
-      emit(DoctorDashboardError(message: 'Server error: ${e.response?.statusCode}\nDetails: $detail'));
+      emit(
+        DoctorDashboardError(
+          message: 'Server error: ${e.response?.statusCode}\nDetails: $detail',
+        ),
+      );
     }
   }
 }

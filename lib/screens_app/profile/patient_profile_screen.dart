@@ -48,6 +48,8 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
   void _showEditProfileDialog(ProfileModel profile) {
     final l10n = AppLocalizations.of(context);
     final nameCtrl = TextEditingController(text: profile.fullName);
+    final ageCtrl = TextEditingController(text: profile.age.toString());
+    String selectedGender = profile.gender.isNotEmpty ? profile.gender : 'Male';
 
     showDialog(
       context: context,
@@ -59,18 +61,52 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: nameCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.fullName,
-                      border: const OutlineInputBorder(),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: nameCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.fullName,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: ageCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: l10n.age,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: ['Male', 'Female'].contains(selectedGender)
+                          ? selectedGender
+                          : 'Male',
+                      decoration: InputDecoration(
+                        labelText: l10n.gender,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: ['Male', 'Female']
+                          .map((g) => DropdownMenuItem(
+                                value: g,
+                                child: Text(g),
+                              ))
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            selectedGender = val;
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -89,10 +125,18 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     ),
                   ),
                   onPressed: () async {
-                    Navigator.pop(context);
                     final cubit = context.read<ProfileCubit>();
                     final settingsCubit = context.read<SettingsCubit>();
-                    await cubit.updateProfile(fullName: nameCtrl.text);
+                    final age = int.tryParse(ageCtrl.text) ?? 0;
+                    
+                    Navigator.pop(context);
+                    
+                    await cubit.updateProfile(
+                      fullName: nameCtrl.text,
+                      age: age,
+                      gender: selectedGender,
+                    );
+                    
                     if (context.mounted) {
                       settingsCubit.fetchSettings();
                     }

@@ -73,8 +73,14 @@ class DoctorDashboardApiService {
 
   Future<void> uploadReport(UploadReportModel model) async {
     try {
-      await _dio.post('/api/DoctorDashboard/upload-report',
-          data: model.toJson());
+      await _dio.post(
+        '/api/DoctorReports',
+        data: {
+          'patientId': model.patientId,
+          'type': model.type,
+          'fileUrl': model.fileUrl,
+        },
+      );
     } on DioException catch (e) {
       log('DioError uploading medical report: ${e.response?.statusCode}');
       rethrow;

@@ -56,9 +56,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ResetPasswordScreen(
-                        email: _emailCtrl.text.trim(),
-                      ),
+                      builder: (context) =>
+                          ResetPasswordScreen(email: _emailCtrl.text.trim()),
                     ),
                   );
                 } else if (state is AuthFailure) {
@@ -71,111 +70,152 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 }
               },
               builder: (context, state) {
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxContentWidth),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            height: Responsive.height(context, 0.36),
-                            width: double.infinity,
-                            child: Stack(
-                              children: [
-                                Center(
-                                  child: Image.asset(
-                                    'assets/images/image_patient.png',
-                                    width: Responsive.width(context, 0.8),
-                                    height: Responsive.height(context, 0.25),
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                                AppIconBack(
-                                  top: Responsive.spacing(context, 10),
-                                  left: Responsive.spacing(context, 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: Responsive.spacing(context, 16)),
-                          Text(
-                            l10n.forgotPassword,
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: Responsive.fontSize(context, 20),
-                            ),
-                          ),
-                          SizedBox(height: Responsive.spacing(context, 18)),
-
-                          // FORM
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: Responsive.valueByDevice(
-                                context: context,
-                                mobile: 30,
-                                tablet: 80,
-                                desktop: 120,
-                              ),
-                            ),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'Enter your email to receive a password reset code',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: Responsive.fontSize(context, 14),
-                                    ),
-                                  ),
-                                  SizedBox(height: Responsive.spacing(context, 20)),
-                                  AppTextField(
-                                    controller: _emailCtrl,
-                                    hintText: l10n.emailHint,
-                                    prefixIcon: Icons.email_outlined,
-                                    keyboardType: TextInputType.emailAddress,
-                                    borderRadius: Responsive.borderRadius(context, 18.0),
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: Responsive.padding(context, 20),
-                                      vertical: Responsive.padding(context, 18),
-                                    ),
-                                    hintStyle: TextStyle(
-                                      color: const Color(0xFF9FB9CF),
-                                      fontSize: Responsive.fontSize(context, 16),
-                                    ),
-                                    validator: (v) {
-                                      if (v == null || v.trim().isEmpty) return l10n.enterEmail;
-                                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v.trim())) return l10n.enterValidEmail;
-                                      return null;
-                                    },
-                                  ),
-                                  SizedBox(height: Responsive.spacing(context, 30)),
-
-                                  // Send Code Button
-                                  if (state is AuthLoading)
-                                    const CircularProgressIndicator()
-                                  else
-                                    AppButton(
-                                      width: double.infinity,
-                                      height: Responsive.height(context, 0.065).clamp(48, 60),
-                                      radius: Responsive.borderRadius(context, 12),
-                                      textStyle: TextStyle(
-                                        fontSize: Responsive.fontSize(context, 18),
-                                        color: Colors.white,
+                return Stack(
+                  children: [
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: maxContentWidth),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: Responsive.height(context, 0.35),
+                                width: double.infinity,
+                                child: Stack(
+                                  children: [
+                                    Center(
+                                      child: Image.asset(
+                                        'assets/images/ForgotPassword.png',
+                                        width: Responsive.width(context, 0.8),
+                                        height: Responsive.height(
+                                          context,
+                                          0.25,
+                                        ),
+                                        // fit: BoxFit.contain,
                                       ),
-                                      onPressed: _onSendCode,
-                                      label: 'Send Code',
                                     ),
-                                  SizedBox(height: Responsive.spacing(context, 40)),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
+                              // Text(
+                              //   l10n.forgotPassword,
+                              //   style: TextStyle(
+                              //     color: Colors.black,
+                              //     fontSize: Responsive.fontSize(context, 20),
+                              //   ),
+                              // ),
+                              SizedBox(height: Responsive.spacing(context, 18)),
+
+                              // FORM
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: Responsive.valueByDevice(
+                                    context: context,
+                                    mobile: 30,
+                                    tablet: 80,
+                                    desktop: 120,
+                                  ),
+                                ),
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'Enter your email to receive a password reset code',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.black54,
+                                          fontSize: Responsive.fontSize(
+                                            context,
+                                            14,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: Responsive.spacing(context, 20),
+                                      ),
+                                      AppTextField(
+                                        controller: _emailCtrl,
+                                        hintText: l10n.emailHint,
+                                        prefixIcon: Icons.email_outlined,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        borderRadius: Responsive.borderRadius(
+                                          context,
+                                          18.0,
+                                        ),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: Responsive.padding(
+                                            context,
+                                            20,
+                                          ),
+                                          vertical: Responsive.padding(
+                                            context,
+                                            18,
+                                          ),
+                                        ),
+                                        hintStyle: TextStyle(
+                                          color: const Color(0xFF9FB9CF),
+                                          fontSize: Responsive.fontSize(
+                                            context,
+                                            16,
+                                          ),
+                                        ),
+                                        validator: (v) {
+                                          if (v == null || v.trim().isEmpty)
+                                            return l10n.enterEmail;
+                                          if (!RegExp(
+                                            r'^[^@]+@[^@]+\.[^@]+',
+                                          ).hasMatch(v.trim()))
+                                            return l10n.enterValidEmail;
+                                          return null;
+                                        },
+                                      ),
+                                      SizedBox(
+                                        height: Responsive.spacing(context, 30),
+                                      ),
+
+                                      // Send Code Button
+                                      if (state is AuthLoading)
+                                        const CircularProgressIndicator()
+                                      else
+                                        AppButton(
+                                          width: double.infinity,
+                                          height: Responsive.height(
+                                            context,
+                                            0.065,
+                                          ).clamp(48, 60),
+                                          radius: Responsive.borderRadius(
+                                            context,
+                                            12,
+                                          ),
+                                          textStyle: TextStyle(
+                                            fontSize: Responsive.fontSize(
+                                              context,
+                                              18,
+                                            ),
+                                            color: Colors.white,
+                                          ),
+                                          onPressed: _onSendCode,
+                                          label: 'Send Code',
+                                        ),
+                                      SizedBox(
+                                        height: Responsive.spacing(context, 40),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    AppIconBack(
+                      top: Responsive.spacing(context, 50),
+                      left: Responsive.spacing(context, 12),
+                    ),
+                  ],
                 );
               },
             ),

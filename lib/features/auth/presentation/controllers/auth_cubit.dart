@@ -166,6 +166,23 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> updateDoctorProfileLocally({
+    required String name,
+    required String specialization,
+    required int yearsOfExperience,
+    String? bio,
+    double? sessionPrice,
+  }) async {
+    await _repo.updateDoctorProfileLocally(
+      name: name,
+      specialization: specialization,
+      yearsOfExperience: yearsOfExperience,
+      bio: bio,
+      sessionPrice: sessionPrice,
+    );
+    await reloadUser();
+  }
+
   Future<void> forgotPassword(String email) async {
     emit(const AuthLoading());
     try {

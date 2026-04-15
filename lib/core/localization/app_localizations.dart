@@ -57,10 +57,16 @@ class AppLocalizations {
   String get fullName => translate('full_name');
   String get email => translate('email');
   String get name => translate('name');
+  String get age => translate('age');
+  String get gender => translate('gender');
   String get currentPassword => translate('current_password');
   String get newPassword => translate('new_password');
   String get changePassword => translate('change_password');
   String get update => translate('update');
+  String get specialization => translate('specialization');
+  String get experienceYears => translate('experience_years');
+  String get bio => translate('bio');
+  String get sessionPrice => translate('session_price');
 
   String get general => translate('general');
   String get security => translate('security');
@@ -76,6 +82,7 @@ class AppLocalizations {
   String get updatingProfile => translate('updating_profile');
   String get profileUpdated => translate('profile_updated');
   String get imageUpdated => translate('image_updated');
+  String get passwordUpdatedSuccess => translate('password_updated_success');
 
   String get whatsOnYourMind => translate('whats_on_your_mind');
   String get photo => translate('photo');

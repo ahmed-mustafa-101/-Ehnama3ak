@@ -1,9 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:image_picker/image_picker.dart';
+import 'package:ehnama3ak/screens_app/chatbot/chat_cubit.dart';
+import 'package:ehnama3ak/screens_app/chatbot/chat_state.dart';
+import 'package:ehnama3ak/screens_app/chatbot/chat_message.dart';
 
 class ChatbotScreen extends StatefulWidget {
   final VoidCallback? onClose;
@@ -14,8 +17,8 @@ class ChatbotScreen extends StatefulWidget {
 }
 
 class _ChatbotScreenState extends State<ChatbotScreen> {
-  final List<_ChatMessage> _messages = [];
   final TextEditingController _inputCtrl = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
 
   late stt.SpeechToText _speech;
@@ -30,7 +33,20 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   @override
   void dispose() {
     _inputCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    }
   }
 
   void _listen() async {
@@ -72,17 +88,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       );
 
       if (pickedFile != null) {
-        setState(() {
-          _messages.add(
-            _ChatMessage(text: "", isUser: true, image: File(pickedFile.path)),
-          );
-          _messages.add(
-            _ChatMessage(
-              text: AppLocalizations.of(context).imageReceived,
-              isUser: false,
-            ),
-          );
-        });
+        // UI logic for image picking could be integrated with the cubit if needed,
+        // but keeping it as per current implementation for now.
+        // For simplicity and matching current UI:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).imageReceived)),
+        );
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
@@ -113,12 +124,18 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 _buildOption(
                   icon: Icons.camera_alt,
                   label: AppLocalizations.of(context).camera,
-                  onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
                 ),
                 _buildOption(
                   icon: Icons.photo_library,
                   label: AppLocalizations.of(context).gallery,
-                  onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
                 ),
               ],
             ),
@@ -157,16 +174,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final text = _inputCtrl.text.trim();
     if (text.isEmpty) return;
 
-    setState(() {
-      _messages.add(_ChatMessage(text: text, isUser: true));
-      _inputCtrl.clear();
-      _messages.add(
-        _ChatMessage(
-          text: AppLocalizations.of(context).botReply,
-          isUser: false,
-        ),
-      );
-    });
+    context.read<ChatCubit>().sendMessage(text);
+    _inputCtrl.clear();
+    _scrollToBottom();
   }
 
   @override
@@ -200,12 +210,39 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
           // ===== قائمة الرسائل =====
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                return _buildMessageBubble(msg);
+            child: BlocConsumer<ChatCubit, ChatState>(
+              listener: (context, state) {
+                if (state is ChatLoaded ||
+                    state is ChatLoading ||
+                    state is ChatError) {
+                  _scrollToBottom();
+                }
+                if (state is ChatError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.error),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                final messages = state.messages;
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  itemCount: messages.length + (state is ChatLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == messages.length && state is ChatLoading) {
+                      return _buildTypingIndicator();
+                    }
+                    final msg = messages[index];
+                    return _buildMessageBubble(msg);
+                  },
+                );
               },
             ),
           ),
@@ -300,7 +337,58 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   // =================== WIDGET الرسالة ===================
 
-  Widget _buildMessageBubble(_ChatMessage msg) {
+  Widget _buildTypingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF1E1E1E)
+                  : const Color(0xFFF5F7FB),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _TypingDot(delay: Duration(milliseconds: 0)),
+                SizedBox(width: 4),
+                _TypingDot(delay: Duration(milliseconds: 200)),
+                SizedBox(width: 4),
+                _TypingDot(delay: Duration(milliseconds: 400)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getEmotionEmoji(String? emotion) {
+    if (emotion == null) return '';
+    switch (emotion.toLowerCase()) {
+      case 'sadness':
+        return '😢';
+      case 'joy':
+        return '😊';
+      case 'fear':
+        return '😨';
+      case 'anger':
+        return '😠';
+      case 'surprise':
+        return '😲';
+      case 'disgust':
+        return '🤢';
+      case 'neutral':
+        return '😐';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildMessageBubble(ChatMessage msg) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (msg.isUser) {
@@ -325,20 +413,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (msg.image != null)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.file(
-                          msg.image!,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    if (msg.image != null && msg.text.isNotEmpty)
-                      const SizedBox(height: 8),
-                    if (msg.text.isNotEmpty)
+                    if (msg.message.isNotEmpty)
                       Text(
-                        msg.text,
+                        msg.message,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15,
@@ -354,38 +431,119 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       );
     } else {
       // رسالة البوت
+      final emotionEmoji = _getEmotionEmoji(msg.emotion);
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 6.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Flexible(
-              child: Text(
-                msg.text,
-                style: TextStyle(
-                  fontSize: 15,
-                  height: 1.35,
-                  color: isDark ? Colors.white : const Color(0xFF374957),
-                ),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E88E5).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.smart_toy_outlined,
+                color: Color(0xFF1E88E5),
+                size: 20,
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              icon: const Icon(
-                Icons.copy_outlined,
-                size: 20,
-                color: Color(0xFF90A4AE),
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF263238)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(
+                    20,
+                  ).copyWith(topLeft: const Radius.circular(4)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (msg.aiModel != null || emotionEmoji.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (msg.aiModel != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1E88E5)
+                                      .withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  msg.aiModel!.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1E88E5),
+                                  ),
+                                ),
+                              ),
+                            if (msg.aiModel != null && emotionEmoji.isNotEmpty)
+                              const SizedBox(width: 8),
+                            if (emotionEmoji.isNotEmpty)
+                              Text(
+                                emotionEmoji,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                          ],
+                        ),
+                      ),
+                    Text(
+                      msg.message,
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.35,
+                        color: isDark ? Colors.white : const Color(0xFF374957),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(
+                          Icons.copy_outlined,
+                          size: 16,
+                          color: Color(0xFF90A4AE),
+                        ),
+                        onPressed: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: msg.message),
+                          );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  ).copiedToClipboard,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: msg.text));
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context).copiedToClipboard)),
-                  );
-                }
-              },
             ),
           ],
         ),
@@ -394,11 +552,56 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 }
 
-// موديل بسيط للرسالة
-class _ChatMessage {
-  final String text;
-  final bool isUser;
-  final File? image;
+class _TypingDot extends StatefulWidget {
+  final Duration delay;
+  const _TypingDot({required this.delay});
 
-  _ChatMessage({required this.text, required this.isUser, this.image});
+  @override
+  State<_TypingDot> createState() => _TypingDotState();
+}
+
+class _TypingDotState extends State<_TypingDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _animation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    Future.delayed(widget.delay, () {
+      if (mounted) _controller.repeat(reverse: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          width: 5,
+          height: 5,
+          decoration: BoxDecoration(
+            color: Color.lerp(Colors.blueGrey, Colors.blue, _animation.value),
+            shape: BoxShape.circle,
+          ),
+        );
+      },
+    );
+  }
 }

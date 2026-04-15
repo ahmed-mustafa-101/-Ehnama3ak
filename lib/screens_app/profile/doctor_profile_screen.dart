@@ -484,6 +484,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                           l10n.upload,
                           const Color(0xFF43A047),
                           -3,
+                          count: state.medicalReports?.length ?? 0,
                         ),
                       ],
                     ),

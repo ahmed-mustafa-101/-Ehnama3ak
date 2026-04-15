@@ -37,6 +37,22 @@ class SettingsRepositoryImpl implements SettingsRepository {
       );
 
   @override
+  Future<void> updateDoctorProfile({
+    required String fullName,
+    required String specialization,
+    required num experienceYears,
+    required String bio,
+    required num sessionPrice,
+  }) =>
+      _apiService.updateDoctorProfile(
+        fullName: fullName,
+        specialization: specialization,
+        experienceYears: experienceYears,
+        bio: bio,
+        sessionPrice: sessionPrice,
+      );
+
+  @override
   Future<PrivacyPolicy> getPrivacyPolicy() => _apiService.getPrivacyPolicy();
 
   @override

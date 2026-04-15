@@ -5,6 +5,8 @@ class ProfileModel {
   final int sessionsCount;
   final int exercisesCount;
   final int daysCount;
+  final int age;
+  final String gender;
 
   ProfileModel({
     required this.fullName,
@@ -13,6 +15,8 @@ class ProfileModel {
     required this.sessionsCount,
     required this.exercisesCount,
     required this.daysCount,
+    this.age = 0,
+    this.gender = '',
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +34,8 @@ class ProfileModel {
       sessionsCount: json['sessionsCount'] ?? 0,
       exercisesCount: json['exercisesCount'] ?? 0,
       daysCount: json['daysCount'] ?? 0,
+      age: json['age'] ?? json['Age'] ?? 0,
+      gender: json['gender'] ?? json['Gender'] ?? '',
     );
   }
 }
