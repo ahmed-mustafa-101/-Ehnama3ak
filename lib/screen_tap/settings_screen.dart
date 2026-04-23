@@ -11,6 +11,7 @@ import '../core/widgets/app_tile.dart';
 import '../core/network/dio_client.dart';
 import '../screens_app/notifications/notifications_screen.dart';
 import 'section_title.dart';
+import 'package:share_plus/share_plus.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -52,9 +53,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(l10n.selectLanguage,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  l10n.selectLanguage,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 _LanguageTile(
                   label: 'English',
@@ -98,8 +103,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text(state.errorMessage!),
-                  backgroundColor: Colors.red),
+                content: Text(state.errorMessage!),
+                backgroundColor: Colors.red,
+              ),
             );
             context.read<SettingsCubit>().resetStatus();
           } else if (state.status == SettingsStatus.success) {
@@ -124,9 +130,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Text(l10n.settings,
-                    style: const TextStyle(
-                        fontSize: 30, fontWeight: FontWeight.w600)),
+                Text(
+                  l10n.settings,
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -142,7 +152,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             : () async {
                                 final picker = ImagePicker();
                                 final XFile? image = await picker.pickImage(
-                                    source: ImageSource.gallery);
+                                  source: ImageSource.gallery,
+                                );
                                 if (image != null && context.mounted) {
                                   await context
                                       .read<SettingsCubit>()
@@ -151,13 +162,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               },
                         child: CircleAvatar(
                           radius: 28,
-                          backgroundImage: (user?.profileImageUrl != null &&
+                          backgroundImage:
+                              (user?.profileImageUrl != null &&
                                   user!.profileImageUrl!.isNotEmpty)
                               ? NetworkImage(
-                                  _getFullImageUrl(user.profileImageUrl!))
+                                  _getFullImageUrl(user.profileImageUrl!),
+                                )
                               : const AssetImage(
-                                      'assets/images/user_avatar.png')
-                                  as ImageProvider,
+                                      'assets/images/user_avatar.png',
+                                    )
+                                    as ImageProvider,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -170,12 +184,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ? user.name
                                   : '...',
                               style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.color),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyLarge?.color,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -183,7 +197,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ? user.email
                                   : '...',
                               style: const TextStyle(
-                                  color: Colors.blueGrey, fontSize: 13),
+                                color: Colors.blueGrey,
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
@@ -197,9 +213,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.notifications_none,
                   title: l10n.notifications,
                   onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const NotificationsScreen())),
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  ),
                 ),
                 AppTile(
                   icon: Icons.language,
@@ -212,7 +230,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: l10n.security,
                   onTap: () => _showChangePasswordDialog(context),
                 ),
-                AppTile(icon: Icons.share, title: l10n.shareApp, onTap: () {}),
+                AppTile(
+                  icon: Icons.share,
+                  title: l10n.shareApp,
+                  onTap: () {
+                    Share.share(
+                      '${l10n.shareAppContent ?? 'Check out Ehnama3ak App!'} \n https://play.google.com/store/apps/details?id=com.ehnama3ak.app',
+                    );
+                  },
+                ),
                 const SizedBox(height: 20),
                 SectionTitle(l10n.support),
                 AppTile(
@@ -263,52 +289,66 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
-                        controller: cpCtrl,
-                        decoration:
-                            InputDecoration(labelText: l10n.currentPassword),
-                        obscureText: true),
+                      controller: cpCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.currentPassword,
+                      ),
+                      obscureText: true,
+                    ),
                     TextField(
-                        controller: npCtrl,
-                        decoration:
-                            InputDecoration(labelText: l10n.newPassword),
-                        obscureText: true),
+                      controller: npCtrl,
+                      decoration: InputDecoration(labelText: l10n.newPassword),
+                      obscureText: true,
+                    ),
                   ],
                 ),
                 actions: [
-                  Row(children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: state.isPasswordChanging
-                            ? null
-                            : () => Navigator.pop(diagContext),
-                        child: Text(l10n.cancel),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: state.isPasswordChanging
-                            ? null
-                            : () {
-                                if (cpCtrl.text.isEmpty || npCtrl.text.isEmpty)
-                                  return;
-                                context.read<SettingsCubit>().changePassword(
-                                    currentPassword: cpCtrl.text.trim(),
-                                    newPassword: npCtrl.text.trim());
-                              },
-                        style: ElevatedButton.styleFrom(
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: state.isPasswordChanging
+                              ? null
+                              : () => Navigator.pop(diagContext),
+                          style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0DA5FE),
-                            foregroundColor: Colors.white),
-                        child: state.isPasswordChanging
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2))
-                            : Text(l10n.update),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: Text(l10n.cancel),
+                        ),
                       ),
-                    ),
-                  ]),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: state.isPasswordChanging
+                              ? null
+                              : () {
+                                  if (cpCtrl.text.isEmpty ||
+                                      npCtrl.text.isEmpty)
+                                    return;
+                                  context.read<SettingsCubit>().changePassword(
+                                    currentPassword: cpCtrl.text.trim(),
+                                    newPassword: npCtrl.text.trim(),
+                                  );
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0DA5FE),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: state.isPasswordChanging
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(l10n.update),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               );
             },
@@ -328,18 +368,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
         builder: (context, state) => Container(
           height: MediaQuery.of(context).size.height * 0.7,
           padding: const EdgeInsets.all(20),
-          child: Column(children: [
-            Text(l10n.privacyPolicy,
+          child: Column(
+            children: [
+              Text(
+                l10n.privacyPolicy,
                 style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold)),
-            const Divider(),
-            Expanded(
-              child: state.status == SettingsStatus.loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : SingleChildScrollView(
-                      child: Text(state.privacyPolicy?.content ?? '')),
-            ),
-          ]),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Divider(),
+              Expanded(
+                child: state.status == SettingsStatus.loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView(
+                        child: Text(state.privacyPolicy?.content ?? ''),
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -356,23 +403,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(l10n.supportCenter,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(
+                l10n.supportCenter,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const Divider(),
               if (state.status == SettingsStatus.loading)
                 const CircularProgressIndicator()
               else if (state.supportInfo != null) ...[
                 ListTile(
-                    leading: const Icon(Icons.email),
-                    title: Text(state.supportInfo!.email)),
+                  leading: const Icon(Icons.email),
+                  title: Text(state.supportInfo!.email),
+                ),
                 ListTile(
-                    leading: const Icon(Icons.phone),
-                    title: Text(state.supportInfo!.phone)),
+                  leading: const Icon(Icons.phone),
+                  title: Text(state.supportInfo!.phone),
+                ),
                 if (state.supportInfo!.description != null)
                   Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(state.supportInfo!.description!)),
+                    padding: const EdgeInsets.all(8),
+                    child: Text(state.supportInfo!.description!),
+                  ),
               ],
             ],
           ),

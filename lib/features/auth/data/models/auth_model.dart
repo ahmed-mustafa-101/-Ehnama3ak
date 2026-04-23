@@ -72,8 +72,12 @@ class AuthModel extends Equatable {
     String roleStr = 'patient';
     if (json['role'] != null) {
       roleStr = json['role'].toString().trim().toLowerCase();
+    } else if (json['Role'] != null) {
+      roleStr = json['Role'].toString().trim().toLowerCase();
     } else if (json['roles'] is List && (json['roles'] as List).isNotEmpty) {
       roleStr = (json['roles'] as List).first.toString().trim().toLowerCase();
+    } else if (json['Roles'] is List && (json['Roles'] as List).isNotEmpty) {
+      roleStr = (json['Roles'] as List).first.toString().trim().toLowerCase();
     }
 
     final id = json['id'] ?? json['userId'] ?? json['userIds'] ?? json['uid'];

@@ -28,16 +28,23 @@ class VideoCard extends StatelessWidget {
         title: Text(
           title,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text(duration, style: const TextStyle(fontSize: 13)),
-        trailing: ElevatedButton.icon(
-          onPressed: onTap,
-          icon: const Icon(Icons.play_arrow, size: 18),
-          label: const Text('Watch'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1E88E5),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+        subtitle: Text(duration, style: const TextStyle(fontSize: 13),
+            maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: SizedBox(
+          width: 90,
+          child: ElevatedButton.icon(
+            onPressed: onTap,
+            icon: const Icon(Icons.play_arrow, size: 16),
+            label: const Text('Watch', style: TextStyle(fontSize: 12)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1E88E5),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
           ),
         ),

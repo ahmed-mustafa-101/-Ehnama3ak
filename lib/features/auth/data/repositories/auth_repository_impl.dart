@@ -61,12 +61,21 @@ class AuthRepositoryImpl implements AuthRepository {
     final emailFromJwt = JwtHelper.getEmailFromToken(d.token);
     final specFromJwt = JwtHelper.getSpecializationFromToken(d.token);
     final yearsFromJwt = JwtHelper.getYearsOfExperienceFromToken(d.token);
+    final roleFromJwt = JwtHelper.getRoleFromToken(d.token);
 
     final newId = d.id.isNotEmpty ? d.id : (idFromJwt ?? '');
     var newName = d.name.isNotEmpty ? d.name : (nameFromJwt ?? '');
     var newEmail = d.email.isNotEmpty ? d.email : (emailFromJwt ?? '');
     final newSpec = d.specialization ?? specFromJwt;
     final newYears = d.yearsOfExperience ?? yearsFromJwt;
+
+    var resolvedRole = d.role;
+    if (roleFromJwt != null) {
+      final jwtRole = UserRole.fromString(roleFromJwt);
+      if (jwtRole == UserRole.doctor) {
+        resolvedRole = UserRole.doctor;
+      }
+    }
 
     // If "name" from JWT is the same as email, prefer showing email once in UI;
     // still store a non-empty display string for the drawer.
@@ -92,7 +101,7 @@ class AuthRepositoryImpl implements AuthRepository {
         id: newId,
         name: newName,
         email: newEmail,
-        role: d.role,
+        role: resolvedRole,
         token: d.token,
         specialization: newSpec,
         yearsOfExperience: newYears,
@@ -106,8 +115,10 @@ class AuthRepositoryImpl implements AuthRepository {
     String name,
     String email,
     String password,
-    String confirmPassword,
-  ) async {
+    String confirmPassword, {
+    String? nationalNumber,
+    String? bio,
+  }) async {
     if (password != confirmPassword) {
       throw Exception('Passwords do not match');
     }
@@ -115,7 +126,10 @@ class AuthRepositoryImpl implements AuthRepository {
       name: name,
       email: email,
       password: password,
-      role: 'patient',
+      confirmPassword: confirmPassword,
+      role: 'Patient',
+      nationalNumber: nationalNumber,
+      bio: bio,
     );
     response = _enrichFromToken(response);
     if (response.token.isEmpty) {
@@ -135,8 +149,10 @@ class AuthRepositoryImpl implements AuthRepository {
     String password,
     String confirmPassword,
     String specialization,
-    int yearsOfExperience,
-  ) async {
+    int yearsOfExperience, {
+    String? nationalNumber,
+    String? bio,
+  }) async {
     if (password != confirmPassword) {
       throw Exception('Passwords do not match');
     }
@@ -144,9 +160,12 @@ class AuthRepositoryImpl implements AuthRepository {
       name: name,
       email: email,
       password: password,
-      role: 'doctor',
+      confirmPassword: confirmPassword,
+      role: 'Doctor',
       specialization: specialization.isNotEmpty ? specialization : null,
       yearsOfExperience: yearsOfExperience,
+      nationalNumber: nationalNumber,
+      bio: bio,
     );
     response = _enrichFromToken(response);
     if (response.token.isEmpty) {

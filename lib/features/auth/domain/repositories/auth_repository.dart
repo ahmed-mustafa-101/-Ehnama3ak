@@ -7,8 +7,10 @@ abstract class AuthRepository {
     String name,
     String email,
     String password,
-    String confirmPassword,
-  );
+    String confirmPassword, {
+    String? nationalNumber,
+    String? bio,
+  });
 
   Future<AuthResponseModel> registerDoctor(
     String name,
@@ -16,8 +18,10 @@ abstract class AuthRepository {
     String password,
     String confirmPassword,
     String specialization,
-    int yearsOfExperience,
-  );
+    int yearsOfExperience, {
+    String? nationalNumber,
+    String? bio,
+  });
 
   Future<AuthResponseModel?> getCurrentSession();
 

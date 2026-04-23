@@ -34,6 +34,8 @@ class PodcastCard extends StatelessWidget {
                     fontSize: 15,
                     color: isDark ? Colors.white : Colors.black,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -41,6 +43,8 @@ class PodcastCard extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 12,
                       color: isDark ? Colors.white70 : Colors.black54),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

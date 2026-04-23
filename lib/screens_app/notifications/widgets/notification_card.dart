@@ -81,6 +81,8 @@ class NotificationCard extends StatelessWidget {
                           fontWeight: isUnread ? FontWeight.w700 : FontWeight.w600,
                           fontSize: 15,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -92,6 +94,8 @@ class NotificationCard extends StatelessWidget {
                               : Colors.blueGrey.shade600,
                           height: 1.4,
                         ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

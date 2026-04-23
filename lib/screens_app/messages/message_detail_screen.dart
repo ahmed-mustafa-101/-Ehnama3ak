@@ -61,7 +61,10 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
               child: _profileImg == null ? Text(_displayName.isNotEmpty ? _displayName[0] : '?') : null,
             ),
             const SizedBox(width: 10),
-            Text(_displayName),
+            Expanded(
+              child: Text(_displayName,
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
           ],
         ),
       ),

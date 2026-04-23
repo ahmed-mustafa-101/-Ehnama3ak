@@ -56,11 +56,16 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
 
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Text(l10n.sessionsTitle, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              l10n.sessionsTitle,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.only(right: 20),
@@ -156,9 +161,12 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
             children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(session.patientName ?? 'Unknown Patient',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
-                Text("$displayDate - $displayTime", style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                Text("$displayDate - $displayTime",
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
                 if (session.price != null) ...[
                   const SizedBox(height: 4),
                   Text("Price: ${session.price} EGP",
@@ -168,7 +176,11 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                 Row(children: [
                   Icon(_getSessionIcon(sessionType), size: 16, color: Colors.grey),
                   const SizedBox(width: 5),
-                  Text('$sessionType Session', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Expanded(
+                    child: Text('$sessionType Session',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
                 ]),
               ])),
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [

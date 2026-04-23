@@ -71,6 +71,7 @@ class AppLocalizations {
   String get general => translate('general');
   String get security => translate('security');
   String get shareApp => translate('share_app');
+  String get shareAppContent => translate('share_app_content');
   String get supportCenter => translate('support_center');
   String get support => translate('support');
   String get privacyPolicy => translate('privacy_policy');

@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:ehnama3ak/screen_tap/therapist/data/datasources/doctor_api_service.dart';
 import 'package:ehnama3ak/screen_tap/therapist/presentation/cubit/doctor_state.dart';
+import 'package:ehnama3ak/screen_tap/therapist/models/doctor_model.dart';
 
 class DoctorCubit extends Cubit<DoctorState> {
   final DoctorApiService _doctorApiService;
@@ -10,10 +11,13 @@ class DoctorCubit extends Cubit<DoctorState> {
       : _doctorApiService = doctorApiService,
         super(DoctorInitial());
 
+  List<DoctorModel> _allDoctors = [];
+
   Future<void> loadDoctors() async {
     emit(DoctorLoading());
     try {
       final doctors = await _doctorApiService.getDoctors();
+      _allDoctors = doctors;
       emit(DoctorSuccess(doctors));
     } on DioException catch (e) {
       _handleErrors(e);
@@ -23,18 +27,32 @@ class DoctorCubit extends Cubit<DoctorState> {
   }
 
   Future<void> searchDoctors(String query) async {
-    if (query.isEmpty) {
-      return loadDoctors();
+    if (query.trim().isEmpty) {
+      if (_allDoctors.isNotEmpty) {
+        emit(DoctorSuccess(_allDoctors));
+      } else {
+        return loadDoctors();
+      }
+      return;
     }
-    emit(DoctorLoading());
-    try {
-      final doctors = await _doctorApiService.searchDoctors(query);
-      emit(DoctorSuccess(doctors));
-    } on DioException catch (e) {
-      _handleErrors(e);
-    } catch (e) {
-      emit(DoctorError(message: 'An unexpected error occurred: $e'));
+
+    if (_allDoctors.isEmpty) {
+      emit(DoctorLoading());
+      try {
+        _allDoctors = await _doctorApiService.getDoctors();
+      } catch (e) {
+        emit(DoctorError(message: 'Failed to search doctors: $e'));
+        return;
+      }
     }
+
+    final queryLower = query.toLowerCase();
+    final filteredDoctors = _allDoctors.where((doctor) {
+      return doctor.name.toLowerCase().contains(queryLower) ||
+          doctor.specialization.toLowerCase().contains(queryLower);
+    }).toList();
+
+    emit(DoctorSuccess(filteredDoctors));
   }
 
   Future<void> bookSession(int doctorId, String sessionDate, String sessionType) async {

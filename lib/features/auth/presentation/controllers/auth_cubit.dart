@@ -63,6 +63,8 @@ class AuthCubit extends Cubit<AuthState> {
     required String email,
     required String password,
     required String confirmPassword,
+    String? nationalNumber,
+    String? bio,
   }) async {
     if (name.trim().isEmpty) {
       emit(const AuthFailure('Name is required'));
@@ -88,6 +90,8 @@ class AuthCubit extends Cubit<AuthState> {
         email.trim(),
         password,
         confirmPassword,
+        nationalNumber: nationalNumber,
+        bio: bio,
       );
       emit(AuthSuccess(response.data));
     } catch (e) {
@@ -102,6 +106,8 @@ class AuthCubit extends Cubit<AuthState> {
     required String confirmPassword,
     required String specialization,
     required int yearsOfExperience,
+    String? nationalNumber,
+    String? bio,
   }) async {
     if (name.trim().isEmpty) {
       emit(const AuthFailure('Name is required'));
@@ -137,6 +143,8 @@ class AuthCubit extends Cubit<AuthState> {
         confirmPassword,
         specialization.trim(),
         yearsOfExperience,
+        nationalNumber: nationalNumber,
+        bio: bio,
       );
       emit(AuthSuccess(response.data));
     } catch (e) {

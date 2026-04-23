@@ -22,6 +22,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
   final TextEditingController emailCtrl = TextEditingController();
   final TextEditingController passCtrl = TextEditingController();
   final TextEditingController pass2Ctrl = TextEditingController();
+  final TextEditingController nationalNumCtrl = TextEditingController();
 
   bool _obscure1 = true;
   bool _obscure2 = true;
@@ -32,6 +33,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
     emailCtrl.dispose();
     passCtrl.dispose();
     pass2Ctrl.dispose();
+    nationalNumCtrl.dispose();
     super.dispose();
   }
 
@@ -42,6 +44,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
         email: emailCtrl.text.trim(),
         password: passCtrl.text.trim(),
         confirmPassword: pass2Ctrl.text.trim(),
+        nationalNumber: nationalNumCtrl.text.trim(),
       );
     }
   }
@@ -133,8 +136,19 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                                           ? 'Enter name'
                                           : null,
                                 ),
-                                SizedBox(
-                                    height: Responsive.spacing(context, 14)),
+                                SizedBox(height: Responsive.spacing(context, 14)),
+
+                                // National Number
+                                AppTextField(
+                                  controller: nationalNumCtrl,
+                                  hintText: 'National Number',
+                                  prefixIcon: Icons.badge_outlined,
+                                  validator: (v) =>
+                                      (v == null || v.trim().isEmpty)
+                                          ? 'Enter national number'
+                                          : null,
+                                ),
+                                SizedBox(height: Responsive.spacing(context, 14)),
 
                                 // Email
                                 AppTextField(

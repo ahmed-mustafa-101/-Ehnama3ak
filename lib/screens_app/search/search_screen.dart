@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
+import 'package:ehnama3ak/screen_tap/therapists.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ehnama3ak/screen_tap/therapist/presentation/cubit/doctor_cubit.dart';
 
 class SearchScreen extends StatefulWidget {
   final VoidCallback? onNotificationTap;
@@ -49,7 +53,10 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             child: TextField(
               controller: _searchController,
-              onChanged: (value) => setState(() => searchText = value),
+              onChanged: (value) {
+                setState(() => searchText = value);
+                context.read<DoctorCubit>().searchDoctors(value);
+              },
               decoration: InputDecoration(
                 border: InputBorder.none,
                 icon: const Icon(Icons.search, color: Colors.grey),
@@ -107,7 +114,13 @@ class _SearchScreenState extends State<SearchScreen> {
           child: PageView(
             controller: _pageController,
             onPageChanged: (index) => setState(() => _currentIndex = index),
-            children: List.generate(5, (i) => _TabPage(index: i, controller: _pageController)),
+            children: [
+              _TabPage(index: 0, controller: _pageController),
+              const TherapistsPage(showHeader: false),
+              _TabPage(index: 2, controller: _pageController),
+              _TabPage(index: 3, controller: _pageController),
+              _TabPage(index: 4, controller: _pageController),
+            ],
           ),
         ),
       ],

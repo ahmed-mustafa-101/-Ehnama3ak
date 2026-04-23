@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'dart:developer' as dev;
+import 'package:ehnama3ak/core/storage/pref_manager.dart';
 
 /// Represents the full response from the /chat API endpoint.
 class ChatApiResponse {
@@ -31,7 +32,7 @@ class ChatApiResponse {
 class ChatService {
   final Dio _dio;
   static const String _baseUrl =
-      "https://8080-01kp13y4qnq140r3q61mt98fp4.cloudspaces.litng.ai";
+      "https://8080-01kpfza2ykbgwssk6yhydnk5ac.cloudspaces.litng.ai";
 
   ChatService()
       : _dio = Dio(BaseOptions(
@@ -51,16 +52,56 @@ class ChatService {
     ));
   }
 
-  /// Sends [message] to the /chat endpoint and returns the full API response.
   Future<ChatApiResponse> sendMessage(String message) async {
     dev.log('Sending message to /chat: $message', name: 'ChatService');
+
+    String emotion = "string";
+    String userId = "default";
+    double? analyzeConfidence;
+    String? analyzeLanguage;
+
+    try {
+      final fetchedId = await PrefManager.getUserId();
+      if (fetchedId != null && fetchedId.isNotEmpty) {
+        userId = fetchedId;
+      }
+      dev.log('Sending text to /analyze: $message', name: 'ChatService');
+      final analyzeRes = await _dio.post('/analyze', data: {'text': message});
+      dev.log('Analyze response: ${analyzeRes.data}', name: 'ChatService');
+      if (analyzeRes.data != null && analyzeRes.data is Map<String, dynamic>) {
+        emotion = analyzeRes.data['emotion']?.toString() ??
+                  analyzeRes.data['label']?.toString() ??
+                  analyzeRes.data['sentiment']?.toString() ??
+                  "string";
+        analyzeConfidence = (analyzeRes.data['confidence'] as num?)?.toDouble();
+        analyzeLanguage = analyzeRes.data['language']?.toString();
+      } else if (analyzeRes.data is String) {
+        emotion = analyzeRes.data as String;
+      }
+    } catch (e) {
+      dev.log('Analyze error: $e', name: 'ChatService');
+    }
+
     try {
       final response = await _dio.post(
         '/chat',
-        data: {'text': message},
+        data: {
+          'text': message,
+          'emotion': emotion,
+          'user_id': userId,
+        },
       );
       dev.log('Response received: ${response.data}', name: 'ChatService');
-      return _parseResponse(response.data);
+      
+      final parsedResponse = _parseResponse(response.data);
+      
+      return ChatApiResponse(
+        message: parsedResponse.message,
+        emotion: parsedResponse.emotion ?? emotion,
+        confidence: parsedResponse.confidence ?? analyzeConfidence,
+        aiModel: parsedResponse.aiModel,
+        language: parsedResponse.language ?? analyzeLanguage,
+      );
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {

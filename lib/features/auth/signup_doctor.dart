@@ -334,6 +334,8 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
                           confirmPassword: pass2Ctrl.text.trim(),
                           specialization: specializationCtrl.text.trim(),
                           yearsOfExperience: years,
+                          nationalNumber: nationalNumCtrl.text.trim(),
+                          bio: aboutCtrl.text.trim(),
                         );
                   }
                 },

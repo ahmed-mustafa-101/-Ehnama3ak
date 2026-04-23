@@ -28,17 +28,24 @@ class ArticleCard extends StatelessWidget {
         title: Text(
           title,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 13)),
-        trailing: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1E88E5),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 13),
+            maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: SizedBox(
+          width: 90,
+          child: ElevatedButton(
+            onPressed: onTap,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1E88E5),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
+            child: const Text('Read Now', style: TextStyle(fontSize: 12)),
           ),
-          child: const Text('Read Now'),
         ),
       ),
     );

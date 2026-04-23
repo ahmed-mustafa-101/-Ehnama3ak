@@ -54,21 +54,43 @@ class DoctorDashboardApiService {
   }
 
   Future<List<MedicalReportModel>> getMedicalReports() async {
-    try {
-      final response = await _dio.get('/api/DoctorDashboard/medical-reports');
-      if (response.data is List) {
-        return (response.data as List)
-            .map((e) => MedicalReportModel.fromJson(e))
-            .toList();
+    final endpoints = [
+      '/api/DoctorDashboard/medical-reports',
+      '/api/DoctorReports',
+      '/api/DoctorReports/reports',
+      '/api/DoctorDashboard/reports',
+    ];
+
+    Object? lastError;
+    for (final endpoint in endpoints) {
+      try {
+        final response = await _dio.get(endpoint);
+        if (response.data is List) {
+          return (response.data as List)
+              .map((e) => MedicalReportModel.fromJson(e))
+              .toList();
+        }
+        if (response.data is Map) {
+          final dynamic items = response.data['items'] ?? response.data['data'] ?? response.data['reports'];
+          if (items is List) {
+            return items.map((e) => MedicalReportModel.fromJson(e)).toList();
+          }
+        }
+        return [];
+      } on DioException catch (e) {
+        lastError = e;
+        log('Error hitting $endpoint: ${e.response?.statusCode}');
+        if (e.response?.statusCode == 404 || e.response?.statusCode == 403) {
+          continue;
+        }
+        rethrow;
+      } catch (e) {
+        lastError = e;
+        continue;
       }
-      return [];
-    } on DioException catch (e) {
-      log('DioError getting medical reports: ${e.response?.statusCode}');
-      rethrow;
-    } catch (e) {
-      log('Error getting medical reports: $e');
-      rethrow;
     }
+    log('All medical reports endpoints failed. Last error: $lastError');
+    return [];
   }
 
   Future<void> uploadReport(UploadReportModel model) async {

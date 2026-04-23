@@ -83,9 +83,29 @@ class PrefManager {
     return activeDays.length;
   }
 
+  static const String _chatbotIntroKey = 'has_seen_chatbot_intro';
+
+  static Future<void> setHasSeenChatbotIntro(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_chatbotIntroKey, value);
+  }
+
+  static Future<bool> getHasSeenChatbotIntro() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_chatbotIntroKey) ?? false;
+  }
+
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
+    // Preserve intro flag across logouts
+    final bool hasSeenChatbot = prefs.getBool(_chatbotIntroKey) ?? false;
+    
     await prefs.clear();
+    
+    if (hasSeenChatbot) {
+      await prefs.setBool(_chatbotIntroKey, true);
+    }
+    
     await _secureStorage.clearAll();
   }
 }

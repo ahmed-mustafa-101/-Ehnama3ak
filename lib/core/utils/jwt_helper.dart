@@ -12,6 +12,8 @@ class JwtHelper {
       'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';
   static const _claimSurname =
       'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';
+  static const _claimRole =
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 
   static Map<String, dynamic>? decodePayload(String token) {
     try {
@@ -120,5 +122,17 @@ class JwtHelper {
         map[_claimNameId];
 
     return id?.toString();
+  }
+
+  static String? getRoleFromToken(String token) {
+    final map = decodePayload(token);
+    if (map == null) return null;
+    return _firstNonEmptyString(map, [
+      'role',
+      'Role',
+      'roles',
+      'Roles',
+      _claimRole,
+    ]);
   }
 }

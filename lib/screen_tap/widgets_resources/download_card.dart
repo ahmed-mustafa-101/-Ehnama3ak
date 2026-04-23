@@ -47,9 +47,12 @@ class DownloadCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(description, style: const TextStyle(fontSize: 13)),
+                  Text(description, style: const TextStyle(fontSize: 13),
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 6),
                   Text(
                     fileSize,
@@ -58,27 +61,37 @@ class DownloadCard extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                ElevatedButton.icon(
-                  onPressed: onDownload,
-                  icon: const Icon(Icons.download, size: 16),
-                  label: const Text('Download'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E88E5),
-                    minimumSize: const Size(90, 34),
+                SizedBox(
+                  width: 90,
+                  height: 34,
+                  child: ElevatedButton.icon(
+                    onPressed: onDownload,
+                    icon: const Icon(Icons.download, size: 14),
+                    label: const Text('Download', style: TextStyle(fontSize: 11)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E88E5),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),
-                OutlinedButton(
-                  onPressed: onRead,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(90, 34),
-                    side: const BorderSide(color: Color(0xFF1E88E5)),
-                  ),
-                  child: const Text(
-                    'Read',
-                    style: TextStyle(color: Color(0xFF1E88E5)),
+                SizedBox(
+                  width: 90,
+                  height: 34,
+                  child: OutlinedButton(
+                    onPressed: onRead,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      side: const BorderSide(color: Color(0xFF1E88E5)),
+                    ),
+                    child: const Text(
+                      'Read',
+                      style: TextStyle(color: Color(0xFF1E88E5), fontSize: 12),
+                    ),
                   ),
                 ),
               ],

@@ -50,24 +50,49 @@ class AuthApiService {
     required String name,
     required String email,
     required String password,
+    required String confirmPassword,
     required String role,
+    String? nationalNumber,
     String? specialization,
     int? yearsOfExperience,
+    String? bio,
   }) async {
-    final data = <String, dynamic>{
-      'fullName': name,
-      'email': email,
-      'password': password,
-      'role': role,
+    final formDataMap = <String, dynamic>{
+      'FullName': name,
+      'Email': email,
+      'Password': password,
+      'ConfirmPassword': confirmPassword,
+      'Role': role,
+      'NationalNumber': nationalNumber ?? '',
     };
+
     if (specialization != null && specialization.isNotEmpty) {
-      data['specialization'] = specialization;
-    }
-    if (yearsOfExperience != null && yearsOfExperience >= 0) {
-      data['experienceYears'] = yearsOfExperience;
+      formDataMap['Specialization'] = specialization;
+    } else if (role == 'doctor') {
+      formDataMap['Specialization'] = 'General';
     }
 
-    final response = await _dio.post('/api/Auth/register', data: data);
+    if (yearsOfExperience != null && yearsOfExperience >= 0) {
+      formDataMap['ExperienceYears'] = yearsOfExperience;
+    } else if (role == 'doctor') {
+      formDataMap['ExperienceYears'] = 0;
+    }
+
+    if (bio != null && bio.isNotEmpty) {
+      formDataMap['Bio'] = bio;
+    } else if (role == 'doctor') {
+      formDataMap['Bio'] = 'Doctor profile';
+    }
+
+    final formData = FormData.fromMap(formDataMap);
+
+    final response = await _dio.post(
+      '/api/Auth/register',
+      data: formData,
+      options: Options(
+        contentType: 'multipart/form-data',
+      ),
+    );
     return AuthResponseModel.fromJson(response.data);
   }
 
@@ -102,7 +127,6 @@ class AuthApiService {
   }
 
   static String parseApiError(dynamic error) {
-
     if (error is DioException) {
       if (error.response != null &&
           error.response?.data != null &&
@@ -110,7 +134,13 @@ class AuthApiService {
         final data = error.response!.data;
         try {
           if (data is List) {
-            return data.map((e) => e.toString()).join('\n');
+            // Handle list of objects with "code" and "description"
+            return data.map((e) {
+              if (e is Map && e.containsKey('description')) {
+                return e['description'].toString();
+              }
+              return e.toString();
+            }).join('\n');
           }
           if (data is Map) {
             if (data['errors'] != null) {

@@ -27,12 +27,21 @@ class DoctorPatientModel extends Equatable {
       return null;
     }
 
+    String? imageUrl = getField(['profileImageUrl', 'imageUrl', 'image', 'picture'])?.toString();
+    if (imageUrl != null && imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
+      if (imageUrl.startsWith('/')) {
+        imageUrl = 'http://e7nama3ak.runasp.net$imageUrl';
+      } else {
+        imageUrl = 'http://e7nama3ak.runasp.net/$imageUrl';
+      }
+    }
+
     return DoctorPatientModel(
       id: getField(['id'])?.toString(),
       fullName: getField(['fullName', 'name', 'patientName'])?.toString(),
       diagnosis: getField(['diagnosis', 'condition', 'medicalHistory'])?.toString(),
       lastSessionDate: getField(['lastSessionDate', 'lastSession', 'date'])?.toString(),
-      profileImageUrl: getField(['profileImageUrl', 'imageUrl', 'image', 'picture'])?.toString(),
+      profileImageUrl: imageUrl,
     );
   }
 

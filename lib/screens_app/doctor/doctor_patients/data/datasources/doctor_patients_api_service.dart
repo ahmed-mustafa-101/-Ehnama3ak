@@ -10,9 +10,9 @@ class DoctorPatientsApiService {
   /// GET all doctor patients
   Future<List<DoctorPatientModel>> getDoctorPatients() async {
     final variants = [
+      '/api/DoctorDashboard/patients',
       '/api/DoctorPatients/patients',
       '/api/DoctorPatients',
-      '/api/DoctorDashboard/patients',
       '/api/Doctor/Patients',
     ];
 
@@ -35,7 +35,7 @@ class DoctorPatientsApiService {
   /// GET search doctor patients
   Future<List<DoctorPatientModel>> searchDoctorPatients(String query) async {
     return _fetchPatients(
-      '/api/DoctorPatients/search-doctors',
+      '/api/DoctorPatients/search-patients',
       queryParameters: {'query': query},
     );
   }
@@ -60,7 +60,18 @@ class DoctorPatientsApiService {
 
       // Handle direct List response
       if (data is List) {
+        log('Fetching patients, total items: ${data.length}');
         return data
+            .where((json) {
+              if (json is Map) {
+                final role = (json['role'] ?? json['Role'] ?? json['userRole'] ?? json['UserRole'] ?? json['roleName'])?.toString().toLowerCase().trim();
+                log('Item role: $role');
+                // Only filter out if we are SURE it is a doctor. 
+                // In some APIs, patients might have role null or 'patient'.
+                return role != 'doctor' && role != 'therapist' && role != 'admin';
+              }
+              return true;
+            })
             .map(
               (json) =>
                   DoctorPatientModel.fromJson(Map<String, dynamic>.from(json)),
@@ -72,7 +83,16 @@ class DoctorPatientsApiService {
       if (data is Map) {
         final dynamic items = data['items'] ?? data['data'] ?? data['patients'];
         if (items is List) {
+          log('Fetching patients from map, total items: ${items.length}');
           return items
+              .where((json) {
+                if (json is Map) {
+                  final role = (json['role'] ?? json['Role'] ?? json['userRole'] ?? json['UserRole'] ?? json['roleName'])?.toString().toLowerCase().trim();
+                  log('Item role: $role');
+                  return role != 'doctor' && role != 'therapist' && role != 'admin';
+                }
+                return true;
+              })
               .map(
                 (json) => DoctorPatientModel.fromJson(
                   Map<String, dynamic>.from(json),

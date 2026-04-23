@@ -16,7 +16,6 @@ class ChatCubit extends Cubit<ChatState> {
       isUser: true,
       timestamp: DateTime.now(),
     );
-
     final updatedMessages = List<ChatMessage>.from(state.messages)
       ..add(userMessage);
 

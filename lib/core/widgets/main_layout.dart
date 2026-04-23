@@ -179,7 +179,7 @@ class MainLayoutState extends State<MainLayout> {
           // Notifications Overlay
           if (_showNotifications)
             Positioned(
-              top: 80,
+              top: 60,
               left: 0,
               right: 0,
               bottom: 0,
@@ -195,7 +195,7 @@ class MainLayoutState extends State<MainLayout> {
 
           if (_showMessages)
             Positioned(
-              top: 80,
+              top: 60,
               left: 0,
               right: 0,
               bottom: 0,

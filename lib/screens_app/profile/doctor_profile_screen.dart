@@ -2,6 +2,7 @@ import 'package:ehnama3ak/core/utils/responsive.dart';
 import 'package:ehnama3ak/core/widgets/registered_doctor_profile_texts.dart';
 import 'package:ehnama3ak/core/widgets/main_layout.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/models/upload_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/auth/presentation/controllers/auth_cubit.dart';
@@ -9,7 +10,8 @@ import '../../features/auth/presentation/controllers/auth_state.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_cubit.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_state.dart';
 import 'package:ehnama3ak/core/network/dio_client.dart';
-import 'package:ehnama3ak/screens_app/doctor/dashboard/models/upload_models.dart';
+import 'package:ehnama3ak/features/notifications/presentation/cubit/notification_cubit.dart';
+import 'package:ehnama3ak/features/notifications/presentation/cubit/notification_state.dart';
 
 class DoctorProfileScreen extends StatefulWidget {
   const DoctorProfileScreen({super.key});
@@ -447,13 +449,17 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                           -1,
                           count: stats.sessionsCount,
                         ),
-                        _dashboardItem(
-                          context,
-                          Icons.notifications_rounded,
-                          l10n.news,
-                          Colors.orange,
-                          -1,
-                          count: stats.newsCount,
+                        BlocBuilder<NotificationCubit, NotificationState>(
+                          builder: (context, notificationState) {
+                            return _dashboardItem(
+                              context,
+                              Icons.notifications_rounded,
+                              l10n.news,
+                              Colors.orange,
+                              -4, // Custom index for notifications
+                              count: notificationState.unreadCount,
+                            );
+                          },
                         ),
                         _dashboardItem(
                           context,
@@ -600,6 +606,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           _showAddRecordDialog();
         } else if (targetIndex == -3) {
           _showUploadReportDialog();
+        } else if (targetIndex == -4) {
+          MainLayout.of(context)?.toggleNotifications();
         } else if (targetIndex != -1) {
           MainLayout.of(context)?.changeTab(targetIndex);
         }

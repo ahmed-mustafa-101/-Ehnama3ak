@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/notifications/presentation/cubit/notification_cubit.dart';
 import '../../features/notifications/presentation/cubit/notification_state.dart';
 import '../../screens_app/notifications/notifications_screen.dart';
-
 import '../../features/messages/presentation/controllers/message_cubit.dart';
 import '../../features/messages/presentation/controllers/message_state.dart';
 
@@ -20,7 +19,7 @@ class CustomAppBar extends StatelessWidget {
       child: Row(
         children: [
           // Logo
-          Image.asset('assets/images/name.png', width: 150),
+          Flexible(child: Image.asset('assets/images/name.png', width: 150)),
           const Spacer(),
 
           // Notification icon with live unread badge

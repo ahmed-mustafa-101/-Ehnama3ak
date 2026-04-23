@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:ehnama3ak/core/storage/pref_manager.dart';
 import 'package:ehnama3ak/core/widgets/post_options_menu.dart';
 import 'package:ehnama3ak/core/utils/responsive.dart';
-import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:ehnama3ak/features/feed/data/models/comment_model.dart';
 import 'package:ehnama3ak/features/feed/data/models/post_model.dart';
@@ -139,7 +138,10 @@ class _ForYouViewState extends State<ForYouView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                state.errorMessage ?? AppLocalizations.of(context).serverConnectionError,
+                                state.errorMessage ??
+                                    AppLocalizations.of(
+                                      context,
+                                    ).serverConnectionError,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.error,
@@ -214,9 +216,9 @@ class _ForYouViewState extends State<ForYouView> {
                               Share.share(
                                 '${post.userName} posted:\n${post.content}',
                               );
-                              context
-                                  .read<FeedCubit>()
-                                  .incrementShareCount(post.id);
+                              context.read<FeedCubit>().incrementShareCount(
+                                post.id,
+                              );
                             },
                           ),
                         ),
@@ -247,8 +249,10 @@ class _ForYouViewState extends State<ForYouView> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        title: Text(l10n.editPost,
-            style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+        title: Text(
+          l10n.editPost,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+        ),
         content: TextField(
           controller: controller,
           maxLines: 4,
@@ -260,8 +264,9 @@ class _ForYouViewState extends State<ForYouView> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel)),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           ElevatedButton(
             onPressed: () {
               final text = controller.text.trim();
@@ -301,13 +306,12 @@ class _ForYouViewState extends State<ForYouView> {
     );
   }
 
-
   Widget _buildHeader(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (context, settingsState) {
         final user = settingsState.userSettings;
-        
+
         return Container(
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -332,161 +336,178 @@ class _ForYouViewState extends State<ForYouView> {
                 children: [
                   CircleAvatar(
                     radius: Responsive.iconSize(context, 22),
-                    backgroundImage: buildUserProfileImageProvider(user?.profileImageUrl ?? ''),
+                    backgroundImage: buildUserProfileImageProvider(
+                      user?.profileImageUrl ?? '',
+                    ),
                   ),
                   SizedBox(width: Responsive.spacing(context, 12)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: _postController,
-                      decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context).whatsOnYourMind,
-                        hintStyle: TextStyle(
-                          fontSize: Responsive.fontSize(context, 16),
-                          color: isDark
-                              ? Colors.white54
-                              : const Color(0xFF475569),
-                          fontWeight: FontWeight.w500,
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: Responsive.padding(context, 8),
-                        ),
-                      ),
-                      style: TextStyle(
-                        fontSize: Responsive.fontSize(context, 16),
-                        color: isDark ? Colors.white : Colors.black,
-                      ),
-                      minLines: 1,
-                      maxLines: 5,
-                    ),
-                    if (_selectedImage != null) ...[
-                      SizedBox(height: Responsive.spacing(context, 10)),
-                      Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              Responsive.borderRadius(context, 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _postController,
+                          decoration: InputDecoration(
+                            hintText: AppLocalizations.of(
+                              context,
+                            ).whatsOnYourMind,
+                            hintStyle: TextStyle(
+                              fontSize: Responsive.fontSize(context, 16),
+                              color: isDark
+                                  ? Colors.white54
+                                  : const Color(0xFF475569),
+                              fontWeight: FontWeight.w500,
                             ),
-                            child: Image.file(
-                              File(_selectedImage!.path),
-                              height: Responsive.height(context, 0.25),
-                              width: double.infinity,
-                              fit: BoxFit.cover,
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: Responsive.padding(context, 8),
                             ),
                           ),
-                          Positioned(
-                            top: Responsive.spacing(context, 8),
-                            right: Responsive.spacing(context, 8),
-                            child: GestureDetector(
-                              onTap: () =>
-                                  setState(() => _selectedImage = null),
-                              child: Container(
-                                padding: EdgeInsets.all(
-                                  Responsive.padding(context, 4),
+                          style: TextStyle(
+                            fontSize: Responsive.fontSize(context, 16),
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                          minLines: 1,
+                          maxLines: 5,
+                        ),
+                        if (_selectedImage != null) ...[
+                          SizedBox(height: Responsive.spacing(context, 10)),
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  Responsive.borderRadius(context, 12),
                                 ),
-                                decoration: const BoxDecoration(
-                                  color: Colors.black54,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: Responsive.iconSize(context, 18),
+                                child: Image.file(
+                                  File(_selectedImage!.path),
+                                  height: Responsive.height(context, 0.25),
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                            ),
+                              Positioned(
+                                top: Responsive.spacing(context, 8),
+                                right: Responsive.spacing(context, 8),
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      setState(() => _selectedImage = null),
+                                  child: Container(
+                                    padding: EdgeInsets.all(
+                                      Responsive.padding(context, 4),
+                                    ),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: Responsive.iconSize(context, 18),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Divider(height: Responsive.spacing(context, 20), thickness: 0.5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    flex: 6,
+                    child: TextButton.icon(
+                      onPressed: _pickImage,
+                      icon: Icon(
+                        Icons.image_outlined,
+                        color: const Color(0xFF1E88E5),
+                        size: Responsive.iconSize(context, 18),
                       ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Divider(height: Responsive.spacing(context, 20), thickness: 0.5),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                flex: 6,
-                child: TextButton.icon(
-                  onPressed: _pickImage,
-                  icon: Icon(
-                    Icons.image_outlined,
-                    color: const Color(0xFF1E88E5),
-                    size: Responsive.iconSize(context, 18),
-                  ),
-                  label: Text(
-                    _selectedImage == null
-                        ? AppLocalizations.of(context).photo
-                        : AppLocalizations.of(context).change,
-                    style: TextStyle(
-                      color: const Color(0xFF1E88E5),
-                      fontWeight: FontWeight.w500,
-                      fontSize: Responsive.fontSize(context, 12),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: Responsive.spacing(context, 3)),
-              // Custom compact Post button
-              Material(
-                color: const Color(0xFF0DA5FE),
-                borderRadius: BorderRadius.circular(15),
-                child: InkWell(
-                  onTap: () {
-                    final text = _postController.text.trim();
-                    if (text.isNotEmpty || _selectedImage != null) {
-                      context.read<FeedCubit>().createPost(
-                        text,
-                        imagePath: _selectedImage?.path,
-                      );
-                      _postController.clear();
-                      setState(() => _selectedImage = null);
-                      FocusScope.of(context).unfocus();
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(AppLocalizations.of(context).pleaseEnterText),
-                        ),
-                      );
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(5),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: Responsive.padding(context, 7),
-                      vertical: Responsive.padding(context, 3),
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 35,
-                      maxWidth: 48,
-                      minHeight: 22,
-                      maxHeight: 26,
-                    ),
-                    child: Center(
-                      child: Text(
-                        AppLocalizations.of(context).post,
+                      label: Text(
+                        _selectedImage == null
+                            ? AppLocalizations.of(context).photo
+                            : AppLocalizations.of(context).change,
                         style: TextStyle(
-                          fontSize: Responsive.fontSize(context, 8),
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.1,
+                          color: const Color(0xFF1E88E5),
+                          fontWeight: FontWeight.w500,
+                          fontSize: Responsive.fontSize(context, 12),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  SizedBox(width: Responsive.spacing(context, 3)),
+                  // Custom compact Post button
+                  Material(
+                    color: const Color(0xFF0DA5FE),
+                    borderRadius: BorderRadius.circular(15),
+                    child: InkWell(
+                      onTap: () {
+                        final text = _postController.text.trim();
+                        if (text.isNotEmpty || _selectedImage != null) {
+                          context.read<FeedCubit>().createPost(
+                            text,
+                            imagePath: _selectedImage?.path,
+                          );
+                          _postController.clear();
+                          setState(() => _selectedImage = null);
+                          FocusScope.of(context).unfocus();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                AppLocalizations.of(context).pleaseEnterText,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(5),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: Responsive.padding(context, 7),
+                          vertical: Responsive.padding(context, 3),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 35,
+                          maxWidth: 60,
+                          minHeight: 22,
+                          maxHeight: 26,
+                        ),
+                        child: Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                AppLocalizations.of(context).post,
+                                style: TextStyle(
+                                  fontSize: Responsive.fontSize(context, 10),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
+                              SizedBox(width: Responsive.spacing(context, 2)),
+                              Icon(
+                                Icons.ios_share,
+                                color: Colors.white,
+                                size: Responsive.iconSize(context, 10),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
         );
       },
     );
@@ -669,7 +690,9 @@ class PostCard extends StatelessWidget {
                 backgroundColor: isDark
                     ? const Color(0xFF2C2C2C)
                     : const Color(0xFFCFD8DC),
-                backgroundImage: buildUserProfileImageProvider(post.userProfileImage),
+                backgroundImage: buildUserProfileImageProvider(
+                  post.userProfileImage,
+                ),
               ),
               SizedBox(width: Responsive.spacing(context, 10)),
               Expanded(
@@ -928,13 +951,18 @@ class _CommentsSheetState extends State<_CommentsSheet> {
             builder: (context, state) {
               if (state.replyToComment == null) return const SizedBox.shrink();
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: widget.isDark 
-                    ? const Color(0xFF1E88E5).withValues(alpha: 0.15) 
-                    : const Color(0xFF1E88E5).withValues(alpha: 0.08),
+                  color: widget.isDark
+                      ? const Color(0xFF1E88E5).withValues(alpha: 0.15)
+                      : const Color(0xFF1E88E5).withValues(alpha: 0.08),
                   border: Border(
-                    top: BorderSide(color: widget.isDark ? Colors.white10 : Colors.black12),
+                    top: BorderSide(
+                      color: widget.isDark ? Colors.white10 : Colors.black12,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -942,7 +970,9 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                     Icon(
                       Icons.reply,
                       size: 16,
-                      color: widget.isDark ? const Color(0xFF64B5F6) : const Color(0xFF1E88E5),
+                      color: widget.isDark
+                          ? const Color(0xFF64B5F6)
+                          : const Color(0xFF1E88E5),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -951,7 +981,9 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: widget.isDark ? const Color(0xFF64B5F6) : const Color(0xFF1E88E5),
+                          color: widget.isDark
+                              ? const Color(0xFF64B5F6)
+                              : const Color(0xFF1E88E5),
                         ),
                       ),
                     ),
@@ -959,7 +991,8 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                       icon: const Icon(Icons.close, size: 16),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      onPressed: () => context.read<CommentsCubit>().clearReplyTo(),
+                      onPressed: () =>
+                          context.read<CommentsCubit>().clearReplyTo(),
                     ),
                   ],
                 ),
@@ -1021,7 +1054,7 @@ class _CommentTile extends StatelessWidget {
   final String? currentUserId;
 
   const _CommentTile({
-    required this.comment, 
+    required this.comment,
     required this.isDark,
     this.currentUserId,
   });
@@ -1047,7 +1080,10 @@ class _CommentTile extends StatelessWidget {
             onPressed: () {
               final newText = controller.text.trim();
               if (newText.isNotEmpty && newText != comment.text) {
-                context.read<CommentsCubit>().updateComment(comment.id, newText);
+                context.read<CommentsCubit>().updateComment(
+                  comment.id,
+                  newText,
+                );
               }
               Navigator.pop(ctx);
             },
@@ -1099,8 +1135,12 @@ class _CommentTile extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 17,
-            backgroundColor: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFCFD8DC),
-            backgroundImage: buildUserProfileImageProvider(comment.userProfileImage),
+            backgroundColor: isDark
+                ? const Color(0xFF2C2C2C)
+                : const Color(0xFFCFD8DC),
+            backgroundImage: buildUserProfileImageProvider(
+              comment.userProfileImage,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -1108,9 +1148,14 @@ class _CommentTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F5F9),
+                    color: isDark
+                        ? const Color(0xFF2C2C2C)
+                        : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(0),
                       topRight: const Radius.circular(16),
@@ -1134,8 +1179,7 @@ class _CommentTile extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (isMyComment)
-                            _buildOptionsButton(context),
+                          if (isMyComment) _buildOptionsButton(context),
                         ],
                       ),
                       const SizedBox(height: 2),
@@ -1162,13 +1206,16 @@ class _CommentTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 16),
                       InkWell(
-                        onTap: () => context.read<CommentsCubit>().setReplyTo(comment),
+                        onTap: () =>
+                            context.read<CommentsCubit>().setReplyTo(comment),
                         child: Text(
-                          AppLocalizations.of(context).reply, 
+                          AppLocalizations.of(context).reply,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? const Color(0xFF64B5F6) : const Color(0xFF1E88E5),
+                            color: isDark
+                                ? const Color(0xFF64B5F6)
+                                : const Color(0xFF1E88E5),
                           ),
                         ),
                       ),
@@ -1208,7 +1255,10 @@ class _CommentTile extends StatelessWidget {
               children: [
                 const Icon(Icons.edit, size: 16),
                 const SizedBox(width: 8),
-                Text(AppLocalizations.of(context).edit, style: const TextStyle(fontSize: 13)),
+                Text(
+                  AppLocalizations.of(context).edit,
+                  style: const TextStyle(fontSize: 13),
+                ),
               ],
             ),
           ),
@@ -1218,8 +1268,10 @@ class _CommentTile extends StatelessWidget {
               children: [
                 const Icon(Icons.delete, size: 16, color: Colors.red),
                 const SizedBox(width: 8),
-                Text(AppLocalizations.of(context).delete,
-                    style: const TextStyle(color: Colors.red, fontSize: 13)),
+                Text(
+                  AppLocalizations.of(context).delete,
+                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                ),
               ],
             ),
           ),
@@ -1231,16 +1283,20 @@ class _CommentTile extends StatelessWidget {
 
 // Helper function to build ImageProvider for user profile pictures
 ImageProvider buildUserProfileImageProvider(String path) {
-  if (path.isEmpty || path.toLowerCase() == 'null' || path.toLowerCase() == 'string') {
+  if (path.isEmpty ||
+      path.toLowerCase() == 'null' ||
+      path.toLowerCase() == 'string') {
     return const AssetImage('assets/images/user_avatar.png');
   }
-  
+
   String normalizedPath = path.trim().replaceAll('\\', '/');
   if (normalizedPath.startsWith('assets/')) return AssetImage(normalizedPath);
   if (normalizedPath.startsWith('http')) return NetworkImage(normalizedPath);
 
   const String baseUrl = 'http://e7nama3ak.runasp.net';
-  final cleanPath = normalizedPath.startsWith('/') ? normalizedPath : '/$normalizedPath';
+  final cleanPath = normalizedPath.startsWith('/')
+      ? normalizedPath
+      : '/$normalizedPath';
   return NetworkImage('$baseUrl$cleanPath');
 }
 

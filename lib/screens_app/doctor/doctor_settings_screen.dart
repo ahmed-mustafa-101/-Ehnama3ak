@@ -12,6 +12,7 @@ import '../../core/network/dio_client.dart';
 import '../notifications/notifications_screen.dart';
 import '../../features/settings/presentation/controllers/settings_cubit.dart';
 import '../../features/settings/presentation/controllers/settings_state.dart';
+import 'package:share_plus/share_plus.dart';
 
 class DoctorSettingsScreen extends StatelessWidget {
   const DoctorSettingsScreen({super.key});
@@ -120,7 +121,11 @@ class DoctorSettingsScreen extends StatelessWidget {
                 context,
                 Icons.share_outlined,
                 l10n.shareApp,
-                onTap: () {},
+                onTap: () {
+                  Share.share(
+                    '${l10n.shareAppContent ?? 'Check out Ehnama3ak App!'} \n https://play.google.com/store/apps/details?id=com.ehnama3ak.app',
+                  );
+                },
               ),
               const SizedBox(height: 30),
               Align(
@@ -320,19 +325,21 @@ class DoctorSettingsScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  children: List.generate(
-                    10,
-                    (index) => Icon(
-                      Icons.star,
-                      size: 16,
-                      color: index < 7
-                          ? const Color(0xFF0DA5FE)
-                          : Colors.grey.shade400,
+                Flexible(
+                  child: Wrap(
+                    children: List.generate(
+                      10,
+                      (index) => Icon(
+                        Icons.star,
+                        size: 16,
+                        color: index < 7
+                            ? const Color(0xFF0DA5FE)
+                            : Colors.grey.shade400,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 15),
+                const SizedBox(width: 10),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -343,6 +350,7 @@ class DoctorSettingsScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const CircleAvatar(
                         radius: 4,
@@ -629,6 +637,10 @@ class DoctorSettingsScreen extends StatelessWidget {
                           onPressed: state.isPasswordChanging
                               ? null
                               : () => Navigator.pop(diagContext),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0DA5FE),
+                            foregroundColor: Colors.white,
+                          ),
                           child: Text(l10n.cancel),
                         ),
                       ),
@@ -714,7 +726,7 @@ class DoctorSettingsScreen extends StatelessWidget {
             const Divider(),
             const ListTile(
               leading: Icon(Icons.email),
-              title: Text('am6888122@gmail.com.com'),
+              title: Text('am6888122@gmail.com'),
             ),
             const ListTile(
               leading: Icon(Icons.phone),
