@@ -35,7 +35,6 @@ class DoctorSessionsCubit extends Cubit<DoctorSessionsState> {
     required String sessionType,
     required DateTime scheduledAt,
     double? price,
-    String? sessionUrl,
     String? filePath,
   }) async {
     emit(DoctorSessionCreating());
@@ -45,7 +44,6 @@ class DoctorSessionsCubit extends Cubit<DoctorSessionsState> {
         sessionType: sessionType,
         scheduledAt: scheduledAt,
         price: price,
-        sessionUrl: sessionUrl,
         filePath: filePath,
       );
 

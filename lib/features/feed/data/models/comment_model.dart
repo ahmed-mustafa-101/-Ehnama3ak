@@ -87,3 +87,6 @@ class CommentModel extends Equatable {
   @override
   List<Object?> get props => [id, postId, userId, text, parentId];
 }
+  @override
+  List<Object?> get props => [id, postId, userId, text, parentId];
+}

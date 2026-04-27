@@ -173,6 +173,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'models/podcast_model.dart';
+import 'package:ehnama3ak/core/network/dio_client.dart';
 
 class PodcastPlayerScreen extends StatefulWidget {
   final PodcastModel podcast;
@@ -192,9 +193,31 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen> {
     _loadAudio();
   }
 
+  String _normalizeUrl(String url) {
+    if (url.isEmpty) return url;
+    if (url.startsWith('/data/') || url.startsWith('/storage/') || url.startsWith('file://') || url.startsWith('C:')) {
+      return url;
+    }
+    if (!url.startsWith('http')) {
+      if (url.startsWith('/')) {
+        return '${DioClient.baseUrl}$url';
+      } else {
+        return '${DioClient.baseUrl}/$url';
+      }
+    }
+    return url;
+  }
+
   Future<void> _loadAudio() async {
     try {
-      await _player.setUrl(widget.podcast.audioUrl);
+      final url = _normalizeUrl(widget.podcast.audioUrl);
+      if (url.isEmpty) return;
+      
+      if (url.startsWith('http')) {
+        await _player.setUrl(url);
+      } else {
+        await _player.setFilePath(url);
+      }
     } catch (e) {
       debugPrint('Error loading audio: $e');
     }

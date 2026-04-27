@@ -47,16 +47,37 @@ class ResourceModel extends Equatable {
   // ─── Deserialization ──────────────────────────────────────────────────────
 
   factory ResourceModel.fromJson(Map<String, dynamic> json) {
+    dynamic getValue(List<String> keys) {
+      for (var k in keys) {
+        if (json.containsKey(k)) return json[k];
+        final cap = k[0].toUpperCase() + k.substring(1);
+        if (json.containsKey(cap)) return json[cap];
+      }
+      return null;
+    }
+
+    String normalizeUrl(String? url) {
+      if (url == null || url.trim().isEmpty) return '';
+      final u = url.trim();
+      if (u.startsWith('http') || u.startsWith('file://') || u.startsWith('/data/') || u.startsWith('C:')) {
+        return u;
+      }
+      if (u.startsWith('/')) {
+        return 'http://e7nama3ak.runasp.net$u';
+      }
+      return 'http://e7nama3ak.runasp.net/$u';
+    }
+
     return ResourceModel(
-      id: _parseInt(json['id']),
-      title: _str(json['title'] ?? json['name'] ?? ''),
-      description: _str(json['description'] ?? json['summary'] ?? ''),
-      coverImageUrl: _nullable(json['coverImageUrl'] ?? json['imageUrl'] ?? json['image']),
-      type: _parseType(json['type']),
-      url: _str(json['url'] ?? json['resourceUrl'] ?? json['fileUrl'] ?? ''),
-      duration: _parseInt(json['duration']),
-      fileSize: _parseInt(json['fileSize'] ?? json['size']),
-      createdDate: _parseDate(json['createdDate'] ?? json['createdAt'] ?? json['date']),
+      id: _parseInt(getValue(['id', 'sessionId'])),
+      title: _str(getValue(['title', 'name', 'patientName'])),
+      description: _str(getValue(['description', 'summary'])),
+      coverImageUrl: _nullable(normalizeUrl(getValue(['coverImageUrl', 'imageUrl', 'image']))),
+      type: _parseType(getValue(['type', 'sessionType'])),
+      url: normalizeUrl(getValue(['url', 'resourceUrl', 'fileUrl', 'videoUrl', 'pdfUrl', 'audioUrl', 'sessionUrl'])),
+      duration: _parseInt(getValue(['duration'])),
+      fileSize: _parseInt(getValue(['fileSize', 'size'])),
+      createdDate: _parseDate(getValue(['createdDate', 'createdAt', 'date', 'scheduledAt'])),
     );
   }
 

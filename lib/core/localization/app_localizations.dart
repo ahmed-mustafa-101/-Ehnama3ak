@@ -282,6 +282,26 @@ class AppLocalizations {
   String get addRecord => translate('add_record');
   String get upcomingSessions => translate('upcoming_sessions');
   String get upcoming => translate('upcoming');
+
+  // Payment
+  String get payment => translate('payment');
+  String get savedCards => translate('saved_cards');
+  String get otherPaymentMethods => translate('other_payment_methods');
+  String get creditDebitCard => translate('credit_debit_card');
+  String get netBanking => translate('net_banking');
+  String get mobileWallets => translate('mobile_wallets');
+  String get cardNumber => translate('card_number');
+  String get cardHolder => translate('card_holder');
+  String get expiryMonth => translate('expiry_month');
+  String get expiryYear => translate('expiry_year');
+  String get cvv => translate('cvv');
+  String get saveCardFuture => translate('save_card_future');
+  String get pay => translate('pay');
+  String get selectBank => translate('select_bank');
+  String get selectWallet => translate('select_wallet');
+  String get pleaseSelectBank => translate('please_select_bank');
+  String get pleaseSelectWallet => translate('please_select_wallet');
+  String get paymentSuccessful => translate('payment_successful');
 }
 
 class _AppLocalizationsDelegate

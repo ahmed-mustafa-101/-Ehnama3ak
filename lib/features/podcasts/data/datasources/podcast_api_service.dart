@@ -15,7 +15,7 @@ class PodcastApiService {
 
   Future<List<PodcastModel>> getPodcasts() async {
     try {
-      final response = await _dio.get('/api/Podcasts');
+      final response = await _dio.get('/api/DoctorSessions/podcasts');
       return _parsePodcastsResponse(response.data);
     } on DioException catch (e) {
       throw Exception(parseError(e));

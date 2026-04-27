@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'dart:developer' as dev;
+import 'dart:convert';
 import 'package:ehnama3ak/core/storage/pref_manager.dart';
+import 'package:http_parser/http_parser.dart';
 
 /// Represents the full response from the /chat API endpoint.
 class ChatApiResponse {
@@ -32,16 +34,15 @@ class ChatApiResponse {
 class ChatService {
   final Dio _dio;
   static const String _baseUrl =
-      "https://8080-01kpfza2ykbgwssk6yhydnk5ac.cloudspaces.litng.ai";
+      "https://8000-01kq25s44a7bqzmb6716gx7773.cloudspaces.litng.ai";
 
   ChatService()
       : _dio = Dio(BaseOptions(
           baseUrl: _baseUrl,
-          connectTimeout: const Duration(seconds: 15),
-          receiveTimeout: const Duration(seconds: 15),
-          sendTimeout: const Duration(seconds: 15),
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 30),
           headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
         )) {
@@ -57,51 +58,69 @@ class ChatService {
 
     String emotion = "string";
     String userId = "default";
-    double? analyzeConfidence;
-    String? analyzeLanguage;
 
     try {
       final fetchedId = await PrefManager.getUserId();
       if (fetchedId != null && fetchedId.isNotEmpty) {
         userId = fetchedId;
       }
-      dev.log('Sending text to /analyze: $message', name: 'ChatService');
-      final analyzeRes = await _dio.post('/analyze', data: {'text': message});
-      dev.log('Analyze response: ${analyzeRes.data}', name: 'ChatService');
-      if (analyzeRes.data != null && analyzeRes.data is Map<String, dynamic>) {
-        emotion = analyzeRes.data['emotion']?.toString() ??
-                  analyzeRes.data['label']?.toString() ??
-                  analyzeRes.data['sentiment']?.toString() ??
-                  "string";
-        analyzeConfidence = (analyzeRes.data['confidence'] as num?)?.toDouble();
-        analyzeLanguage = analyzeRes.data['language']?.toString();
-      } else if (analyzeRes.data is String) {
-        emotion = analyzeRes.data as String;
-      }
     } catch (e) {
-      dev.log('Analyze error: $e', name: 'ChatService');
+      dev.log('Error fetching userId: $e', name: 'ChatService');
     }
 
     try {
+      final formData = FormData.fromMap({
+        'input_type': 'string',
+        'text': message,
+        'emotion': emotion,
+        'user_id': userId,
+      });
+
       final response = await _dio.post(
         '/chat',
-        data: {
-          'text': message,
-          'emotion': emotion,
-          'user_id': userId,
-        },
+        data: formData,
       );
       dev.log('Response received: ${response.data}', name: 'ChatService');
       
-      final parsedResponse = _parseResponse(response.data);
-      
-      return ChatApiResponse(
-        message: parsedResponse.message,
-        emotion: parsedResponse.emotion ?? emotion,
-        confidence: parsedResponse.confidence ?? analyzeConfidence,
-        aiModel: parsedResponse.aiModel,
-        language: parsedResponse.language ?? analyzeLanguage,
+      return _parseResponse(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<ChatApiResponse> sendVoiceMessage(String filePath) async {
+    dev.log('Sending voice message to /chat: $filePath', name: 'ChatService');
+
+    String userId = "default";
+    try {
+      final fetchedId = await PrefManager.getUserId();
+      if (fetchedId != null && fetchedId.isNotEmpty) {
+        userId = fetchedId;
+      }
+    } catch (e) {}
+
+    try {
+      final formData = FormData.fromMap({
+        'input_type': 'audio',
+        'text': '',
+        'emotion': 'string',
+        'user_id': userId,
+        'file': await MultipartFile.fromFile(
+          filePath,
+          filename: 'voice_message.wav',
+          contentType: MediaType('audio', 'wav'),
+        ),
+      });
+
+      final response = await _dio.post(
+        '/chat',
+        data: formData,
       );
+
+      dev.log('Voice response received: ${response.data}', name: 'ChatService');
+      return _parseResponse(response.data);
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
@@ -110,16 +129,30 @@ class ChatService {
   }
 
   ChatApiResponse _parseResponse(dynamic data) {
-    if (data is Map<String, dynamic>) {
-      final msg = data['message']?.toString() ?? '';
+    var decodedData = data;
+    if (decodedData is String) {
+      try {
+        decodedData = jsonDecode(decodedData);
+      } catch (_) {}
+    }
+
+    if (decodedData is Map) {
+      // Check if 'message' is present directly or nested
+      final msg = decodedData['message']?.toString() ?? 
+                  decodedData['response']?.toString() ?? 
+                  decodedData['text']?.toString() ?? 
+                  '';
+      
       if (msg.isNotEmpty) {
-        return ChatApiResponse.fromJson(data);
+        return ChatApiResponse(
+          message: msg,
+          emotion: decodedData['emotion']?.toString(),
+          confidence: (decodedData['confidence'] as num?)?.toDouble(),
+          aiModel: decodedData['ai']?.toString(),
+          language: decodedData['language']?.toString(),
+        );
       }
-      // Fallback: try other common keys
-      final fallback = data['response']?.toString() ??
-          data['result']?.toString() ??
-          'No response content';
-      return ChatApiResponse(message: fallback);
+      return ChatApiResponse(message: 'No response content');
     }
     return ChatApiResponse(message: data.toString());
   }

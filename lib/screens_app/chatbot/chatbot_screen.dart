@@ -8,6 +8,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:ehnama3ak/screens_app/chatbot/chat_cubit.dart';
 import 'package:ehnama3ak/screens_app/chatbot/chat_state.dart';
 import 'package:ehnama3ak/screens_app/chatbot/chat_message.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:async';
+import 'dart:developer' as dev;
 
 class ChatbotScreen extends StatefulWidget {
   final VoidCallback? onClose;
@@ -25,16 +29,25 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
 
+  late AudioRecorder _audioRecorder;
+  bool _isRecording = false;
+  String? _audioPath;
+  double _amplitude = 0.0;
+  List<double> _amplitudeHistory = List.filled(20, -60.0);
+  StreamSubscription<Amplitude>? _amplitudeSub;
+
   @override
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
+    _audioRecorder = AudioRecorder();
   }
 
   @override
   void dispose() {
     _inputCtrl.dispose();
     _scrollController.dispose();
+    _audioRecorder.dispose();
     super.dispose();
   }
 
@@ -50,7 +63,81 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
   }
 
+  Future<void> _startRecording() async {
+    dev.log('Attempting to start recording...', name: 'ChatbotScreen');
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        dev.log('Permission granted', name: 'ChatbotScreen');
+        final directory = await getApplicationDocumentsDirectory();
+        final path =
+            '${directory.path}/voice_${DateTime.now().millisecondsSinceEpoch}.wav';
+
+        const config = RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
+        );
+
+        dev.log('Starting recorder with path: $path', name: 'ChatbotScreen');
+        await _audioRecorder.start(config, path: path);
+
+        _amplitudeSub = _audioRecorder
+            .onAmplitudeChanged(const Duration(milliseconds: 100))
+            .listen((amp) {
+              if (mounted) {
+                setState(() {
+                  _amplitude = amp.current;
+                  _amplitudeHistory.removeAt(0);
+                  _amplitudeHistory.add(amp.current);
+                });
+              }
+            });
+
+        setState(() {
+          _isRecording = true;
+          _audioPath = path;
+        });
+        dev.log('Recording started successfully', name: 'ChatbotScreen');
+      } else {
+        dev.log('Permission denied', name: 'ChatbotScreen');
+      }
+    } catch (e) {
+      dev.log('Error starting recording: $e', name: 'ChatbotScreen', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    dev.log('Stopping recording...', name: 'ChatbotScreen');
+    try {
+      await _amplitudeSub?.cancel();
+      final path = await _audioRecorder.stop();
+      dev.log('Recorder stopped. Path: $path', name: 'ChatbotScreen');
+
+      setState(() {
+        _isRecording = false;
+        _amplitude = 0.0;
+        _amplitudeHistory = List.filled(20, -60.0);
+      });
+
+      if (path != null) {
+        if (mounted) {
+          dev.log('Sending voice message to cubit', name: 'ChatbotScreen');
+          context.read<ChatCubit>().sendVoiceMessage(path);
+        }
+      }
+    } catch (e) {
+      dev.log('Error stopping recording: $e', name: 'ChatbotScreen', error: e);
+    }
+  }
+
   void _listen() async {
+    // Keeping speech to text as an option or replacing it?
+    // Let's use tap for speech-to-text and long press for recording voice message.
     if (!_isListening) {
       try {
         bool available = await _speech.initialize(
@@ -279,10 +366,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 // حقل الكتابة داخل Container مستطيل
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    constraints: const BoxConstraints(
-                      minHeight: 45,
-                      maxHeight: 150,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: _isRecording ? 0 : 4,
+                    ),
+                    constraints: BoxConstraints(
+                      minHeight: _isRecording ? 40 : 45,
+                      maxHeight: _isRecording ? 60 : 150,
                     ),
                     decoration: BoxDecoration(
                       color: isDark
@@ -299,29 +389,49 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _inputCtrl,
-                            maxLines: null,
-                            minLines: 1,
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10,
+                        if (_isRecording)
+                          Expanded(
+                            child: Center(
+                              child: VoiceWaveform(
+                                amplitudes: _amplitudeHistory,
                               ),
-                              border: InputBorder.none,
-                              hintText: AppLocalizations.of(context).askDepo,
-                              hintStyle: const TextStyle(
-                                color: Color(0xFF9FB0C0),
-                                fontSize: 18,
+                            ),
+                          )
+                        else
+                          Expanded(
+                            child: TextField(
+                              controller: _inputCtrl,
+                              maxLines: null,
+                              minLines: 1,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                border: InputBorder.none,
+                                hintText: AppLocalizations.of(context).askDepo,
+                                hintStyle: const TextStyle(
+                                  color: Color(0xFF9FB0C0),
+                                  fontSize: 18,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                         IconButton(
-                          onPressed: _listen,
+                          onPressed: () {
+                            if (_isRecording) {
+                              _stopRecording();
+                            } else {
+                              _startRecording();
+                            }
+                          },
                           icon: Icon(
-                            _isListening ? Icons.mic : Icons.mic_outlined,
-                            color: const Color(0xFF1E88E5),
+                            _isRecording
+                                ? Icons.stop_circle
+                                : Icons.mic_outlined,
+                            color: _isRecording
+                                ? Colors.red
+                                : const Color(0xFF1E88E5),
+                            size: 32,
                           ),
                         ),
                       ],
@@ -524,33 +634,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        // Good Response (Thumb Up)
                         _buildActionButton(
                           icon: Icons.thumb_up_outlined,
                           tooltip: 'Good response',
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Thank you for your feedback!'),
-                              ),
-                            );
-                          },
+                          onPressed: () {},
                         ),
-                        // Bad Response (Thumb Down)
                         _buildActionButton(
                           icon: Icons.thumb_down_outlined,
                           tooltip: 'Bad response',
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Feedback received. We will improve.',
-                                ),
-                              ),
-                            );
-                          },
+                          onPressed: () {},
                         ),
-                        // Share Response
                         _buildActionButton(
                           icon: Icons.ios_share_outlined,
                           tooltip: 'Share',
@@ -558,7 +651,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             Share.share(msg.message);
                           },
                         ),
-                        // Try Again (Refresh)
                         _buildActionButton(
                           icon: Icons.refresh_rounded,
                           tooltip: AppLocalizations.of(context).tryAgain,
@@ -575,7 +667,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             }
                           },
                         ),
-                        // Copy Response
                         _buildActionButton(
                           icon: Icons.copy_outlined,
                           tooltip: AppLocalizations.of(
@@ -585,25 +676,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             await Clipboard.setData(
                               ClipboardData(text: msg.message),
                             );
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    AppLocalizations.of(
-                                      context,
-                                    ).copiedToClipboard,
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                        // More Actions
-                        _buildActionButton(
-                          icon: Icons.more_horiz_rounded,
-                          tooltip: 'More',
-                          onPressed: () {
-                            // Empty for now as a placeholder
                           },
                         ),
                       ],
@@ -616,6 +688,41 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         ),
       );
     }
+  }
+}
+
+// =================== Voice Waveform Widget ===================
+class VoiceWaveform extends StatelessWidget {
+  final List<double> amplitudes;
+  const VoiceWaveform({super.key, required this.amplitudes});
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(amplitudes.length, (index) {
+          double amp = amplitudes[index];
+          double scale = (amp + 50).clamp(0, 50) / 50;
+          if (scale < 0.1) scale = 0.1;
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 100),
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            width: 5,
+            height: 8 + (40 * scale),
+            decoration: BoxDecoration(
+              color: const Color(
+                0xFF1E88E5,
+              ).withValues(alpha: 0.3 + (scale * 0.7)),
+              borderRadius: BorderRadius.circular(10),
+            ),
+          );
+        }),
+      ),
+    );
   }
 }
 

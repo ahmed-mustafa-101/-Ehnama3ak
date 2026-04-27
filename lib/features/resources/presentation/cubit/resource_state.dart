@@ -34,15 +34,14 @@ class ResourceLoaded extends ResourceState {
 
   /// Convenience: articles only.
   List<ResourceModel> get articles =>
-      resources.where((r) => r.type == ResourceType.article).toList();
+      resources.where((r) => r.type == ResourceType.article || r.type == ResourceType.pdf).toList();
 
   /// Convenience: videos only.
   List<ResourceModel> get videos =>
       resources.where((r) => r.type == ResourceType.video).toList();
 
-  /// Convenience: PDFs only.
-  List<ResourceModel> get pdfs =>
-      resources.where((r) => r.type == ResourceType.pdf).toList();
+  /// Convenience: all resources for downloading.
+  List<ResourceModel> get pdfs => resources;
 
   @override
   List<Object?> get props => [resources];

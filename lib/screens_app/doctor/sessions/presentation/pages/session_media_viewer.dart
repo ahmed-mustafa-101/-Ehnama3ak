@@ -5,7 +5,9 @@ import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:ehnama3ak/screens_app/doctor/sessions/models/doctor_session_model.dart';
+import 'package:ehnama3ak/core/network/dio_client.dart'; // To get baseUrl
 
 class SessionMediaViewer extends StatefulWidget {
   final DoctorSessionModel session;
@@ -26,6 +28,23 @@ class _SessionMediaViewerState extends State<SessionMediaViewer> {
   bool _loading = true;
   String? _error;
 
+  String _normalizeUrl(String url) {
+    if (url.isEmpty) return url;
+    // If it's a clear local path on the device, return as is
+    if (url.startsWith('/data/') || url.startsWith('/storage/') || url.startsWith('file://') || url.startsWith('C:')) {
+      return url;
+    }
+    // If it's a relative URL from the backend, append the base URL
+    if (!url.startsWith('http')) {
+      if (url.startsWith('/')) {
+        return '${DioClient.baseUrl}$url';
+      } else {
+        return '${DioClient.baseUrl}/$url';
+      }
+    }
+    return url;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -34,13 +53,15 @@ class _SessionMediaViewerState extends State<SessionMediaViewer> {
 
   Future<void> _initializeMedia() async {
     final type = widget.session.sessionType?.toLowerCase() ?? '';
-    final url = widget.session.sessionUrl ?? '';
+    final url = _normalizeUrl(widget.session.sessionUrl ?? '');
 
     if (url.isEmpty) {
-      setState(() {
-        _error = "No media URL available";
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = "No media URL available";
+          _loading = false;
+        });
+      }
       return;
     }
 
@@ -50,13 +71,17 @@ class _SessionMediaViewerState extends State<SessionMediaViewer> {
       } else if (type.contains('audio')) {
         await _initializeAudio(url);
       } else {
-        setState(() => _loading = false);
+        if (mounted) {
+          setState(() => _loading = false);
+        }
       }
     } catch (e) {
-      setState(() {
-        _error = "Error initializing media: $e";
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = "Error initializing media: $e";
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -84,13 +109,17 @@ class _SessionMediaViewerState extends State<SessionMediaViewer> {
           );
         },
       );
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     } catch (e) {
       log("Video player error: $e");
-      setState(() {
-        _error = "Video Player Error: $e";
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = "Video Player Error: $e";
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -101,13 +130,17 @@ class _SessionMediaViewerState extends State<SessionMediaViewer> {
       } else {
         await _audioPlayer.setAudioSource(AudioSource.uri(Uri.file(url)));
       }
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     } catch (e) {
       log("Audio player error: $e");
-      setState(() {
-        _error = "Audio Player Error: $e";
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = "Audio Player Error: $e";
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -146,7 +179,7 @@ class _SessionMediaViewerState extends State<SessionMediaViewer> {
   }
 
   Widget _buildMediaContent(String type) {
-    final url = widget.session.sessionUrl ?? '';
+    final url = _normalizeUrl(widget.session.sessionUrl ?? '');
 
     if (type.contains('video')) {
       return Center(
@@ -237,9 +270,22 @@ class _SessionMediaViewerState extends State<SessionMediaViewer> {
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () {
-              // Note: You might need to add url_launcher back here if needed
+            onPressed: () async {
+              final uri = Uri.parse(url);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not open PDF link')),
+                  );
+                }
+              }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
             child: const Text("Open Link"),
           ),
         ],

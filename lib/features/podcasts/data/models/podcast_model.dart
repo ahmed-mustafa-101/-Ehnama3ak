@@ -23,35 +23,37 @@ class PodcastModel extends Equatable {
 
   /// Parse from JSON — field names are matched flexibly to cover various API shapes.
   factory PodcastModel.fromJson(Map<String, dynamic> json) {
+    dynamic getValue(List<String> keys) {
+      for (var k in keys) {
+        if (json.containsKey(k)) return json[k];
+        final cap = k[0].toUpperCase() + k.substring(1);
+        if (json.containsKey(cap)) return json[cap];
+      }
+      return null;
+    }
+
     return PodcastModel(
-      id: _parseInt(json['id'] ?? json['podcastId'] ?? 0),
+      id: _parseInt(getValue(['id', 'podcastId']) ?? 0),
       title: _parseString(
-        json['title'] ?? json['name'] ?? json['episodeName'] ?? '',
+        getValue(['title', 'name', 'episodeName', 'patientName']) ?? '',
       ) ?? '',
       description: _parseString(
-        json['description'] ?? json['subtitle'] ?? json['summary'],
+        getValue(['description', 'subtitle', 'summary']),
       ),
-      audioUrl: (json['audioUrl'] ??
-              json['audio_url'] ??
-              json['url'] ??
-              json['fileUrl'] ??
-              '')
+      audioUrl: (getValue(['audioUrl', 'audio_url', 'url', 'fileUrl', 'sessionUrl']) ?? '')
           .toString()
           .trim(),
       imageUrl: _parseString(
-        json['imageUrl'] ??
-            json['image_url'] ??
-            json['thumbnailUrl'] ??
-            json['coverImage'],
+        getValue(['imageUrl', 'image_url', 'thumbnailUrl', 'coverImage']),
       ),
       hostName: _parseString(
-        json['hostName'] ?? json['host'] ?? json['author'],
+        getValue(['hostName', 'host', 'author']),
       ),
       durationSeconds: _parseIntOrNull(
-        json['durationSeconds'] ?? json['duration'] ?? json['durationInSeconds'],
+        getValue(['durationSeconds', 'duration', 'durationInSeconds']),
       ),
       publishedAt: _parseDate(
-        json['publishedAt'] ?? json['createdAt'] ?? json['date'],
+        getValue(['publishedAt', 'createdAt', 'date']),
       ),
     );
   }

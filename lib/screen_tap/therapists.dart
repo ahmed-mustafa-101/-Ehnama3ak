@@ -7,6 +7,7 @@ import 'package:ehnama3ak/screen_tap/therapist/presentation/cubit/doctor_state.d
 import 'package:ehnama3ak/screen_tap/therapist/models/doctor_model.dart';
 import 'package:ehnama3ak/screens_app/messages/message_detail_screen.dart';
 import 'package:ehnama3ak/core/network/dio_client.dart';
+import 'package:ehnama3ak/screens_app/payment/payment_screen.dart';
 
 class TherapistsPage extends StatefulWidget {
   final bool showHeader;
@@ -155,10 +156,20 @@ class _TherapistsPageState extends State<TherapistsPage> {
                             selectedTime!.minute,
                           );
                           Navigator.pop(context);
-                          context.read<DoctorCubit>().bookSession(
-                            doctor.id,
-                            dt.toUtc().toIso8601String(),
-                            selectedType,
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PaymentScreen(
+                                amount: 50.0,
+                                onPaymentSuccess: () {
+                                  context.read<DoctorCubit>().bookSession(
+                                    doctor.id,
+                                    dt.toUtc().toIso8601String(),
+                                    selectedType,
+                                  );
+                                },
+                              ),
+                            ),
                           );
                         },
                         child: Text(l10n.confirmBooking),

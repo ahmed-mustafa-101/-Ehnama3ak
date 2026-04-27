@@ -44,6 +44,40 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  Future<void> sendVoiceMessage(String filePath) async {
+    final userMessage = ChatMessage(
+      message: "🎤 Voice Message",
+      isUser: true,
+      timestamp: DateTime.now(),
+    );
+    final updatedMessages = List<ChatMessage>.from(state.messages)
+      ..add(userMessage);
+
+    emit(ChatLoading(updatedMessages));
+
+    try {
+      final response = await _chatService.sendVoiceMessage(filePath);
+
+      final botMessage = ChatMessage(
+        message: response.message,
+        isUser: false,
+        timestamp: DateTime.now(),
+        emotion: response.emotion,
+        confidence: response.confidence,
+        aiModel: response.aiModel,
+        language: response.language,
+      );
+
+      final finalMessages = List<ChatMessage>.from(updatedMessages)
+        ..add(botMessage);
+      emit(ChatLoaded(finalMessages));
+    } catch (e) {
+      emit(
+        ChatError(updatedMessages, e.toString().replaceAll("Exception: ", "")),
+      );
+    }
+  }
+
   void clearChat() {
     emit(const ChatInitial());
   }

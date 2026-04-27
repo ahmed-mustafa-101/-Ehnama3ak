@@ -31,8 +31,8 @@ class DownloadsTab extends StatelessWidget {
           final pdfs = state.pdfs;
           if (pdfs.isEmpty) {
             return const ResourceEmptyView(
-              icon: Icons.picture_as_pdf_outlined,
-              message: 'No downloadable PDFs available yet.',
+              icon: Icons.download_rounded,
+              message: 'No downloadable files available yet.',
             );
           }
           return RefreshIndicator(
@@ -72,7 +72,7 @@ class _DownloadCard extends StatelessWidget {
             // ── Cover / icon ───────────────────────────────────────────────
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: _thumbnail(resource.coverImageUrl),
+              child: _thumbnail(resource.coverImageUrl, resource.type),
             ),
             const SizedBox(width: 12),
 
@@ -100,7 +100,7 @@ class _DownloadCard extends StatelessWidget {
                   if (fileSize.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
-                      'PDF • $fileSize',
+                      '${resource.type.label} • $fileSize',
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
@@ -143,32 +143,48 @@ class _DownloadCard extends StatelessWidget {
     );
   }
 
-  Widget _thumbnail(String? url) {
+  Widget _thumbnail(String? url, ResourceType type) {
     if (url != null && url.isNotEmpty && Uri.tryParse(url)?.hasAbsolutePath == true) {
       return Image.network(
         url,
         width: 60,
         height: 80,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _pdfBox(),
+        errorBuilder: (_, __, ___) => _iconBox(type),
       );
     }
-    return _pdfBox();
+    return _iconBox(type);
   }
 
-  Widget _pdfBox() => Container(
-        width: 60,
-        height: 80,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E88E5).withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(
-          Icons.picture_as_pdf_outlined,
-          color: Color(0xFF1E88E5),
-          size: 30,
-        ),
-      );
+  Widget _iconBox(ResourceType type) {
+    IconData icon;
+    switch (type) {
+      case ResourceType.article:
+        icon = Icons.article_outlined;
+        break;
+      case ResourceType.video:
+        icon = Icons.play_circle_outline;
+        break;
+      case ResourceType.pdf:
+      default:
+        icon = Icons.picture_as_pdf_outlined;
+        break;
+    }
+
+    return Container(
+      width: 60,
+      height: 80,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E88E5).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(
+        icon,
+        color: const Color(0xFF1E88E5),
+        size: 30,
+      ),
+    );
+  }
 }
 
 Future<void> _open(String url) async {

@@ -94,58 +94,64 @@ class DoctorSessionsApiService {
   }
 
   Future<bool> createDoctorSession({
-    required String patientName,
     required String sessionType,
     required DateTime scheduledAt,
     double? price,
-    String? sessionUrl, 
-    String? filePath,   
+    String? videoUrl,
+    String? audioUrl,
+    String? pdfUrl,
+    String? imageUrl,
+    String? filePath,
+    String? patientName,
+    int patientId = 1, // Defaulting to 1 for now, should be passed from UI later
   }) async {
-    // Determine the media path (URL or local path)
-    final String mediaPath = sessionUrl ?? filePath ?? "";
-    
-    // Map URL based on session type - Only fill the relevant one, keep others null
-    String? videoUrl;
-    String? audioUrl;
-    String? pdfUrl;
-    String? imageUrl;
+    // Map URL based on session type if not explicitly provided
+    String? finalVideoUrl = videoUrl;
+    String? finalAudioUrl = audioUrl;
+    String? finalPdfUrl = pdfUrl;
+    String? finalImageUrl = imageUrl;
 
-    final String lowerType = sessionType.toLowerCase();
-    if (lowerType.contains('video')) {
-      videoUrl = mediaPath;
-    } else if (lowerType.contains('audio')) {
-      audioUrl = mediaPath;
-    } else if (lowerType.contains('pdf')) {
-      pdfUrl = mediaPath;
-    } else {
-      imageUrl = mediaPath;
-    }
-
-    final Map<String, dynamic> body = {
-      "patientName": patientName,
-      "patientId": "P-12345", 
-      "sessionType": sessionType,
-      "scheduledAt": scheduledAt.toUtc().toIso8601String(),
-      "price": price ?? 0,
-      "videoUrl": videoUrl,
-      "audioUrl": audioUrl,
-      "pdfUrl": pdfUrl,
-      "imageUrl": imageUrl,
+    final Map<String, dynamic> data = {
+      "SessionType": sessionType,
+      "ScheduledAt": scheduledAt.toUtc().toIso8601String(),
+      "Price": price ?? 0,
+      "VideoUrl": finalVideoUrl ?? "",
+      "AudioUrl": finalAudioUrl ?? "",
+      "PdfUrl": finalPdfUrl ?? "",
+      "ImageUrl": finalImageUrl ?? "",
     };
 
-    log('Creating session at: /api/DoctorSessions with body: $body');
+    final FormData formData = FormData.fromMap(data);
+
+    if (filePath != null && filePath.isNotEmpty) {
+      formData.files.add(MapEntry(
+        "MediaFile",
+        await MultipartFile.fromFile(
+          filePath,
+          filename: filePath.split('/').last,
+        ),
+      ));
+    }
+
+    log('Creating session at: /api/DoctorSessions/$patientId with multipart/form-data');
+    log('Fields: ${data.keys.join(', ')}');
+    if (filePath != null) log('File: $filePath');
 
     try {
       final response = await _dio.post(
-        '/api/DoctorSessions',
-        data: body,
+        '/api/DoctorSessions/$patientId',
+        data: formData,
         options: Options(
-          headers: {'accept': '*/*', 'Content-Type': 'application/json'},
+          headers: {
+            'accept': '*/*',
+          },
         ),
       );
 
       log('Create response: ${response.statusCode} - ${response.data}');
-      return response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300;
+      return response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
     } on DioException catch (e) {
       log('DioError: ${e.response?.statusCode} - ${e.response?.data}');
       rethrow;
