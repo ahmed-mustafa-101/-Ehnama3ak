@@ -3,30 +3,30 @@ import 'package:ehnama3ak/repositories/post_repository.dart';
 
 class MockPostRepository implements PostRepository {
   final List<PostModel> _posts = [
-    PostModel(
-      postId: '1',
-      userId: 'u1',
-      userName: 'Ahmed Mohamed',
-      userRole: 'Patient',
-      userProfileImage: 'assets/images/image_patient.png',
-      postText: "I feel exhausted and unable to get through my day...",
-      likesCount: 1,
-      commentsCount: 22,
-      isLikedByMe: false,
-      createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
-    ),
-    PostModel(
-      postId: '2',
-      userId: 'u2',
-      userName: 'Dr. Sara Ahmed',
-      userRole: 'Doctor',
-      userProfileImage: 'assets/images/image_patient.png',
-      postText: "Remember to take deep breaths and stay hydrated! 🧘‍♀️",
-      likesCount: 15,
-      commentsCount: 3,
-      isLikedByMe: true,
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
+    // PostModel(
+    //   postId: '1',
+    //   userId: 'u1',
+    //   userName: 'Ahmed Mohamed',
+    //   userRole: 'Patient',
+    //   userProfileImage: 'assets/images/image_patient.png',
+    //   postText: "I feel exhausted and unable to get through my day...",
+    //   likesCount: 1,
+    //   commentsCount: 22,
+    //   isLikedByMe: false,
+    //   createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+    // ),
+    // PostModel(
+    //   postId: '2',
+    //   userId: 'u2',
+    //   userName: 'Dr. Sara Ahmed',
+    //   userRole: 'Doctor',
+    //   userProfileImage: 'assets/images/image_patient.png',
+    //   postText: "Remember to take deep breaths and stay hydrated! 🧘‍♀️",
+    //   likesCount: 15,
+    //   commentsCount: 3,
+    //   isLikedByMe: true,
+    //   createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+    // ),
   ];
 
   @override

@@ -6,6 +6,7 @@ class PostModel extends Equatable {
   final String userName;
   final String userRole;
   final String userProfileImage;
+  final String userAvatar;
   final String content;
   final String? imageUrl;
   final int likesCount;
@@ -21,6 +22,7 @@ class PostModel extends Equatable {
     required this.userName,
     required this.userRole,
     required this.userProfileImage,
+    required this.userAvatar,
     required this.content,
     this.imageUrl,
     required this.likesCount,
@@ -37,6 +39,7 @@ class PostModel extends Equatable {
     String? userName,
     String? userRole,
     String? userProfileImage,
+    String? userAvatar,
     String? content,
     String? imageUrl,
     int? likesCount,
@@ -52,6 +55,7 @@ class PostModel extends Equatable {
       userName: userName ?? this.userName,
       userRole: userRole ?? this.userRole,
       userProfileImage: userProfileImage ?? this.userProfileImage,
+      userAvatar: userAvatar ?? this.userAvatar,
       content: content ?? this.content,
       imageUrl: imageUrl ?? this.imageUrl,
       likesCount: likesCount ?? this.likesCount,
@@ -123,7 +127,7 @@ class PostModel extends Equatable {
       'authorImage', 'AuthorImage', 'doctorImage', 'DoctorImage', 'patientImage', 'PatientImage',
       'userPhoto', 'UserPhoto', 'authorPhoto', 'AuthorPhoto', 'doctorPhoto', 'DoctorPhoto',
       'patientPhoto', 'PatientPhoto', 'profile_picture', 'profile_photo', 'avatar_url', 'image_url',
-      'uImage', 'uPhoto', 'uAvatar', 'uPicture'
+      'uImage', 'uPhoto', 'uAvatar', 'uPicture', 'userAvatar'
     ];
 
     final List<String> commonImageKeys = [
@@ -148,6 +152,7 @@ class PostModel extends Equatable {
       userName: pick(userMap, nameKeys, defaultValue: pick(json, nameKeys, defaultValue: 'Unknown')),
       userRole: (json['userRole'] ?? json['role'] ?? userMap?['role'] ?? 'User').toString(),
       userProfileImage: profileImg,
+      userAvatar: profileImg,
       content: (json['content'] ?? json['postText'] ?? json['text'] ?? '').toString(),
       imageUrl: json['imageUrl'] ?? json['postImage'] ?? json['image'],
       likesCount: likesCount,
@@ -178,5 +183,5 @@ class PostModel extends Equatable {
       currentUserId != null && currentUserId.isNotEmpty && userId == currentUserId;
 
   @override
-  List<Object?> get props => [id, userId, content, likesCount, commentsCount, sharesCount, isLikedByMe];
+  List<Object?> get props => [id, userId, content, likesCount, commentsCount, sharesCount, isLikedByMe, userAvatar];
 }

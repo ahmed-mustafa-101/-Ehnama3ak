@@ -37,14 +37,10 @@ class CommentsCubit extends Cubit<CommentsState> {
         }
         
         if (changed) {
-          return CommentModel(
-            id: c.id,
-            postId: c.postId,
-            userId: c.userId,
+          return c.copyWith(
             userName: newName,
             userProfileImage: newImage,
-            text: c.text,
-            createdAt: c.createdAt,
+            userAvatar: newImage,
           );
         }
       }

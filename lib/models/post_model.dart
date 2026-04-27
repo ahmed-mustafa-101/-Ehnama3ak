@@ -4,6 +4,7 @@ class PostModel {
   final String userName;
   final String userRole;
   final String userProfileImage;
+  final String userAvatar;
   final String postText;
   final String? postImage;
   final int likesCount;
@@ -17,6 +18,7 @@ class PostModel {
     required this.userName,
     required this.userRole,
     required this.userProfileImage,
+    required this.userAvatar,
     required this.postText,
     this.postImage,
     required this.likesCount,
@@ -31,6 +33,7 @@ class PostModel {
     String? userName,
     String? userRole,
     String? userProfileImage,
+    String? userAvatar,
     String? postText,
     String? postImage,
     int? likesCount,
@@ -44,6 +47,7 @@ class PostModel {
       userName: userName ?? this.userName,
       userRole: userRole ?? this.userRole,
       userProfileImage: userProfileImage ?? this.userProfileImage,
+      userAvatar: userAvatar ?? this.userAvatar,
       postText: postText ?? this.postText,
       postImage: postImage ?? this.postImage,
       likesCount: likesCount ?? this.likesCount,
@@ -59,7 +63,8 @@ class PostModel {
       userId: (json['userId'] ?? json['uId'] ?? '').toString(),
       userName: json['userName'] ?? json['name'] ?? 'Unknown',
       userRole: json['userRole'] ?? json['role'] ?? 'User',
-      userProfileImage: json['userProfileImage'] ?? json['profilePlaceholder'] ?? '',
+      userProfileImage: json['userProfileImage'] ?? json['userAvatar'] ?? json['profilePlaceholder'] ?? '',
+      userAvatar: json['userAvatar'] ?? json['userProfileImage'] ?? '',
       postText: json['postText'] ?? json['content'] ?? '',
       postImage: json['postImage'],
       likesCount: json['likesCount'] ?? json['likes'] ?? 0,
