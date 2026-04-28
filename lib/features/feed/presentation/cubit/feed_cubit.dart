@@ -23,18 +23,39 @@ class FeedCubit extends Cubit<FeedState> {
         ),
       );
     } else if (state.posts.isEmpty) {
-      emit(state.copyWith(status: FeedStatus.loading, clearError: true));
+      // Try loading from cache first
+      try {
+        final cachedPosts = await _repo.getCachedPosts();
+        if (cachedPosts.isNotEmpty) {
+          emit(state.copyWith(
+            status: FeedStatus.loaded,
+            posts: cachedPosts,
+            currentPage: 1,
+            isRefreshing: true, // Start refreshing in background
+          ));
+        } else {
+          // If no cache, show initial loading
+          emit(state.copyWith(status: FeedStatus.loading, clearError: true));
+        }
+      } catch (_) {
+        emit(state.copyWith(status: FeedStatus.loading, clearError: true));
+      }
+    } else {
+      emit(state.copyWith(isRefreshing: true));
     }
 
     try {
-      final page = refresh ? 1 : state.currentPage;
+      // Always fetch page 1 when refreshing or initial load
+      final page = refresh || state.currentPage <= 1 || state.isRefreshing ? 1 : state.currentPage;
       final posts = await _repo.getPosts(page: page, pageSize: _pageSize);
 
       final hasReachedMax = posts.length < _pageSize;
       
       List<PostModel> newPosts;
-      if (refresh) {
+      if (refresh || page == 1) {
         newPosts = posts;
+        // Save first page to cache
+        await _repo.cachePosts(posts);
       } else {
         // De-duplicate by ID when appending
         final existingIds = state.posts.map((p) => p.id).toSet();
@@ -51,19 +72,31 @@ class FeedCubit extends Cubit<FeedState> {
           posts: newPosts,
           currentPage: page + 1,
           hasReachedMax: hasReachedMax,
+          isRefreshing: false, // Done refreshing
           clearError: true,
         ),
       );
     } catch (e) {
-      emit(
-        state.copyWith(
-          status: FeedStatus.error,
+      // If we already have posts (from cache), don't show full error screen
+      if (state.posts.isNotEmpty) {
+        emit(state.copyWith(
+          status: FeedStatus.loaded,
+          isRefreshing: false,
           errorMessage: FeedApiService.parseError(e),
-          clearError: false,
-        ),
-      );
+        ));
+      } else {
+        emit(
+          state.copyWith(
+            status: FeedStatus.error,
+            isRefreshing: false,
+            errorMessage: FeedApiService.parseError(e),
+            clearError: false,
+          ),
+        );
+      }
     }
   }
+
 
   Future<void> loadMore() async {
     if (state.hasReachedMax || state.status == FeedStatus.loadingMore) return;

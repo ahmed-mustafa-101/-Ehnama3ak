@@ -1,5 +1,6 @@
 import '../../data/datasources/message_api_service.dart';
 import '../../data/models/conversation_model.dart';
+import '../../data/models/message_model.dart';
 import '../../domain/repositories/message_repository.dart';
 
 class MessageRepositoryImpl implements MessageRepository {
@@ -9,6 +10,10 @@ class MessageRepositoryImpl implements MessageRepository {
 
   @override
   Future<List<ConversationModel>> getConversations() => _apiService.getConversations();
+
+  @override
+  Future<List<MessageModel>> getMessages(String otherUserId) =>
+      _apiService.getMessages(otherUserId);
 
   @override
   Future<void> sendMessage({required String receiverId, required String message}) =>

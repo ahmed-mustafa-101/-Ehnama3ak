@@ -1,16 +1,27 @@
 import '../../domain/repositories/feed_repository.dart';
 import '../datasources/feed_api_service.dart';
+import '../datasources/feed_local_data_source.dart';
+
 import '../models/comment_model.dart';
 import '../models/post_model.dart';
 
 class FeedRepositoryImpl implements FeedRepository {
   final FeedApiService _api;
+  final FeedLocalDataSource _local;
 
-  FeedRepositoryImpl(FeedApiService api) : _api = api;
+  FeedRepositoryImpl(FeedApiService api, FeedLocalDataSource local)
+      : _api = api,
+        _local = local;
 
   @override
   Future<List<PostModel>> getPosts({int page = 1, int pageSize = 10}) =>
       _api.getPosts(page: page, pageSize: pageSize);
+
+  @override
+  Future<List<PostModel>> getCachedPosts() => _local.getCachedPosts();
+
+  @override
+  Future<void> cachePosts(List<PostModel> posts) => _local.cachePosts(posts);
 
   @override
   Future<PostModel> createPost({

@@ -16,6 +16,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:ehnama3ak/core/utils/image_utils.dart';
+
+import 'package:ehnama3ak/core/widgets/full_image_page.dart';
+
 
 class ForYouPage extends StatefulWidget {
   const ForYouPage({super.key});
@@ -548,17 +552,17 @@ class PostCard extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    Widget imageWidget;
+
     if (trimmedPath.startsWith('assets/')) {
-      return ClipRRect(
+      imageWidget = ClipRRect(
         borderRadius: BorderRadius.circular(
           Responsive.borderRadius(context, 12),
         ),
         child: Image.asset(trimmedPath, fit: BoxFit.cover),
       );
-    }
-
-    if (trimmedPath.startsWith('http')) {
-      return ClipRRect(
+    } else if (trimmedPath.startsWith('http')) {
+      imageWidget = ClipRRect(
         borderRadius: BorderRadius.circular(
           Responsive.borderRadius(context, 12),
         ),
@@ -588,7 +592,7 @@ class PostCard extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: loadingProgress.expectedTotalBytes != null
                         ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
+                            loadingProgress.expectedTotalBytes!
                         : null,
                   ),
                 ),
@@ -597,60 +601,83 @@ class PostCard extends StatelessWidget {
           ),
         ),
       );
+    } else {
+      // Handle local files or relative URLs
+      final file = File(trimmedPath);
+      if (file.existsSync()) {
+        imageWidget = ClipRRect(
+          borderRadius: BorderRadius.circular(
+            Responsive.borderRadius(context, 12),
+          ),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: Responsive.height(context, 0.4),
+            ),
+            width: double.infinity,
+            child: Image.file(
+              file,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  const Center(child: Icon(Icons.error)),
+            ),
+          ),
+        );
+      } else {
+        // Prepend base URL for relative paths
+        const String baseUrl = 'http://e7nama3ak.runasp.net';
+        final fullUrl = trimmedPath.startsWith('/')
+            ? '$baseUrl$trimmedPath'
+            : '$baseUrl/$trimmedPath';
+
+        imageWidget = ClipRRect(
+          borderRadius: BorderRadius.circular(
+            Responsive.borderRadius(context, 12),
+          ),
+          child: Container(
+            constraints: BoxConstraints(
+              minHeight: 100,
+              maxHeight: Responsive.height(context, 0.4),
+            ),
+            width: double.infinity,
+            child: Image.network(
+              fullUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) {
+                return Container(
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: Icon(Icons.broken_image, color: Colors.grey),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
     }
 
-    // fallback for local files (from fresh posts)
-    final file = File(trimmedPath);
-    if (file.existsSync()) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(
-          Responsive.borderRadius(context, 12),
-        ),
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: Responsive.height(context, 0.4),
-          ),
-          width: double.infinity,
-          child: Image.file(
-            file,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                const Center(child: Icon(Icons.error)),
-          ),
-        ),
-      );
-    }
+    final heroTag = 'post_image_${post.id}';
 
-    // If it's a relative path from server, prepend base URL
-    const String baseUrl = 'http://e7nama3ak.runasp.net';
-    final fullUrl = trimmedPath.startsWith('/')
-        ? '$baseUrl$trimmedPath'
-        : '$baseUrl/$trimmedPath';
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(Responsive.borderRadius(context, 12)),
-      child: Container(
-        constraints: BoxConstraints(
-          minHeight: 100,
-          maxHeight: Responsive.height(context, 0.4),
-        ),
-        width: double.infinity,
-        child: Image.network(
-          fullUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) {
-            // If it still fails, it's likely a bad relative path or missing file
-            return Container(
-              color: Colors.grey.shade200,
-              child: const Center(
-                child: Icon(Icons.broken_image, color: Colors.grey),
-              ),
-            );
-          },
-        ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FullImagePage(
+              imageUrl: trimmedPath,
+              heroTag: heroTag,
+              post: post,
+            ),
+          ),
+        );
+      },
+      child: Hero(
+        tag: heroTag,
+        child: imageWidget,
       ),
     );
   }
+
 
   // Moved to top-level helper function for reuse in _CommentTile
 
@@ -1282,30 +1309,5 @@ class _CommentTile extends StatelessWidget {
 }
 
 // Helper function to build ImageProvider for user profile pictures
-ImageProvider buildUserProfileImageProvider(String path) {
-  if (path.isEmpty ||
-      path.toLowerCase() == 'null' ||
-      path.toLowerCase() == 'string') {
-    return const AssetImage('assets/images/user_avatar.png');
-  }
 
-  String normalizedPath = path.trim().replaceAll('\\', '/');
-  if (normalizedPath.startsWith('assets/')) return AssetImage(normalizedPath);
-  if (normalizedPath.startsWith('http')) return NetworkImage(normalizedPath);
 
-  const String baseUrl = 'http://e7nama3ak.runasp.net';
-  final cleanPath = normalizedPath.startsWith('/')
-      ? normalizedPath
-      : '/$normalizedPath';
-  return NetworkImage('$baseUrl$cleanPath');
-}
-
-String formatRelativeTime(DateTime time) {
-  final diff = DateTime.now().toUtc().difference(time.toUtc());
-  if (diff.inSeconds < 10) return 'Just now';
-  if (diff.inSeconds < 60) return '${diff.inSeconds} sec';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} mins';
-  if (diff.inHours < 24) return '${diff.inHours} hours';
-  if (diff.inDays < 7) return '${diff.inDays} days';
-  return '${time.day}/${time.month}/${time.year}';
-}

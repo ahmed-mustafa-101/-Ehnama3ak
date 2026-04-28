@@ -155,14 +155,18 @@ class _TherapistsPageState extends State<TherapistsPage> {
                             selectedTime!.hour,
                             selectedTime!.minute,
                           );
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
+                          
+                          // Capture navigator before popping the bottom sheet
+                          final navigator = Navigator.of(context);
+                          
+                          navigator.pop(); // Close bottom sheet
+                          navigator.push(
                             MaterialPageRoute(
                               builder: (_) => PaymentScreen(
                                 amount: 50.0,
                                 onPaymentSuccess: () {
-                                  context.read<DoctorCubit>().bookSession(
+                                  // Use the state's context for the cubit call
+                                  this.context.read<DoctorCubit>().bookSession(
                                     doctor.id,
                                     dt.toUtc().toIso8601String(),
                                     selectedType,

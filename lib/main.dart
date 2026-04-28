@@ -48,14 +48,21 @@ import 'features/messages/data/repositories/message_repository_impl.dart';
 import 'package:ehnama3ak/features/messages/presentation/controllers/message_cubit.dart';
 import 'package:ehnama3ak/screens_app/chatbot/chat_service.dart';
 import 'package:ehnama3ak/screens_app/chatbot/chat_cubit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ehnama3ak/features/feed/data/datasources/feed_local_data_source.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const EhnaMa3akApp());
+  final sharedPrefs = await SharedPreferences.getInstance();
+  runApp(EhnaMa3akApp(sharedPrefs: sharedPrefs));
 }
 
+
 class EhnaMa3akApp extends StatelessWidget {
-  const EhnaMa3akApp({super.key});
+  final SharedPreferences sharedPrefs;
+  const EhnaMa3akApp({super.key, required this.sharedPrefs});
+
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +71,9 @@ class EhnaMa3akApp extends StatelessWidget {
     final dioClient = DioClient(tokenStorage: storage);
     final feedRepo = FeedRepositoryImpl(
       FeedApiService(dioClient: dioClient, tokenStorage: storage),
+      FeedLocalDataSource(sharedPrefs),
     );
+
     final podcastRepo = PodcastRepositoryImpl(
       PodcastApiService(dioClient: dioClient),
     );

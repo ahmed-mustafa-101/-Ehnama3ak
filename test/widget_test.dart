@@ -1,12 +1,17 @@
+import 'package:ehnama3ak/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ehnama3ak/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    // Mock SharedPreferences
+    SharedPreferences.setMockInitialValues({});
+    final sharedPrefs = await SharedPreferences.getInstance();
+
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const EhnaMa3akApp());
+    await tester.pumpWidget(EhnaMa3akApp(sharedPrefs: sharedPrefs));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

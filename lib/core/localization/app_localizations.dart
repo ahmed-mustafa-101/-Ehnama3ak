@@ -302,6 +302,10 @@ class AppLocalizations {
   String get pleaseSelectBank => translate('please_select_bank');
   String get pleaseSelectWallet => translate('please_select_wallet');
   String get paymentSuccessful => translate('payment_successful');
+  String get walletPhoneNumber => translate('wallet_phone_number');
+  String get enterWalletPhone => translate('enter_wallet_phone');
+  String get walletInstruction => translate('wallet_instruction');
+  String get invalidPhone => translate('invalid_phone');
 }
 
 class _AppLocalizationsDelegate

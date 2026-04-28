@@ -175,8 +175,18 @@ class PostModel extends Equatable {
   Map<String, dynamic> toJson() => {
         'id': id,
         'userId': userId,
+        'userName': userName,
+        'userRole': userRole,
+        'userProfileImage': userProfileImage,
+        'userAvatar': userAvatar,
         'content': content,
         'imageUrl': imageUrl,
+        'likesCount': likesCount,
+        'commentsCount': commentsCount,
+        'sharesCount': sharesCount,
+        'isLikedByMe': isLikedByMe,
+        'createdAt': createdAt.toIso8601String(),
+        'likeId': likeId,
       };
 
   bool isOwnedBy(String? currentUserId) =>

@@ -263,5 +263,9 @@
   "select_wallet": "اختر مزود المحفظة",
   "please_select_bank": "يرجى اختيار البنك",
   "please_select_wallet": "يرجى اختيار مزود المحفظة",
-  "payment_successful": "تمت عملية الدفع بنجاح!"
+  "payment_successful": "تمت عملية الدفع بنجاح!",
+  "wallet_phone_number": "رقم الهاتف المرتبط بالمحفظة",
+  "enter_wallet_phone": "أدخل رقم الهاتف",
+  "wallet_instruction": "سوف تصلك رسالة تأكيد على هاتفك لإتمام عملية الدفع",
+  "invalid_phone": "رقم هاتف غير صحيح"
 }

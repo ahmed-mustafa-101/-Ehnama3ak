@@ -3,6 +3,8 @@ import '../../data/models/post_model.dart';
 
 abstract class FeedRepository {
   Future<List<PostModel>> getPosts({int page = 1, int pageSize = 10});
+  Future<List<PostModel>> getCachedPosts();
+  Future<void> cachePosts(List<PostModel> posts);
   Future<PostModel> createPost({
     required String content,
     String? imagePath,

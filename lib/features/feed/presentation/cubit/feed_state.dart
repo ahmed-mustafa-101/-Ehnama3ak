@@ -9,6 +9,7 @@ class FeedState extends Equatable {
   final String? errorMessage;
   final bool hasReachedMax;
   final int currentPage;
+  final bool isRefreshing;
 
   const FeedState({
     this.status = FeedStatus.initial,
@@ -16,6 +17,7 @@ class FeedState extends Equatable {
     this.errorMessage,
     this.hasReachedMax = false,
     this.currentPage = 1,
+    this.isRefreshing = false,
   });
 
   FeedState copyWith({
@@ -24,6 +26,7 @@ class FeedState extends Equatable {
     String? errorMessage,
     bool? hasReachedMax,
     int? currentPage,
+    bool? isRefreshing,
     bool clearError = false,
   }) {
     return FeedState(
@@ -32,9 +35,11 @@ class FeedState extends Equatable {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
       currentPage: currentPage ?? this.currentPage,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
     );
   }
 
   @override
-  List<Object?> get props => [status, posts, errorMessage, hasReachedMax, currentPage];
+  List<Object?> get props => [status, posts, errorMessage, hasReachedMax, currentPage, isRefreshing];
 }
+

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:ehnama3ak/core/network/dio_client.dart';
 import '../models/conversation_model.dart';
+import '../models/message_model.dart';
 
 /// Handles all message-related API calls.
 /// The shared [DioClient] auto-attaches the Bearer token on every request.
@@ -17,6 +18,18 @@ class MessageApiService {
     try {
       final response = await _dio.get('/api/Messages/conversations');
       return _parseConversations(response.data);
+    } on DioException catch (e) {
+      throw _mapError(e);
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // GET /api/Messages/conversation/{receiverId}
+  // ─────────────────────────────────────────
+  Future<List<MessageModel>> getMessages(String otherUserId) async {
+    try {
+      final response = await _dio.get('/api/Messages/conversation/$otherUserId');
+      return _parseMessages(response.data);
     } on DioException catch (e) {
       throw _mapError(e);
     }
@@ -70,6 +83,23 @@ class MessageApiService {
       if (items is List) {
         return items
             .map((e) => ConversationModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+    }
+    return [];
+  }
+
+  List<MessageModel> _parseMessages(dynamic data) {
+    if (data is List) {
+      return data
+          .map((e) => MessageModel.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    }
+    if (data is Map) {
+      final items = data['items'] ?? data['data'] ?? data['messages'];
+      if (items is List) {
+        return items
+            .map((e) => MessageModel.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
       }
     }

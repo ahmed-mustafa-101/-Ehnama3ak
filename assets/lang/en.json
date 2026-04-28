@@ -263,5 +263,9 @@
   "select_wallet": "Select wallet provider",
   "please_select_bank": "Please select a bank",
   "please_select_wallet": "Please select a wallet provider",
-  "payment_successful": "Payment Successful!"
+  "payment_successful": "Payment Successful!",
+  "wallet_phone_number": "Wallet Phone Number",
+  "enter_wallet_phone": "Enter phone number",
+  "wallet_instruction": "You will receive a confirmation message on your phone to complete the payment.",
+  "invalid_phone": "Invalid phone number"
 }
