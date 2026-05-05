@@ -6,6 +6,10 @@ import 'package:ehnama3ak/features/resources/presentation/cubit/resource_state.d
 import 'package:ehnama3ak/features/resources/data/models/resource_model.dart';
 import '_resource_empty.dart';
 import '_resource_error.dart';
+import 'pdf_viewer_screen.dart';
+import 'package:ehnama3ak/core/widgets/full_image_page.dart';
+import 'video_player_screen.dart';
+import 'resource_downloader.dart';
 
 class ArticlesTab extends StatelessWidget {
   const ArticlesTab({super.key});
@@ -81,14 +85,58 @@ class _ArticleCard extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: ElevatedButton(
-          onPressed: () => _open(resource.url),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1E88E5),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          ),
-          child: const Text('Read Now'),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.download, color: Color(0xFF1E88E5)),
+              onPressed: () => ResourceDownloader.download(context, resource),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (resource.url.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No content available for this session.')),
+                  );
+                  return;
+                }
+                final urlLower = resource.url.toLowerCase();
+                if (resource.type == ResourceType.pdf || urlLower.endsWith('.pdf') || urlLower.contains('.pdf')) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PdfViewerScreen(url: resource.url, title: resource.title),
+                    ),
+                  );
+                } else if (urlLower.endsWith('.jpg') || urlLower.endsWith('.jpeg') || urlLower.endsWith('.png')) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FullImagePage(
+                        imageUrl: resource.url,
+                        heroTag: 'article_${resource.id}',
+                      ),
+                    ),
+                  );
+                } else if (urlLower.endsWith('.mp4') || urlLower.endsWith('.mov')) {
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => VideoPlayerScreen(url: resource.url, title: resource.title),
+                    ),
+                  );
+                } else {
+                  _openExternal(context, resource.url);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E88E5),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: const Text('Read Now'),
+            ),
+          ],
         ),
       ),
     );
@@ -120,9 +168,15 @@ Widget _iconBox(IconData icon) => Container(
       child: Icon(icon, color: const Color(0xFF1E88E5), size: 30),
     );
 
-Future<void> _open(String url) async {
+Future<void> _openExternal(BuildContext context, String url) async {
   final uri = Uri.tryParse(url);
   if (uri != null && await canLaunchUrl(uri)) {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } else {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the link.')),
+      );
+    }
   }
 }

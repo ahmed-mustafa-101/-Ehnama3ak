@@ -32,6 +32,7 @@ class DoctorSessionsCubit extends Cubit<DoctorSessionsState> {
 
   Future<void> createSession({
     required String patientName,
+    required int patientId,
     required String sessionType,
     required DateTime scheduledAt,
     double? price,
@@ -41,6 +42,7 @@ class DoctorSessionsCubit extends Cubit<DoctorSessionsState> {
     try {
       final success = await _apiService.createDoctorSession(
         patientName: patientName,
+        patientId: patientId,
         sessionType: sessionType,
         scheduledAt: scheduledAt,
         price: price,

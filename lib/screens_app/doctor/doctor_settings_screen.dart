@@ -12,6 +12,8 @@ import '../../core/network/dio_client.dart';
 import '../notifications/notifications_screen.dart';
 import '../../features/settings/presentation/controllers/settings_cubit.dart';
 import '../../features/settings/presentation/controllers/settings_state.dart';
+import 'dashboard/presentation/cubit/doctor_dashboard_cubit.dart';
+import 'dashboard/presentation/cubit/doctor_dashboard_state.dart';
 import 'package:share_plus/share_plus.dart';
 
 class DoctorSettingsScreen extends StatelessWidget {
@@ -237,138 +239,169 @@ class DoctorSettingsScreen extends StatelessWidget {
     bool isDark,
     AppLocalizations l10n,
   ) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      buildWhen: (prev, curr) {
-        if (curr is AuthSuccess) {
-          if (prev is AuthSuccess) return prev.user != curr.user;
-          return true;
-        }
-        return prev is AuthSuccess;
-      },
+    return BlocBuilder<DoctorDashboardCubit, DoctorDashboardState>(
       builder: (context, state) {
-        final user = state is AuthSuccess ? state.user : null;
+        if (state is DoctorDashboardSuccess) {
+          final header = state.header;
+          return Column(
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  final picker = ImagePicker();
+                  final XFile? image = await picker.pickImage(
+                    source: ImageSource.gallery,
+                  );
+                  if (image != null) {
+                    if (!context.mounted) return;
+                    context.read<AuthCubit>().updateProfileImage(image.path);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(l10n.uploadingImage)));
+                  }
+                },
+                child: Stack(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF0DA5FE), Colors.lightBlueAccent],
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey[200],
+                        backgroundImage: header.imageUrl.isNotEmpty
+                            ? NetworkImage(
+                                _getFullImageUrl(header.imageUrl),
+                              )
+                            : const AssetImage('assets/images/user_avatar.png')
+                                  as ImageProvider,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF0DA5FE),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 15),
+              Text(
+                header.name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              Text(
+                header.specialization,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                '${header.experienceYears} Years Exp',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Wrap(
+                      children: List.generate(
+                        10,
+                        (index) => Icon(
+                          Icons.star,
+                          size: 16,
+                          color: index < header.rating.round()
+                              ? const Color(0xFF0DA5FE)
+                              : Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (header.isAvailable) ...[
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircleAvatar(
+                            radius: 4,
+                            backgroundColor: Colors.green,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            AppLocalizations.of(context).available,
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ]
+                ],
+              ),
+            ],
+          );
+        }
+
+        // Loading or initial state
         return Column(
           children: [
-            GestureDetector(
-              onTap: () async {
-                final picker = ImagePicker();
-                final XFile? image = await picker.pickImage(
-                  source: ImageSource.gallery,
-                );
-                if (image != null) {
-                  if (!context.mounted) return;
-                  context.read<AuthCubit>().updateProfileImage(image.path);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(l10n.uploadingImage)));
-                }
-              },
-              child: Stack(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF0DA5FE), Colors.lightBlueAccent],
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.grey[200],
-                      backgroundImage:
-                          (user?.profileImageUrl != null &&
-                              user!.profileImageUrl!.isNotEmpty)
-                          ? NetworkImage(
-                              _getFullImageUrl(user.profileImageUrl!),
-                            )
-                          : const AssetImage('assets/images/user_avatar.png')
-                                as ImageProvider,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF0DA5FE),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFF0DA5FE), Colors.lightBlueAccent],
+                ),
+              ),
+              child: CircleAvatar(
+                radius: 60,
+                backgroundColor: Colors.grey[200],
+                backgroundImage: const AssetImage('assets/images/user_avatar.png'),
               ),
             ),
             const SizedBox(height: 15),
-            RegisteredDoctorProfileTexts(
-              user: user,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              textAlign: TextAlign.center,
-              nameStyle: TextStyle(
+            Text(
+              'Loading...',
+              style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87,
               ),
-              specializationStyle: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 16,
-              ),
-              yearsStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: Wrap(
-                    children: List.generate(
-                      10,
-                      (index) => Icon(
-                        Icons.star,
-                        size: 16,
-                        color: index < 7
-                            ? const Color(0xFF0DA5FE)
-                            : Colors.grey.shade400,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircleAvatar(
-                        radius: 4,
-                        backgroundColor: Colors.green,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        AppLocalizations.of(context).available,
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ],
         );

@@ -1,6 +1,7 @@
 import 'package:ehnama3ak/screens_app/doctor/dashboard/models/dashboard_stats_model.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/models/recent_activity_model.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/models/medical_report_model.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/models/doctor_header_model.dart';
 
 abstract class DoctorDashboardState {}
 
@@ -9,10 +10,12 @@ class DoctorDashboardInitial extends DoctorDashboardState {}
 class DoctorDashboardLoading extends DoctorDashboardState {}
 
 class DoctorDashboardSuccess extends DoctorDashboardState {
+  final DoctorHeaderModel header;
   final DashboardStatsModel stats;
   final List<RecentActivityModel> recentActivity;
   final List<MedicalReportModel>? medicalReports;
   DoctorDashboardSuccess({
+    required this.header,
     required this.stats,
     required this.recentActivity,
     this.medicalReports,

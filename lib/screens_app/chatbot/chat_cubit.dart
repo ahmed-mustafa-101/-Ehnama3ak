@@ -46,9 +46,10 @@ class ChatCubit extends Cubit<ChatState> {
 
   Future<void> sendVoiceMessage(String filePath) async {
     final userMessage = ChatMessage(
-      message: "🎤 Voice Message",
+      message: "Voice Message",
       isUser: true,
       timestamp: DateTime.now(),
+      audioPath: filePath,
     );
     final updatedMessages = List<ChatMessage>.from(state.messages)
       ..add(userMessage);

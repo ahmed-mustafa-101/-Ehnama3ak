@@ -238,161 +238,113 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    BlocBuilder<AuthCubit, AuthState>(
-                      buildWhen: (prev, curr) {
-                        if (curr is AuthSuccess) {
-                          if (prev is AuthSuccess)
-                            return prev.user != curr.user;
-                          return true;
-                        }
-                        return prev is AuthSuccess;
-                      },
-                      builder: (context, authState) {
-                        final user = authState is AuthSuccess
-                            ? authState.user
-                            : null;
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [Colors.blue, Colors.lightBlueAccent],
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Colors.blue, Colors.lightBlueAccent],
+                            ),
+                          ),
+                          child: CircleAvatar(
+                            radius: Responsive.iconSize(context, 55),
+                            backgroundColor: Colors.grey[200],
+                            backgroundImage: state.header.imageUrl.isNotEmpty
+                                ? NetworkImage(
+                                    _getFullImageUrl(state.header.imageUrl),
+                                  )
+                                : const AssetImage(
+                                    'assets/images/user_avatar.png',
+                                  ) as ImageProvider,
+                          ),
+                        ),
+                        SizedBox(width: Responsive.spacing(context, 15)),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                state.header.name,
+                                style: TextStyle(
+                                  fontSize: Responsive.fontSize(context, 24),
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
                                 ),
                               ),
-                              child: CircleAvatar(
-                                radius: Responsive.iconSize(context, 55),
-                                backgroundColor: Colors.grey[200],
-                                backgroundImage:
-                                    (user?.profileImageUrl != null &&
-                                        user!.profileImageUrl!.isNotEmpty)
-                                    ? NetworkImage(
-                                        _getFullImageUrl(user.profileImageUrl!),
-                                      )
-                                    : const AssetImage(
-                                            'assets/images/user_avatar.png',
-                                          )
-                                          as ImageProvider,
+                              SizedBox(height: Responsive.spacing(context, 4)),
+                              Text(
+                                state.header.specialization,
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: Responsive.fontSize(context, 16),
+                                ),
                               ),
-                            ),
-                            SizedBox(width: Responsive.spacing(context, 15)),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              SizedBox(height: Responsive.spacing(context, 4)),
+                              Text(
+                                '${state.header.experienceYears} Years Exp',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: Responsive.fontSize(context, 14),
+                                ),
+                              ),
+                              SizedBox(height: Responsive.spacing(context, 8)),
+                              Wrap(
+                                spacing: Responsive.spacing(context, 8),
+                                runSpacing: Responsive.spacing(context, 8),
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
-                                  RegisteredDoctorProfileTexts(
-                                    user: user,
-                                    nameStyle: TextStyle(
-                                      fontSize: Responsive.fontSize(
-                                        context,
-                                        24,
-                                      ),
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark
-                                          ? Colors.white
-                                          : Colors.black87,
-                                    ),
-                                    specializationStyle: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: Responsive.fontSize(
-                                        context,
-                                        16,
-                                      ),
-                                    ),
-                                    yearsStyle: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: Responsive.fontSize(
-                                        context,
-                                        14,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: Responsive.spacing(context, 8),
-                                  ),
                                   Wrap(
-                                    spacing: Responsive.spacing(context, 8),
-                                    runSpacing: Responsive.spacing(context, 8),
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
-                                    children: [
-                                      Wrap(
-                                        children: List.generate(
-                                          5,
-                                          (index) => Icon(
-                                            Icons.star,
-                                            size: Responsive.iconSize(
-                                              context,
-                                              14,
-                                            ),
-                                            color: index < 4
-                                                ? Colors.blue
-                                                : Colors.grey.shade400,
-                                          ),
-                                        ),
+                                    children: List.generate(
+                                      5,
+                                      (index) => Icon(
+                                        Icons.star,
+                                        size: Responsive.iconSize(context, 14),
+                                        color: index < state.header.rating.round()
+                                            ? Colors.blue
+                                            : Colors.grey.shade400,
                                       ),
-                                      Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: Responsive.padding(
-                                            context,
-                                            10,
-                                          ),
-                                          vertical: Responsive.padding(
-                                            context,
-                                            4,
-                                          ),
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.withValues(
-                                            alpha: 0.05,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            Responsive.borderRadius(
-                                              context,
-                                              20,
-                                            ),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            CircleAvatar(
-                                              radius: Responsive.iconSize(
-                                                context,
-                                                4,
-                                              ),
-                                              backgroundColor: Colors.green,
-                                            ),
-                                            SizedBox(
-                                              width: Responsive.spacing(
-                                                context,
-                                                5,
-                                              ),
-                                            ),
-                                            Text(
-                                              l10n.available,
-                                              style: TextStyle(
-                                                color: const Color(0xFF0DA5FE),
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: Responsive.fontSize(
-                                                  context,
-                                                  12,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
+                                  if (state.header.isAvailable)
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: Responsive.padding(context, 10),
+                                        vertical: Responsive.padding(context, 4),
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.withValues(alpha: 0.05),
+                                        borderRadius: BorderRadius.circular(
+                                          Responsive.borderRadius(context, 20),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: Responsive.iconSize(context, 4),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                          SizedBox(width: Responsive.spacing(context, 5)),
+                                          Text(
+                                            l10n.available,
+                                            style: TextStyle(
+                                              color: const Color(0xFF0DA5FE),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: Responsive.fontSize(context, 12),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                 ],
                               ),
-                            ),
-                          ],
-                        );
-                      },
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: Responsive.spacing(context, 30)),
 

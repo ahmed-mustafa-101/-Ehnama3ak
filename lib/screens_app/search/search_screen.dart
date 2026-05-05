@@ -4,6 +4,9 @@ import 'package:ehnama3ak/screen_tap/therapists.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ehnama3ak/screen_tap/therapist/presentation/cubit/doctor_cubit.dart';
+import 'package:ehnama3ak/screen_tap/widgets_resources/articles_tab.dart';
+import 'package:ehnama3ak/screen_tap/widgets_resources/videos_tab.dart';
+import 'package:ehnama3ak/screen_tap/widgets_resources/downloads_tab.dart';
 
 class SearchScreen extends StatefulWidget {
   final VoidCallback? onNotificationTap;
@@ -115,11 +118,11 @@ class _SearchScreenState extends State<SearchScreen> {
             controller: _pageController,
             onPageChanged: (index) => setState(() => _currentIndex = index),
             children: [
-              _TabPage(index: 0, controller: _pageController),
+              AllTab(controller: _pageController),
               const TherapistsPage(showHeader: false),
-              _TabPage(index: 2, controller: _pageController),
-              _TabPage(index: 3, controller: _pageController),
-              _TabPage(index: 4, controller: _pageController),
+              const ArticlesTab(),
+              const DownloadsTab(),
+              const VideosTab(),
             ],
           ),
         ),
@@ -128,63 +131,69 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
-class _TabPage extends StatelessWidget {
-  final int index;
+class AllTab extends StatelessWidget {
   final PageController controller;
 
-  const _TabPage({required this.index, required this.controller});
+  const AllTab({super.key, required this.controller});
+
+  Widget _buildSectionHeader(BuildContext context, String title, VoidCallback onTap) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title,
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).textTheme.bodyLarge?.color)),
+          GestureDetector(
+            onTap: onTap,
+            child: Text(l10n.seeAll,
+                style: const TextStyle(color: Color(0xFF0DA5FE), fontSize: 14)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
       children: [
         const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(l10n.recent,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,
-                      color: Theme.of(context).textTheme.bodyLarge?.color)),
-              GestureDetector(
-                onTap: () {
-                  if (index < 4) {
-                    controller.animateToPage(index + 1,
-                        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                  }
-                },
-                child: Text(l10n.seeAll,
-                    style: const TextStyle(color: Color(0xFF0DA5FE), fontSize: 14)),
-              ),
-            ],
-          ),
+        _buildSectionHeader(context, l10n.therapists, () {
+          controller.animateToPage(1,
+              duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        }),
+        const SizedBox(height: 10),
+        const SizedBox(
+          height: 350,
+          child: TherapistsPage(showHeader: false),
         ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: 3,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, i) {
-              return Container(
-                height: 90,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF1E1E1E)
-                      : const Color(0xFFF7FAFF),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Text(l10n.translate('content_placeholder'),
-                      style: const TextStyle(color: Colors.grey)),
-                ),
-              );
-            },
-          ),
+        const SizedBox(height: 20),
+        _buildSectionHeader(context, l10n.articles, () {
+          controller.animateToPage(2,
+              duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        }),
+        const SizedBox(height: 10),
+        const SizedBox(
+          height: 350,
+          child: ArticlesTab(),
         ),
+        const SizedBox(height: 20),
+        _buildSectionHeader(context, l10n.videos, () {
+          controller.animateToPage(4,
+              duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        }),
+        const SizedBox(height: 10),
+        const SizedBox(
+          height: 350,
+          child: VideosTab(),
+        ),
+        const SizedBox(height: 20),
       ],
     );
   }

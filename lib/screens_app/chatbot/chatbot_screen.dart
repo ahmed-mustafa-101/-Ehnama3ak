@@ -12,6 +12,9 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 import 'dart:developer' as dev;
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:ehnama3ak/screens_app/chatbot/voice_message_widget.dart';
 
 class ChatbotScreen extends StatefulWidget {
   final VoidCallback? onClose;
@@ -135,6 +138,31 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
   }
 
+  Future<void> _cancelRecording() async {
+    dev.log('Canceling recording...', name: 'ChatbotScreen');
+    try {
+      await _amplitudeSub?.cancel();
+      final path = await _audioRecorder.stop();
+      dev.log('Recorder canceled. Path: $path', name: 'ChatbotScreen');
+
+      setState(() {
+        _isRecording = false;
+        _amplitude = 0.0;
+        _amplitudeHistory = List.filled(20, -60.0);
+        _audioPath = null;
+      });
+
+      if (path != null) {
+        final file = File(path);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
+    } catch (e) {
+      dev.log('Error canceling recording: $e', name: 'ChatbotScreen', error: e);
+    }
+  }
+
   void _listen() async {
     // Keeping speech to text as an option or replacing it?
     // Let's use tap for speech-to-text and long press for recording voice message.
@@ -185,6 +213,23 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
   }
 
+  Future<void> _pickAudioFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.audio,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final path = result.files.single.path!;
+        if (mounted) {
+          context.read<ChatCubit>().sendVoiceMessage(path);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error picking audio: $e");
+    }
+  }
+
   void _showImageSourceBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -199,7 +244,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              AppLocalizations.of(context).selectImageSource,
+              AppLocalizations.of(context).selectSource,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
@@ -220,6 +265,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   onTap: () {
                     Navigator.pop(context);
                     _pickImage(ImageSource.gallery);
+                  },
+                ),
+                _buildOption(
+                  icon: Icons.audiotrack,
+                  label: 'Audio',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAudioFile();
                   },
                 ),
               ],
@@ -391,10 +444,24 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       children: [
                         if (_isRecording)
                           Expanded(
-                            child: Center(
-                              child: VoiceWaveform(
-                                amplitudes: _amplitudeHistory,
-                              ),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  onPressed: _cancelRecording,
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                    size: 28,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Center(
+                                    child: VoiceWaveform(
+                                      amplitudes: _amplitudeHistory,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           )
                         else
@@ -428,9 +495,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             _isRecording
                                 ? Icons.stop_circle
                                 : Icons.mic_outlined,
-                            color: _isRecording
-                                ? Colors.red
-                                : const Color(0xFF1E88E5),
+                            color: const Color(0xFF1E88E5),
                             size: 32,
                           ),
                         ),
@@ -531,32 +596,34 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E88E5),
-                  borderRadius: BorderRadius.circular(
-                    20,
-                  ).copyWith(bottomRight: const Radius.circular(4)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (msg.message.isNotEmpty)
-                      Text(
-                        msg.message,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          height: 1.35,
-                        ),
+              child: msg.audioPath != null
+                  ? VoiceMessageWidget(audioPath: msg.audioPath!, isUser: true)
+                  : Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
                       ),
-                  ],
-                ),
-              ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E88E5),
+                        borderRadius: BorderRadius.circular(
+                          20,
+                        ).copyWith(bottomRight: const Radius.circular(4)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (msg.message.isNotEmpty)
+                            Text(
+                              msg.message,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                height: 1.35,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),
@@ -584,105 +651,109 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             ),
             const SizedBox(width: 8),
             Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF263238)
-                      : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(
-                    20,
-                  ).copyWith(topLeft: const Radius.circular(4)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (emotionText != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6.0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            emotionText,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange,
+              child: msg.audioPath != null
+                  ? VoiceMessageWidget(audioPath: msg.audioPath!, isUser: false)
+                  : Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF263238)
+                            : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(
+                          20,
+                        ).copyWith(topLeft: const Radius.circular(4)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (emotionText != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6.0),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  emotionText,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Text(
+                            msg.message,
+                            style: TextStyle(
+                              fontSize: 18,
+                              height: 1.35,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF374957),
                             ),
                           ),
-                        ),
-                      ),
-                    Text(
-                      msg.message,
-                      style: TextStyle(
-                        fontSize: 18,
-                        height: 1.35,
-                        color: isDark ? Colors.white : const Color(0xFF374957),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _buildActionButton(
+                                icon: Icons.thumb_up_outlined,
+                                tooltip: 'Good response',
+                                onPressed: () {},
+                              ),
+                              _buildActionButton(
+                                icon: Icons.thumb_down_outlined,
+                                tooltip: 'Bad response',
+                                onPressed: () {},
+                              ),
+                              _buildActionButton(
+                                icon: Icons.ios_share_outlined,
+                                tooltip: 'Share',
+                                onPressed: () {
+                                  Share.share(msg.message);
+                                },
+                              ),
+                              _buildActionButton(
+                                icon: Icons.refresh_rounded,
+                                tooltip: AppLocalizations.of(context).tryAgain,
+                                onPressed: () {
+                                  final chatCubit = context.read<ChatCubit>();
+                                  final lastUserMsg = chatCubit
+                                      .state
+                                      .messages
+                                      .reversed
+                                      .where((m) => m.isUser)
+                                      .firstOrNull;
+                                  if (lastUserMsg != null) {
+                                    chatCubit.sendMessage(lastUserMsg.message);
+                                  }
+                                },
+                              ),
+                              _buildActionButton(
+                                icon: Icons.copy_outlined,
+                                tooltip: AppLocalizations.of(
+                                  context,
+                                ).copiedToClipboard,
+                                onPressed: () async {
+                                  await Clipboard.setData(
+                                    ClipboardData(text: msg.message),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        _buildActionButton(
-                          icon: Icons.thumb_up_outlined,
-                          tooltip: 'Good response',
-                          onPressed: () {},
-                        ),
-                        _buildActionButton(
-                          icon: Icons.thumb_down_outlined,
-                          tooltip: 'Bad response',
-                          onPressed: () {},
-                        ),
-                        _buildActionButton(
-                          icon: Icons.ios_share_outlined,
-                          tooltip: 'Share',
-                          onPressed: () {
-                            Share.share(msg.message);
-                          },
-                        ),
-                        _buildActionButton(
-                          icon: Icons.refresh_rounded,
-                          tooltip: AppLocalizations.of(context).tryAgain,
-                          onPressed: () {
-                            final chatCubit = context.read<ChatCubit>();
-                            final lastUserMsg = chatCubit
-                                .state
-                                .messages
-                                .reversed
-                                .where((m) => m.isUser)
-                                .firstOrNull;
-                            if (lastUserMsg != null) {
-                              chatCubit.sendMessage(lastUserMsg.message);
-                            }
-                          },
-                        ),
-                        _buildActionButton(
-                          icon: Icons.copy_outlined,
-                          tooltip: AppLocalizations.of(
-                            context,
-                          ).copiedToClipboard,
-                          onPressed: () async {
-                            await Clipboard.setData(
-                              ClipboardData(text: msg.message),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),

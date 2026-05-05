@@ -2,6 +2,7 @@ class ChatMessage {
   final String message;
   final bool isUser;
   final DateTime timestamp;
+  final String? audioPath;
   // Fields from the /chat API response (null for user messages)
   final String? emotion;
   final double? confidence;
@@ -12,6 +13,7 @@ class ChatMessage {
     required this.message,
     required this.isUser,
     required this.timestamp,
+    this.audioPath,
     this.emotion,
     this.confidence,
     this.aiModel,
@@ -23,6 +25,7 @@ class ChatMessage {
       'message': message,
       'isUser': isUser,
       'timestamp': timestamp.toIso8601String(),
+      if (audioPath != null) 'audioPath': audioPath,
       if (emotion != null) 'emotion': emotion,
       if (confidence != null) 'confidence': confidence,
       if (aiModel != null) 'ai': aiModel,
@@ -37,6 +40,7 @@ class ChatMessage {
       timestamp: json['timestamp'] != null
           ? DateTime.parse(json['timestamp'])
           : DateTime.now(),
+      audioPath: json['audioPath'],
       emotion: json['emotion'],
       confidence: (json['confidence'] as num?)?.toDouble(),
       aiModel: json['ai'],

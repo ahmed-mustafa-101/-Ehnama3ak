@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'dart:developer' as dev;
 import 'dart:convert';
-import 'package:ehnama3ak/core/storage/pref_manager.dart';
 import 'package:http_parser/http_parser.dart';
 
 /// Represents the full response from the /chat API endpoint.
@@ -34,7 +33,7 @@ class ChatApiResponse {
 class ChatService {
   final Dio _dio;
   static const String _baseUrl =
-      "https://8000-01kq25s44a7bqzmb6716gx7773.cloudspaces.litng.ai";
+      "https://ahmed-hamed-emotion-api-2.hf.space";
 
   ChatService()
       : _dio = Dio(BaseOptions(
@@ -54,30 +53,16 @@ class ChatService {
   }
 
   Future<ChatApiResponse> sendMessage(String message) async {
-    dev.log('Sending message to /chat: $message', name: 'ChatService');
-
-    String emotion = "string";
-    String userId = "default";
-
-    try {
-      final fetchedId = await PrefManager.getUserId();
-      if (fetchedId != null && fetchedId.isNotEmpty) {
-        userId = fetchedId;
-      }
-    } catch (e) {
-      dev.log('Error fetching userId: $e', name: 'ChatService');
-    }
+    dev.log('Sending message to /predict: $message', name: 'ChatService');
 
     try {
       final formData = FormData.fromMap({
-        'input_type': 'string',
         'text': message,
-        'emotion': emotion,
-        'user_id': userId,
+        'audio': '',
       });
 
       final response = await _dio.post(
-        '/chat',
+        '/predict',
         data: formData,
       );
       dev.log('Response received: ${response.data}', name: 'ChatService');
@@ -91,23 +76,12 @@ class ChatService {
   }
 
   Future<ChatApiResponse> sendVoiceMessage(String filePath) async {
-    dev.log('Sending voice message to /chat: $filePath', name: 'ChatService');
-
-    String userId = "default";
-    try {
-      final fetchedId = await PrefManager.getUserId();
-      if (fetchedId != null && fetchedId.isNotEmpty) {
-        userId = fetchedId;
-      }
-    } catch (e) {}
+    dev.log('Sending voice message to /predict: $filePath', name: 'ChatService');
 
     try {
       final formData = FormData.fromMap({
-        'input_type': 'audio',
         'text': '',
-        'emotion': 'string',
-        'user_id': userId,
-        'file': await MultipartFile.fromFile(
+        'audio': await MultipartFile.fromFile(
           filePath,
           filename: 'voice_message.wav',
           contentType: MediaType('audio', 'wav'),
@@ -115,7 +89,7 @@ class ChatService {
       });
 
       final response = await _dio.post(
-        '/chat',
+        '/predict',
         data: formData,
       );
 

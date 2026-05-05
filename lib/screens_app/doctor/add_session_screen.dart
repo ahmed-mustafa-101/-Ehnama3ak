@@ -15,6 +15,7 @@ class AddSessionScreen extends StatefulWidget {
 class _AddSessionScreenState extends State<AddSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _patientNameController = TextEditingController();
+  final _patientIdController = TextEditingController();
   final _priceController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
@@ -31,6 +32,7 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
   @override
   void dispose() {
     _patientNameController.dispose();
+    _patientIdController.dispose();
     _priceController.dispose();
     super.dispose();
   }
@@ -72,6 +74,7 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
           _selectedTime.hour, _selectedTime.minute);
       context.read<DoctorSessionsCubit>().createSession(
         patientName: _patientNameController.text.trim(),
+        patientId: int.tryParse(_patientIdController.text.trim()) ?? 1,
         sessionType: _selectedType,
         scheduledAt: scheduledAt,
         price: double.tryParse(_priceController.text.trim()),
@@ -149,6 +152,11 @@ class _AddSessionScreenState extends State<AddSessionScreen> {
                             style: const TextStyle(color: Color(0xFF0EA5E9), fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
                         _buildInputField(controller: _patientNameController, hint: l10n.enterPatientName, l10n: l10n),
+                        const SizedBox(height: 20),
+                        Text(l10n.patientId,
+                            style: const TextStyle(color: Color(0xFF0EA5E9), fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 8),
+                        _buildInputField(controller: _patientIdController, hint: l10n.enterPatientId, keyboardType: TextInputType.number, l10n: l10n),
                         const SizedBox(height: 20),
                         Text(l10n.sessionType,
                             style: const TextStyle(color: Color(0xFF0EA5E9), fontWeight: FontWeight.w600)),

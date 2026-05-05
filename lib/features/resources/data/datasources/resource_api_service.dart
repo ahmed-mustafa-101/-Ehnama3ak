@@ -13,9 +13,9 @@ class ResourceApiService {
 
   // ─── GET /api/Resources ──────────────────────────────────────────────────────
 
-  Future<List<ResourceModel>> getResources({int patientId = 1}) async {
+  Future<List<ResourceModel>> getResources() async {
     try {
-      final response = await _dio.get('/api/DoctorSessions/resources/$patientId');
+      final response = await _dio.get('/api/DoctorSessions/resources');
       return _parseList(response.data);
     } on DioException catch (e) {
       throw Exception(parseError(e));

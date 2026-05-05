@@ -16,8 +16,9 @@ class AppLocalizations {
       _AppLocalizationsDelegate();
 
   Future<bool> load() async {
-    final jsonString =
-        await rootBundle.loadString('assets/lang/${locale.languageCode}.json');
+    final jsonString = await rootBundle.loadString(
+      'assets/lang/${locale.languageCode}.json',
+    );
     final Map<String, dynamic> jsonMap = json.decode(jsonString);
     _strings = jsonMap.map((key, value) => MapEntry(key, value.toString()));
     return true;
@@ -121,7 +122,8 @@ class AppLocalizations {
   String get clearAll => translate('clear_all');
   String get clearAllNotifications => translate('clear_all_notifications');
   String get clearAllConfirm => translate('clear_all_confirm');
-  String get failedToLoadNotifications => translate('failed_to_load_notifications');
+  String get failedToLoadNotifications =>
+      translate('failed_to_load_notifications');
   String get checkConnection => translate('check_connection');
   String get noNotifications => translate('no_notifications');
   String get noNotificationsSubtitle => translate('no_notifications_subtitle');
@@ -218,6 +220,7 @@ class AppLocalizations {
   String get addSessionTitle => translate('add_session_title');
   String get patientName => translate('patient_name');
   String get enterPatientName => translate('enter_patient_name');
+  String get enterPatientId => translate('enter_patient_id');
   String get enterPrice => translate('enter_price');
   String get price => translate('price');
   String get date => translate('date');
@@ -249,7 +252,7 @@ class AppLocalizations {
   String get chatbotDesc => translate('chatbot_desc');
   String get getStarted => translate('get_started');
   String get askDepo => translate('ask_depo');
-  String get selectImageSource => translate('select_image_source');
+  String get selectSource => translate('select source');
   String get camera => translate('camera');
   String get gallery => translate('gallery');
   String get copiedToClipboard => translate('copied_to_clipboard');
@@ -313,8 +316,7 @@ class _AppLocalizationsDelegate
   const _AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) =>
-      ['en', 'ar'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => ['en', 'ar'].contains(locale.languageCode);
 
   @override
   Future<AppLocalizations> load(Locale locale) async {

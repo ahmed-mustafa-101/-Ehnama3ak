@@ -68,13 +68,37 @@ class ResourceModel extends Equatable {
       return 'http://e7nama3ak.runasp.net/$u';
     }
 
+    final videoUrl = getValue(['videoUrl']);
+    final pdfUrl = getValue(['pdfUrl']);
+    final imageUrl = getValue(['imageUrl']);
+    final audioUrl = getValue(['audioUrl']);
+    final defaultUrl = getValue(['url', 'resourceUrl', 'fileUrl', 'sessionUrl']);
+
+    final finalUrl = videoUrl ?? pdfUrl ?? imageUrl ?? audioUrl ?? defaultUrl;
+
+    ResourceType determineType() {
+      final sessionType = getValue(['type', 'sessionType'])?.toString().toLowerCase();
+      final urlLower = finalUrl?.toString().toLowerCase() ?? '';
+
+      if (sessionType == 'video' || videoUrl != null || urlLower.endsWith('.mp4') || urlLower.endsWith('.mov')) {
+        return ResourceType.video;
+      }
+      if (sessionType == 'article' || imageUrl != null || urlLower.endsWith('.jpg') || urlLower.endsWith('.png') || urlLower.endsWith('.jpeg')) {
+        return ResourceType.article;
+      }
+      if (sessionType == 'pdf' || sessionType == 'download' || pdfUrl != null || audioUrl != null || urlLower.endsWith('.pdf')) {
+        return ResourceType.pdf;
+      }
+      return ResourceType.unknown;
+    }
+
     return ResourceModel(
       id: _parseInt(getValue(['id', 'sessionId'])),
       title: _str(getValue(['title', 'name', 'patientName'])),
       description: _str(getValue(['description', 'summary'])),
-      coverImageUrl: _nullable(normalizeUrl(getValue(['coverImageUrl', 'imageUrl', 'image']))),
-      type: _parseType(getValue(['type', 'sessionType'])),
-      url: normalizeUrl(getValue(['url', 'resourceUrl', 'fileUrl', 'videoUrl', 'pdfUrl', 'audioUrl', 'sessionUrl'])),
+      coverImageUrl: _nullable(normalizeUrl(imageUrl ?? getValue(['coverImageUrl', 'image']))),
+      type: determineType(),
+      url: normalizeUrl(finalUrl),
       duration: _parseInt(getValue(['duration'])),
       fileSize: _parseInt(getValue(['fileSize', 'size'])),
       createdDate: _parseDate(getValue(['createdDate', 'createdAt', 'date', 'scheduledAt'])),

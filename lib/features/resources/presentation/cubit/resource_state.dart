@@ -41,7 +41,8 @@ class ResourceLoaded extends ResourceState {
       resources.where((r) => r.type == ResourceType.video).toList();
 
   /// Convenience: all resources for downloading.
-  List<ResourceModel> get pdfs => resources;
+  List<ResourceModel> get pdfs =>
+      resources.where((r) => r.type == ResourceType.pdf).toList();
 
   @override
   List<Object?> get props => [resources];

@@ -6,6 +6,8 @@ import 'package:ehnama3ak/features/resources/presentation/cubit/resource_state.d
 import 'package:ehnama3ak/features/resources/data/models/resource_model.dart';
 import '_resource_empty.dart';
 import '_resource_error.dart';
+import 'video_player_screen.dart';
+import 'resource_downloader.dart';
 
 class VideosTab extends StatelessWidget {
   const VideosTab({super.key});
@@ -97,15 +99,24 @@ class _VideoCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: ElevatedButton.icon(
-          onPressed: () => _open(resource.url),
-          icon: const Icon(Icons.play_arrow, size: 18),
-          label: const Text('Watch'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1E88E5),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.download, color: Color(0xFF1E88E5)),
+              onPressed: () => ResourceDownloader.download(context, resource),
+            ),
+            ElevatedButton.icon(
+              onPressed: () => _open(context, resource.url, resource.title),
+              icon: const Icon(Icons.play_arrow, size: 18),
+              label: const Text('Watch'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E88E5),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -135,9 +146,27 @@ class _VideoCard extends StatelessWidget {
       );
 }
 
-Future<void> _open(String url) async {
-  final uri = Uri.tryParse(url);
-  if (uri != null && await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+void _open(BuildContext context, String url, String title) {
+  if (url.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No content available for this session.')),
+    );
+    return;
   }
+
+  final urlLower = url.toLowerCase();
+  if (urlLower.contains('youtube.com') || urlLower.contains('youtu.be')) {
+    final uri = Uri.tryParse(url);
+    if (uri != null) {
+      launchUrl(uri, mode: LaunchMode.externalApplication);
+      return;
+    }
+  }
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => VideoPlayerScreen(url: url, title: title),
+    ),
+  );
 }

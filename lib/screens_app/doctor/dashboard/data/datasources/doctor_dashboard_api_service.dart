@@ -4,11 +4,25 @@ import 'package:ehnama3ak/screens_app/doctor/dashboard/models/dashboard_stats_mo
 import 'package:ehnama3ak/screens_app/doctor/dashboard/models/recent_activity_model.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/models/medical_report_model.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/models/upload_models.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/models/doctor_header_model.dart';
 
 class DoctorDashboardApiService {
   final Dio _dio;
 
   DoctorDashboardApiService({required Dio dio}) : _dio = dio;
+
+  Future<DoctorHeaderModel> getHeader() async {
+    try {
+      final response = await _dio.get('/api/DoctorDashboard/header');
+      return DoctorHeaderModel.fromJson(response.data);
+    } on DioException catch (e) {
+      log('DioError getting header: ${e.response?.statusCode}');
+      rethrow;
+    } catch (e) {
+      log('Error getting header: $e');
+      rethrow;
+    }
+  }
 
   Future<DashboardStatsModel> getStats() async {
     try {

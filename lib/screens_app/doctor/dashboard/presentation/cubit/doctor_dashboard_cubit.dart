@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/data/datasources/doctor_dashboard_api_service.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_state.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/models/upload_models.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/models/doctor_header_model.dart';
 
 class DoctorDashboardCubit extends Cubit<DoctorDashboardState> {
   final DoctorDashboardApiService _apiService;
@@ -18,17 +19,20 @@ class DoctorDashboardCubit extends Cubit<DoctorDashboardState> {
     emit(DoctorDashboardLoading());
     try {
       final results = await Future.wait([
+        _apiService.getHeader(),
         _apiService.getStats(),
         _apiService.getRecentActivity(),
         _apiService.getMedicalReports(),
       ]);
 
-      final stats = results[0] as DashboardStatsModel;
-      final activity = results[1] as List<RecentActivityModel>;
-      final reports = results[2] as List<MedicalReportModel>;
+      final header = results[0] as DoctorHeaderModel;
+      final stats = results[1] as DashboardStatsModel;
+      final activity = results[2] as List<RecentActivityModel>;
+      final reports = results[3] as List<MedicalReportModel>;
 
       emit(
         DoctorDashboardSuccess(
+          header: header,
           stats: stats,
           recentActivity: activity,
           medicalReports: reports,
@@ -63,6 +67,9 @@ class DoctorDashboardCubit extends Cubit<DoctorDashboardState> {
       emit(DoctorDashboardLoading());
     }
     try {
+      final header = currentState is DoctorDashboardSuccess
+          ? currentState.header
+          : await _apiService.getHeader();
       final stats = currentState is DoctorDashboardSuccess
           ? currentState.stats
           : await _apiService.getStats();
@@ -73,6 +80,7 @@ class DoctorDashboardCubit extends Cubit<DoctorDashboardState> {
 
       emit(
         DoctorDashboardSuccess(
+          header: header,
           stats: stats,
           recentActivity: activity,
           medicalReports: reports,

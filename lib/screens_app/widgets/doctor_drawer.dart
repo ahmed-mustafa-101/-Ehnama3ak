@@ -3,8 +3,9 @@ import 'package:ehnama3ak/core/widgets/registered_doctor_profile_texts.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_cubit.dart';
+import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_state.dart';
 import '../../features/auth/presentation/controllers/auth_cubit.dart';
-import '../../features/auth/presentation/controllers/auth_state.dart';
 import 'package:ehnama3ak/core/network/dio_client.dart';
 import '../../core/widgets/theme/theme_notifier.dart';
 
@@ -124,17 +125,70 @@ class DoctorDrawer extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocBuilder<AuthCubit, AuthState>(
-      buildWhen: (previous, current) {
-        if (current is AuthSuccess) {
-          if (previous is AuthSuccess) return previous.user != current.user;
-          return true;
-        }
-        return previous is AuthSuccess;
-      },
+    return BlocBuilder<DoctorDashboardCubit, DoctorDashboardState>(
       builder: (context, state) {
-        final user = state is AuthSuccess ? state.user : null;
+        if (state is DoctorDashboardSuccess) {
+          final header = state.header;
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF0DA5FE),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 35,
+                    backgroundColor: Colors.grey[200],
+                    backgroundImage: header.imageUrl.isNotEmpty
+                        ? NetworkImage(_getFullImageUrl(header.imageUrl))
+                        : const AssetImage('assets/images/user_avatar.png')
+                            as ImageProvider,
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        header.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        header.specialization,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${header.experienceYears} Years Exp',
+                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
 
+        // Fallback or loading state
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
           child: Row(
@@ -151,28 +205,18 @@ class DoctorDrawer extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 35,
                   backgroundColor: Colors.grey[200],
-                  backgroundImage:
-                      (user?.profileImageUrl != null &&
-                          user!.profileImageUrl!.isNotEmpty)
-                      ? NetworkImage(_getFullImageUrl(user.profileImageUrl!))
-                      : const AssetImage('assets/images/user_avatar.png')
-                            as ImageProvider,
+                  backgroundImage: const AssetImage('assets/images/user_avatar.png'),
                 ),
               ),
               const SizedBox(width: 15),
               Expanded(
-                child: RegisteredDoctorProfileTexts(
-                  user: user,
-                  nameStyle: TextStyle(
+                child: Text(
+                  'Loading...',
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                     color: isDark ? Colors.white : Colors.black,
                   ),
-                  specializationStyle: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 13,
-                  ),
-                  yearsStyle: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ),
             ],
