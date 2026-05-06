@@ -28,6 +28,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final TextEditingController _inputCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
+  String? _selectedImagePath;
 
   late stt.SpeechToText _speech;
   bool _isListening = false;
@@ -204,9 +205,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       );
 
       if (pickedFile != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).imageReceived)),
-        );
+        setState(() {
+          _selectedImagePath = pickedFile.path;
+        });
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
@@ -310,9 +311,20 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   void _sendMessage() {
     final text = _inputCtrl.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty && _selectedImagePath == null) return;
 
-    context.read<ChatCubit>().sendMessage(text);
+    if (_selectedImagePath != null) {
+      context.read<ChatCubit>().sendImageMessage(
+        _selectedImagePath!,
+        text: text.isNotEmpty ? text : null,
+      );
+      setState(() {
+        _selectedImagePath = null;
+      });
+    } else {
+      context.read<ChatCubit>().sendMessage(text);
+    }
+    
     _inputCtrl.clear();
     _scrollToBottom();
   }
@@ -401,8 +413,51 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           // ===== شريط الإدخال في الأسفل =====
           Padding(
             padding: const EdgeInsets.fromLTRB(5, 5, 10, 10),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (_selectedImagePath != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 56, bottom: 8),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(_selectedImagePath!),
+                            height: 100,
+                            width: 100,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedImagePath = null;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Row(
+                  children: [
                 // زر إضافة صورة على اليسار
                 IconButton(
                   onPressed: _showImageSourceBottomSheet,
@@ -524,6 +579,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
               ],
             ),
+              ],
+            ),
           ),
         ],
       ),
@@ -612,7 +669,19 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          if (msg.message.isNotEmpty)
+                          if (msg.imagePath != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  File(msg.imagePath!),
+                                  width: 200,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          if (msg.message.isNotEmpty && msg.message != "Image Message")
                             Text(
                               msg.message,
                               style: const TextStyle(

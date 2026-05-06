@@ -52,17 +52,43 @@ class ChatService {
     ));
   }
 
-  Future<ChatApiResponse> sendMessage(String message) async {
-    dev.log('Sending message to /predict: $message', name: 'ChatService');
+  Future<ChatApiResponse> sendMultimodalMessage({
+    String? text,
+    String? imagePath,
+    String? audioPath,
+  }) async {
+    dev.log('Sending message to /chat: text=$text, image=$imagePath, audio=$audioPath', name: 'ChatService');
 
     try {
-      final formData = FormData.fromMap({
-        'text': message,
-        'audio': '',
-      });
+      final map = <String, dynamic>{};
+      if (text != null && text.isNotEmpty) {
+        map['text'] = text;
+      }
+      
+      if (imagePath != null && imagePath.isNotEmpty) {
+        final ext = imagePath.split('.').last.toLowerCase();
+        final mimeType = ext == 'png' ? 'png' : 'jpeg';
+        map['image'] = await MultipartFile.fromFile(
+          imagePath,
+          filename: 'image_message.$ext',
+          contentType: MediaType('image', mimeType),
+        );
+      }
+      
+      if (audioPath != null && audioPath.isNotEmpty) {
+        final ext = audioPath.split('.').last.toLowerCase();
+        final mimeType = ext == 'mp3' ? 'mpeg' : 'wav';
+        map['audio'] = await MultipartFile.fromFile(
+          audioPath,
+          filename: 'voice_message.$ext',
+          contentType: MediaType('audio', mimeType),
+        );
+      }
+
+      final formData = FormData.fromMap(map);
 
       final response = await _dio.post(
-        '/predict',
+        '/chat',
         data: formData,
       );
       dev.log('Response received: ${response.data}', name: 'ChatService');
@@ -75,31 +101,16 @@ class ChatService {
     }
   }
 
+  Future<ChatApiResponse> sendMessage(String message) async {
+    return sendMultimodalMessage(text: message);
+  }
+
   Future<ChatApiResponse> sendVoiceMessage(String filePath) async {
-    dev.log('Sending voice message to /predict: $filePath', name: 'ChatService');
+    return sendMultimodalMessage(audioPath: filePath);
+  }
 
-    try {
-      final formData = FormData.fromMap({
-        'text': '',
-        'audio': await MultipartFile.fromFile(
-          filePath,
-          filename: 'voice_message.wav',
-          contentType: MediaType('audio', 'wav'),
-        ),
-      });
-
-      final response = await _dio.post(
-        '/predict',
-        data: formData,
-      );
-
-      dev.log('Voice response received: ${response.data}', name: 'ChatService');
-      return _parseResponse(response.data);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    } catch (e) {
-      throw _handleError(e);
-    }
+  Future<ChatApiResponse> sendImageMessage(String imagePath, {String? text}) async {
+    return sendMultimodalMessage(imagePath: imagePath, text: text);
   }
 
   ChatApiResponse _parseResponse(dynamic data) {
