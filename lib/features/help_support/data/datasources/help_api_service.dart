@@ -28,12 +28,12 @@ class HelpApiService {
 
   Future<void> createTicket({
     required String subject,
-    required String description,
+    required String message,
   }) async {
     try {
       await _dio.post('/api/Help/tickets', data: {
         'subject': subject,
-        'description': description,
+        'message': message,
       });
     } catch (e) {
       rethrow;

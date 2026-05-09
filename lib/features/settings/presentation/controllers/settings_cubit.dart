@@ -25,23 +25,25 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
   }
 
-  Future<void> uploadAvatar(String imagePath) async {
+  Future<bool> uploadAvatar(String imagePath) async {
     emit(state.copyWith(isUpdating: true));
     try {
       await _repo.uploadAvatar(imagePath);
       await fetchSettings();
       emit(state.copyWith(status: SettingsStatus.success));
-      emit(state.copyWith(isUpdating: false));
+      emit(state.copyWith(isUpdating: false, status: SettingsStatus.initial));
+      return true;
     } catch (e) {
       emit(state.copyWith(
         isUpdating: false,
         status: SettingsStatus.failure,
         errorMessage: SettingsApiService.parseError(e),
       ));
+      return false;
     }
   }
 
-  Future<void> updateProfile({
+  Future<bool> updateProfile({
     required String name,
     required String email,
     String? profileImagePath,
@@ -56,17 +58,19 @@ class SettingsCubit extends Cubit<SettingsState> {
       // Refresh settings to get updated info
       await fetchSettings();
       emit(state.copyWith(status: SettingsStatus.success));
-      emit(state.copyWith(isUpdating: false));
+      emit(state.copyWith(isUpdating: false, status: SettingsStatus.initial));
+      return true;
     } catch (e) {
       emit(state.copyWith(
         isUpdating: false,
         status: SettingsStatus.failure,
         errorMessage: SettingsApiService.parseError(e),
       ));
+      return false;
     }
   }
 
-  Future<void> changePassword({
+  Future<bool> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
@@ -77,17 +81,19 @@ class SettingsCubit extends Cubit<SettingsState> {
         newPassword: newPassword,
       );
       emit(state.copyWith(status: SettingsStatus.success));
-      emit(state.copyWith(isPasswordChanging: false));
+      emit(state.copyWith(isPasswordChanging: false, status: SettingsStatus.initial));
+      return true;
     } catch (e) {
       emit(state.copyWith(
         isPasswordChanging: false,
         status: SettingsStatus.failure,
         errorMessage: SettingsApiService.parseError(e),
       ));
+      return false;
     }
   }
 
-  Future<void> updateDoctorProfile({
+  Future<bool> updateDoctorProfile({
     required String fullName,
     required String specialization,
     required num experienceYears,
@@ -104,13 +110,15 @@ class SettingsCubit extends Cubit<SettingsState> {
         sessionPrice: sessionPrice,
       );
       emit(state.copyWith(status: SettingsStatus.success));
-      emit(state.copyWith(isUpdating: false));
+      emit(state.copyWith(isUpdating: false, status: SettingsStatus.initial));
+      return true;
     } catch (e) {
       emit(state.copyWith(
         isUpdating: false,
         status: SettingsStatus.failure,
         errorMessage: SettingsApiService.parseError(e),
       ));
+      return false;
     }
   }
 

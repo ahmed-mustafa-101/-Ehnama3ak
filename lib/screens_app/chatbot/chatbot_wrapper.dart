@@ -15,6 +15,7 @@ class ChatbotWrapper extends StatefulWidget {
 class _ChatbotWrapperState extends State<ChatbotWrapper> {
   bool _showIntro = false;
   bool _isLoading = true;
+  String? _userId;
 
   @override
   void initState() {
@@ -23,15 +24,27 @@ class _ChatbotWrapperState extends State<ChatbotWrapper> {
   }
 
   Future<void> _checkIntroStatus() async {
-    final hasSeen = await PrefManager.getHasSeenChatbotIntro();
+    final userId = await PrefManager.getUserId();
+    if (userId == null) {
+      setState(() {
+        _isLoading = false;
+        _showIntro = true; // Fallback or handle as guest
+      });
+      return;
+    }
+    
+    final hasSeen = await PrefManager.getHasSeenChatbotIntro(userId);
     setState(() {
+      _userId = userId;
       _showIntro = !hasSeen;
       _isLoading = false;
     });
   }
 
   void _startChat() async {
-    await PrefManager.setHasSeenChatbotIntro(true);
+    if (_userId != null) {
+      await PrefManager.setHasSeenChatbotIntro(_userId!, true);
+    }
     setState(() {
       _showIntro = false;
     });

@@ -47,30 +47,30 @@ class HelpContactModel extends Equatable {
 }
 
 class SupportTicketModel extends Equatable {
-  final String id;
+  final int id;
   final String subject;
-  final String description;
+  final String message;
   final String status;
   final DateTime createdAt;
 
   const SupportTicketModel({
     required this.id,
     required this.subject,
-    required this.description,
+    required this.message,
     required this.status,
     required this.createdAt,
   });
 
   factory SupportTicketModel.fromJson(Map<String, dynamic> json) {
     return SupportTicketModel(
-      id: (json['id'] ?? '').toString(),
+      id: json['id'] ?? 0,
       subject: json['subject'] ?? '',
-      description: json['description'] ?? '',
-      status: json['status'] ?? 'Pending',
+      message: json['message'] ?? '',
+      status: json['status'] ?? 'Open',
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
 
   @override
-  List<Object?> get props => [id, subject, description, status, createdAt];
+  List<Object?> get props => [id, subject, message, status, createdAt];
 }

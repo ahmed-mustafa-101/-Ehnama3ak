@@ -33,7 +33,7 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
     try {
       await controller.preparePlayer(
         path: widget.audioPath,
-        shouldExtractWaveform: true,
+        shouldExtractWaveform: !widget.audioPath.startsWith('http'),
         noOfSamples: 100,
         volume: 1.0,
       );
@@ -109,7 +109,7 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
             : const Color(0xFF374957);
 
     final waveformColor = widget.isUser
-        ? Colors.white.withValues(alpha: 0.5)
+        ? Colors.white.withOpacity(0.5)
         : const Color(0xFF9FB0C0);
 
     final activeWaveformColor = widget.isUser
@@ -126,7 +126,7 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             offset: const Offset(0, 2),
             blurRadius: 5,
           )
@@ -146,8 +146,8 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: widget.isUser
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : const Color(0xFF1E88E5).withValues(alpha: 0.1),
+                      ? Colors.white.withOpacity(0.2)
+                      : const Color(0xFF1E88E5).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: isPrepared
@@ -202,7 +202,7 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
               Text(
                 _formatDuration(isPlaying ? currentDuration : maxDuration),
                 style: TextStyle(
-                  color: textColor.withValues(alpha: 0.8),
+                  color: textColor.withOpacity(0.8),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),

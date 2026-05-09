@@ -32,7 +32,7 @@ class WelcomeScreen extends StatelessWidget {
                         SizedBox(height: Responsive.spacing(context, 90)),
                         Center(
                           child: Image.asset(
-                            'assets/images/Frame 6.png',
+                            'assets/images/weclome_image.png',
                             width: Responsive.width(context, 0.8),
                             height: Responsive.height(context, 0.25),
                             fit: BoxFit.contain,

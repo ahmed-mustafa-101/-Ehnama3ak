@@ -38,12 +38,12 @@ class HelpCubit extends Cubit<HelpState> {
     }
   }
 
-  Future<void> createTicket(String subject, String description) async {
+  Future<void> createTicket(String subject, String message) async {
     emit(state.copyWith(isSubmitting: true));
     try {
-      await _repo.createTicket(subject: subject, description: description);
+      await _repo.createTicket(subject: subject, message: message);
       await fetchUserTickets();
-      emit(state.copyWith(isSubmitting: false, status: HelpStatus.success));
+      emit(state.copyWith(isSubmitting: false, status: HelpStatus.success, successMessage: 'ticket_created'));
     } catch (e) {
       emit(state.copyWith(isSubmitting: false, status: HelpStatus.failure, errorMessage: HelpApiService.parseError(e)));
     }
@@ -53,13 +53,13 @@ class HelpCubit extends Cubit<HelpState> {
     emit(state.copyWith(isSubmitting: true));
     try {
       await _repo.sendEmail(subject: subject, message: message);
-      emit(state.copyWith(isSubmitting: false, status: HelpStatus.success));
+      emit(state.copyWith(isSubmitting: false, status: HelpStatus.success, successMessage: 'email_sent'));
     } catch (e) {
       emit(state.copyWith(isSubmitting: false, status: HelpStatus.failure, errorMessage: HelpApiService.parseError(e)));
     }
   }
   
   void resetStatus() {
-    emit(state.copyWith(status: HelpStatus.initial, errorMessage: null));
+    emit(state.copyWith(status: HelpStatus.initial, errorMessage: null, successMessage: null));
   }
 }

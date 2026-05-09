@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'doctor_patients/presentation/cubit/doctor_patients_cubit.dart';
 import 'doctor_patients/presentation/cubit/doctor_patients_state.dart';
-import '../messages/message_detail_screen.dart';
+import '../messages/chat_navigator.dart';
 import 'patient_detail_screen.dart';
 
 class DoctorPatientsScreen extends StatefulWidget {
@@ -232,15 +232,11 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
                   padding: EdgeInsets.zero,
                   onPressed: () {
                     if (id != null) {
-                      Navigator.push(
+                      ChatNavigator.open(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => MessageDetailScreen(
-                            receiverId: id,
-                            receiverName: name,
-                            receiverProfileImage: imageUrl,
-                          ),
-                        ),
+                        userId: id,
+                        userName: name,
+                        profileImage: imageUrl,
                       );
                     }
                   },

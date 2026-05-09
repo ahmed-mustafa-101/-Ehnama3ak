@@ -7,7 +7,7 @@ import 'sessions/models/doctor_session_model.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_session_screen.dart';
-import '../messages/message_detail_screen.dart';
+import '../messages/chat_navigator.dart';
 import 'sessions/presentation/pages/session_media_viewer.dart';
 
 class DoctorSessionsScreen extends StatefulWidget {
@@ -199,8 +199,11 @@ class _DoctorSessionsScreenState extends State<DoctorSessionsScreen> {
                   final type = session.sessionType?.toLowerCase() ?? '';
                   final patientId = session.patientId;
                   if (type.contains('chat') && patientId != null && patientId.isNotEmpty) {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => MessageDetailScreen(
-                        receiverId: patientId, receiverName: session.patientName ?? 'Patient')));
+                    ChatNavigator.open(
+                      context,
+                      userId: patientId,
+                      userName: session.patientName ?? 'Patient',
+                    );
                     return;
                   }
                   if (type.contains('video') || type.contains('audio') || type.contains('pdf') || type.contains('image')) {

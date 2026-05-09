@@ -42,7 +42,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     return Column(
       children: [
-        const SizedBox(height: 100),
+        // const SizedBox(height: 100),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Container(
@@ -82,17 +82,23 @@ class _SearchScreenState extends State<SearchScreen> {
               return GestureDetector(
                 onTap: () {
                   setState(() => _currentIndex = index);
-                  _pageController.animateToPage(index,
-                      duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                  _pageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: selected
                         ? primaryColor
                         : Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey.shade800
-                            : Colors.grey.shade200,
+                        ? Colors.grey.shade800
+                        : Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -101,8 +107,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       color: selected
                           ? Colors.white
                           : Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white70
-                              : Colors.black54,
+                          ? Colors.white70
+                          : Colors.black54,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -136,22 +142,31 @@ class AllTab extends StatelessWidget {
 
   const AllTab({super.key, required this.controller});
 
-  Widget _buildSectionHeader(BuildContext context, String title, VoidCallback onTap) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title,
+    VoidCallback onTap,
+  ) {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title,
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).textTheme.bodyLarge?.color)),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
           GestureDetector(
             onTap: onTap,
-            child: Text(l10n.seeAll,
-                style: const TextStyle(color: Color(0xFF0DA5FE), fontSize: 14)),
+            child: Text(
+              l10n.seeAll,
+              style: const TextStyle(color: Color(0xFF0DA5FE), fontSize: 14),
+            ),
           ),
         ],
       ),
@@ -165,34 +180,34 @@ class AllTab extends StatelessWidget {
       children: [
         const SizedBox(height: 10),
         _buildSectionHeader(context, l10n.therapists, () {
-          controller.animateToPage(1,
-              duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+          controller.animateToPage(
+            1,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         }),
         const SizedBox(height: 10),
-        const SizedBox(
-          height: 350,
-          child: TherapistsPage(showHeader: false),
-        ),
+        const SizedBox(height: 350, child: TherapistsPage(showHeader: false)),
         const SizedBox(height: 20),
         _buildSectionHeader(context, l10n.articles, () {
-          controller.animateToPage(2,
-              duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+          controller.animateToPage(
+            2,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         }),
         const SizedBox(height: 10),
-        const SizedBox(
-          height: 350,
-          child: ArticlesTab(),
-        ),
+        const SizedBox(height: 350, child: ArticlesTab()),
         const SizedBox(height: 20),
         _buildSectionHeader(context, l10n.videos, () {
-          controller.animateToPage(4,
-              duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+          controller.animateToPage(
+            4,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         }),
         const SizedBox(height: 10),
-        const SizedBox(
-          height: 350,
-          child: VideosTab(),
-        ),
+        const SizedBox(height: 350, child: VideosTab()),
         const SizedBox(height: 20),
       ],
     );

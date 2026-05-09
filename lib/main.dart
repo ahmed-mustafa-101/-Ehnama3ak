@@ -45,7 +45,10 @@ import 'features/notifications/data/repositories/notification_repository_impl.da
 import 'features/notifications/presentation/cubit/notification_cubit.dart';
 import 'features/messages/data/datasources/message_api_service.dart';
 import 'features/messages/data/repositories/message_repository_impl.dart';
-import 'package:ehnama3ak/features/messages/presentation/controllers/message_cubit.dart';
+import 'features/messages/domain/repositories/message_repository.dart';
+import 'features/messages/presentation/controllers/conversations_cubit.dart';
+import 'features/messages/presentation/controllers/message_cubit.dart';
+import 'features/messages/presentation/controllers/unread_cubit.dart';
 import 'package:ehnama3ak/screens_app/chatbot/chat_service.dart';
 import 'package:ehnama3ak/screens_app/chatbot/chat_cubit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -55,6 +58,7 @@ import 'package:ehnama3ak/features/feed/data/datasources/feed_local_data_source.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final sharedPrefs = await SharedPreferences.getInstance();
+  await ThemeNotifier.init(sharedPrefs);
   runApp(EhnaMa3akApp(sharedPrefs: sharedPrefs));
 }
 
@@ -85,10 +89,43 @@ class EhnaMa3akApp extends StatelessWidget {
     );
     final helpRepo = HelpRepositoryImpl(HelpApiService(dioClient: dioClient));
 
-    return RepositoryProvider<FeedRepository>.value(
-      value: feedRepo,
-      child: MultiBlocProvider(
-        providers: [
+    // Messages repository — shared across ConversationsCubit, UnreadCubit, ChatCubit
+    final MessageRepository messageRepo = MessageRepositoryImpl(
+      MessageApiService(dioClient: dioClient),
+    );
+
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<FeedRepository>.value(value: feedRepo),
+        RepositoryProvider<MessageRepository>.value(value: messageRepo),
+      ],
+      child: _buildBlocTree(
+        feedRepo: feedRepo,
+        messageRepo: messageRepo,
+        podcastRepo: podcastRepo,
+        resourceRepo: resourceRepo,
+        settingsRepo: settingsRepo,
+        helpRepo: helpRepo,
+        storage: storage,
+        apiService: apiService,
+        dioClient: dioClient,
+      ),
+    );
+  }
+
+  Widget _buildBlocTree({
+    required dynamic feedRepo,
+    required MessageRepository messageRepo,
+    required dynamic podcastRepo,
+    required dynamic resourceRepo,
+    required dynamic settingsRepo,
+    required dynamic helpRepo,
+    required dynamic storage,
+    required dynamic apiService,
+    required dynamic dioClient,
+  }) {
+    return MultiBlocProvider(
+      providers: [
           BlocProvider(create: (_) => LocaleCubit()..loadSavedLocale()),
           BlocProvider(
             create: (context) =>
@@ -122,10 +159,17 @@ class EhnaMa3akApp extends StatelessWidget {
               ),
             )..loadUnreadCount(),
           ),
-          BlocProvider(
-            create: (context) => MessageCubit(
-              MessageRepositoryImpl(MessageApiService(dioClient: dioClient)),
-            )..loadUnreadCount(),
+          // Backward-compat alias — powers any legacy MessageCubit reads
+          BlocProvider<MessageCubit>(
+            create: (_) => MessageCubit(messageRepo),
+          ),
+          // Conversations list cubit
+          BlocProvider<ConversationsCubit>(
+            create: (_) => ConversationsCubit(messageRepo),
+          ),
+          // Global unread badge
+          BlocProvider<UnreadCubit>(
+            create: (_) => UnreadCubit(messageRepo)..refresh(),
           ),
           BlocProvider(
             create: (context) => ProgressCubit(
@@ -208,7 +252,6 @@ class EhnaMa3akApp extends StatelessWidget {
               },
             );
           },
-        ),
       ),
     );
   }

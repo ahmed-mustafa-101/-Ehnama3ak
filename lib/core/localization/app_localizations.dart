@@ -190,6 +190,10 @@ class AppLocalizations {
   String get getSupportChat => translate('get_support_chat');
   String get reachSupport => translate('reach_support');
   String get manageRequests => translate('manage_requests');
+  String get ticketCreatedSuccess => translate('ticket_created_success');
+  String get emailSentSuccess => translate('email_sent_success');
+  String get lightMode => translate('light_mode');
+  String get nightMode => translate('night_mode');
 
   // Saved Resources
   String get savedResourcesTitle => translate('saved_resources_title');

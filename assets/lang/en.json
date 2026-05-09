@@ -160,6 +160,10 @@
   "get_support_chat": "get support via live chat",
   "reach_support": "reach our support team",
   "manage_requests": "manage your support requests",
+  "ticket_created_success": "Support ticket created successfully!",
+  "email_sent_success": "Email sent successfully!",
+  "light_mode": "Light Mode",
+  "night_mode": "Night Mode",
 
   "saved_resources_title": "Saved Resources",
   "no_saved_resources": "No saved resources yet.",

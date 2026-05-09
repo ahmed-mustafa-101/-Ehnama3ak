@@ -14,8 +14,8 @@ class HelpRepositoryImpl implements HelpRepository {
   Future<HelpContactModel> getContactInfo() => _apiService.getContactInfo();
 
   @override
-  Future<void> createTicket({required String subject, required String description}) =>
-      _apiService.createTicket(subject: subject, description: description);
+  Future<void> createTicket({required String subject, required String message}) =>
+      _apiService.createTicket(subject: subject, message: message);
 
   @override
   Future<List<SupportTicketModel>> getUserTickets() => _apiService.getUserTickets();

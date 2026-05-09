@@ -160,6 +160,10 @@
   "get_support_chat": "احصل على دعم عبر الدردشة",
   "reach_support": "تواصل مع فريق الدعم",
   "manage_requests": "إدارة طلبات الدعم",
+  "ticket_created_success": "تم إنشاء تذكرة الدعم بنجاح!",
+  "email_sent_success": "تم إرسال البريد الإلكتروني بنجاح!",
+  "light_mode": "الوضع الفاتح",
+  "night_mode": "الوضع الليلي",
 
   "saved_resources_title": "الموارد المحفوظة",
   "no_saved_resources": "لا توجد موارد محفوظة بعد.",

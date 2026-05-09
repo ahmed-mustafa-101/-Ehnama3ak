@@ -9,6 +9,7 @@ class HelpState extends Equatable {
   final HelpContactModel? contactInfo;
   final List<SupportTicketModel> tickets;
   final String? errorMessage;
+  final String? successMessage;
   final bool isSubmitting;
 
   const HelpState({
@@ -17,6 +18,7 @@ class HelpState extends Equatable {
     this.contactInfo,
     this.tickets = const [],
     this.errorMessage,
+    this.successMessage,
     this.isSubmitting = false,
   });
 
@@ -26,6 +28,7 @@ class HelpState extends Equatable {
     HelpContactModel? contactInfo,
     List<SupportTicketModel>? tickets,
     String? errorMessage,
+    String? successMessage,
     bool? isSubmitting,
   }) {
     return HelpState(
@@ -34,10 +37,11 @@ class HelpState extends Equatable {
       contactInfo: contactInfo ?? this.contactInfo,
       tickets: tickets ?? this.tickets,
       errorMessage: errorMessage,
+      successMessage: successMessage,
       isSubmitting: isSubmitting ?? this.isSubmitting,
     );
   }
 
   @override
-  List<Object?> get props => [status, faqs, contactInfo, tickets, errorMessage, isSubmitting];
+  List<Object?> get props => [status, faqs, contactInfo, tickets, errorMessage, successMessage, isSubmitting];
 }

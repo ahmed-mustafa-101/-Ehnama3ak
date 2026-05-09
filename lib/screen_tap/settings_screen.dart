@@ -12,6 +12,7 @@ import '../core/network/dio_client.dart';
 import '../screens_app/notifications/notifications_screen.dart';
 import 'section_title.dart';
 import 'package:share_plus/share_plus.dart';
+import '../core/widgets/theme/theme_notifier.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -210,6 +211,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 20),
                 SectionTitle(l10n.general),
                 AppTile(
+                  icon: isDark ? Icons.light_mode : Icons.dark_mode,
+                  title: isDark ? l10n.lightMode : l10n.nightMode,
+                  trailing: Switch(
+                    value: isDark,
+                    onChanged: (_) => ThemeNotifier.toggleTheme(),
+                    activeColor: const Color(0xFF0DA5FE),
+                  ),
+                  onTap: () => ThemeNotifier.toggleTheme(),
+                ),
+                AppTile(
                   icon: Icons.notifications_none,
                   title: l10n.notifications,
                   onTap: () => Navigator.push(
@@ -235,7 +246,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: l10n.shareApp,
                   onTap: () {
                     Share.share(
-                      '${l10n.shareAppContent ?? 'Check out Ehnama3ak App!'} \n https://play.google.com/store/apps/details?id=com.ehnama3ak.app',
+                      '${l10n.shareAppContent} \n https://play.google.com/store/apps/details?id=com.ehnama3ak.app',
                     );
                   },
                 ),
@@ -324,8 +335,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ? null
                               : () {
                                   if (cpCtrl.text.isEmpty ||
-                                      npCtrl.text.isEmpty)
+                                      npCtrl.text.isEmpty) {
                                     return;
+                                  }
                                   context.read<SettingsCubit>().changePassword(
                                     currentPassword: cpCtrl.text.trim(),
                                     newPassword: npCtrl.text.trim(),

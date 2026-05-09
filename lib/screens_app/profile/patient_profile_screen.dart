@@ -246,9 +246,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                         CircleAvatar(
                           radius: 70,
                           backgroundColor: Colors.grey[200],
-                          backgroundImage: profile.profileImageUrl.isNotEmpty
+                          backgroundImage: profile.avatarUrl.isNotEmpty
                               ? NetworkImage(
-                                  _getFullImageUrl(profile.profileImageUrl),
+                                  _getFullImageUrl(profile.avatarUrl),
                                 )
                               : const AssetImage(
                                       'assets/images/user_avatar.png',
@@ -337,15 +337,15 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                       children: [
                         StatCard(
                           title: l10n.sessionsLabel,
-                          value: profile.sessionsCount.toString(),
+                          value: profile.sessionsCompleted.toString(),
                         ),
                         StatCard(
                           title: l10n.exercisesLabel,
-                          value: profile.exercisesCount.toString(),
+                          value: profile.exercisesCompleted.toString(),
                         ),
                         StatCard(
                           title: l10n.daysLabel,
-                          value: profile.daysCount.toString(),
+                          value: profile.activeDays.toString(),
                         ),
                       ],
                     ),

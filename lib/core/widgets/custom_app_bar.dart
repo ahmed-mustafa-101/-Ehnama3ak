@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/notifications/presentation/cubit/notification_cubit.dart';
 import '../../features/notifications/presentation/cubit/notification_state.dart';
 import '../../screens_app/notifications/notifications_screen.dart';
-import '../../features/messages/presentation/controllers/message_cubit.dart';
-import '../../features/messages/presentation/controllers/message_state.dart';
+import '../../features/messages/presentation/controllers/unread_cubit.dart';
+import '../../features/messages/presentation/controllers/unread_state.dart';
 
 class CustomAppBar extends StatelessWidget {
   final VoidCallback? onNotificationTap;
@@ -15,11 +15,19 @@ class CustomAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.only(left: 35, right: 16.0),
       child: Row(
         children: [
           // Logo
-          Flexible(child: Image.asset('assets/images/name.png', width: 150)),
+          Transform.translate(
+            offset: const Offset(-10, 0),
+            child: Image.asset(
+              'assets/images/name_app.png',
+              width: 150,
+              height: 35,
+              alignment: Alignment.centerLeft,
+            ),
+          ),
           const Spacer(),
 
           // Notification icon with live unread badge
@@ -104,8 +112,8 @@ class CustomAppBar extends StatelessWidget {
           const SizedBox(width: 2),
 
           // Messenger icon with unread badge
-          BlocBuilder<MessageCubit, MessageState>(
-            buildWhen: (prev, curr) => prev.unreadCount != curr.unreadCount,
+          BlocBuilder<UnreadCubit, UnreadState>(
+            buildWhen: (prev, curr) => prev.count != curr.count,
             builder: (context, state) {
               return Stack(
                 clipBehavior: Clip.none,
@@ -127,7 +135,7 @@ class CustomAppBar extends StatelessWidget {
                       },
                     ),
                   ),
-                  if (state.unreadCount > 0)
+                  if (state.count > 0)
                     Positioned(
                       right: -2,
                       top: -2,
@@ -142,9 +150,9 @@ class CustomAppBar extends StatelessWidget {
                           minHeight: 14,
                         ),
                         child: Text(
-                          state.unreadCount > 99
+                          state.count > 99
                               ? '99+'
-                              : '${state.unreadCount}',
+                              : '${state.count}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 8,

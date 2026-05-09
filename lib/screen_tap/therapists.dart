@@ -5,7 +5,7 @@ import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:ehnama3ak/screen_tap/therapist/presentation/cubit/doctor_cubit.dart';
 import 'package:ehnama3ak/screen_tap/therapist/presentation/cubit/doctor_state.dart';
 import 'package:ehnama3ak/screen_tap/therapist/models/doctor_model.dart';
-import 'package:ehnama3ak/screens_app/messages/message_detail_screen.dart';
+import 'package:ehnama3ak/screens_app/messages/chat_navigator.dart';
 import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/screens_app/payment/payment_screen.dart';
 
@@ -484,18 +484,12 @@ class _TherapistsPageState extends State<TherapistsPage> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => MessageDetailScreen(
-                                receiverId: doctor.id.toString(),
-                                receiverName: doctor.name,
-                                receiverProfileImage: doctor.imageUrl,
-                              ),
-                            ),
-                          );
-                        },
+                        onPressed: () => ChatNavigator.open(
+                          context,
+                          userId: doctor.id.toString(),
+                          userName: doctor.name,
+                          profileImage: doctor.imageUrl,
+                        ),
                         child: Image.asset(
                           'assets/images/messageicon.png',
                           width: 24,

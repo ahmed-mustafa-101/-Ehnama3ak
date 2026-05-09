@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
-import 'package:ehnama3ak/screens_app/messages/message_detail_screen.dart';
+import 'package:ehnama3ak/screens_app/messages/chat_navigator.dart';
 
 class PatientDetailScreen extends StatelessWidget {
   final String id;
@@ -87,18 +87,12 @@ class PatientDetailScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MessageDetailScreen(
-                            receiverId: id,
-                            receiverName: name,
-                            receiverProfileImage: imageUrl,
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: () => ChatNavigator.open(
+                      context,
+                      userId: id,
+                      userName: name,
+                      profileImage: imageUrl,
+                    ),
                     icon: const Icon(Icons.message_rounded),
                     label: Text(l10n.messageLabel),
                     style: ElevatedButton.styleFrom(

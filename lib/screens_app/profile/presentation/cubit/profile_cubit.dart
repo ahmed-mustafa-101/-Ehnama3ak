@@ -22,7 +22,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     try {
       final apiProfile = await _profileApiService.getProfile();
       // Update cached profile image URL
-      await _tokenStorage.saveUserProfileImageUrl(apiProfile.profileImageUrl);
+      await _tokenStorage.saveUserProfileImageUrl(apiProfile.avatarUrl);
 
       // Get local active days count and merge it
       final localDaysCount = await PrefManager.getActiveDaysCount();
@@ -31,10 +31,10 @@ class ProfileCubit extends Cubit<ProfileState> {
       final profile = ProfileModel(
         fullName: apiProfile.fullName,
         email: apiProfile.email,
-        profileImageUrl: apiProfile.profileImageUrl,
-        sessionsCount: apiProfile.sessionsCount,
-        exercisesCount: apiProfile.exercisesCount,
-        daysCount: localDaysCount,
+        avatarUrl: apiProfile.avatarUrl,
+        sessionsCompleted: apiProfile.sessionsCompleted,
+        exercisesCompleted: apiProfile.exercisesCompleted,
+        activeDays: localDaysCount,
         age: apiProfile.age,
         gender: apiProfile.gender,
       );

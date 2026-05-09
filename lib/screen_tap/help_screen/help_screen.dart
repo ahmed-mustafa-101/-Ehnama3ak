@@ -50,6 +50,24 @@ class _HelpScreenState extends State<HelpScreen> {
               ),
             );
             context.read<HelpCubit>().resetStatus();
+          } else if (state.status == HelpStatus.success &&
+              state.successMessage != null) {
+            String message = '';
+            if (state.successMessage == 'ticket_created') {
+              message = l10n.ticketCreatedSuccess;
+            } else if (state.successMessage == 'email_sent') {
+              message = l10n.emailSentSuccess;
+            }
+
+            if (message.isNotEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(message),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+            context.read<HelpCubit>().resetStatus();
           }
         },
         builder: (context, state) {
@@ -301,7 +319,7 @@ class _HelpScreenState extends State<HelpScreen> {
                           final ticket = state.tickets[index];
                           return ListTile(
                             title: Text(ticket.subject),
-                            subtitle: Text(ticket.description),
+                            subtitle: Text(ticket.message),
                             trailing: Chip(label: Text(ticket.status)),
                           );
                         },

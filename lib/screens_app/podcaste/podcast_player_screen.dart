@@ -195,7 +195,10 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen> {
 
   String _normalizeUrl(String url) {
     if (url.isEmpty) return url;
-    if (url.startsWith('/data/') || url.startsWith('/storage/') || url.startsWith('file://') || url.startsWith('C:')) {
+    if (url.startsWith('/data/') ||
+        url.startsWith('/storage/') ||
+        url.startsWith('file://') ||
+        url.startsWith('C:')) {
       return url;
     }
     if (!url.startsWith('http')) {
@@ -212,7 +215,7 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen> {
     try {
       final url = _normalizeUrl(widget.podcast.audioUrl);
       if (url.isEmpty) return;
-      
+
       if (url.startsWith('http')) {
         await _player.setUrl(url);
       } else {
@@ -241,8 +244,8 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen> {
     return Scaffold(
       // backgroundColor: Colors.white,
       appBar: AppBar(
-          // backgroundColor: Colors.white,
-          ),
+        // backgroundColor: Colors.white,
+      ),
 
       body: SafeArea(
         child: Column(
@@ -280,8 +283,8 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Image.asset(
-                'assets/images/image_started.png',
-                width: 260,
+                'assets/images/podcust.png',
+                width: 300,
                 height: 260,
                 fit: BoxFit.cover,
               ),

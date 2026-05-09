@@ -6,6 +6,7 @@ class AppTile extends StatelessWidget {
   final VoidCallback onTap;
   final bool isLogout;
   final String? trailingText;
+  final Widget? trailing;
 
   const AppTile({
     super.key,
@@ -14,6 +15,7 @@ class AppTile extends StatelessWidget {
     required this.onTap,
     this.isLogout = false,
     this.trailingText,
+    this.trailing,
   });
 
   @override
@@ -39,12 +41,12 @@ class AppTile extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: trailingText != null
+        trailing: trailing ?? (trailingText != null
             ? Text(
                 trailingText!,
                 style: const TextStyle(color: Colors.blueGrey),
               )
-            : Icon(Icons.chevron_right, color: isDark ? Colors.white70 : null),
+            : Icon(Icons.chevron_right, color: isDark ? Colors.white70 : null)),
         onTap: onTap,
       ),
     );

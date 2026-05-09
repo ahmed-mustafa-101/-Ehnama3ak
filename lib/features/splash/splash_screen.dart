@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
                           horizontal: Responsive.padding(context, 20),
                         ),
                         child: Image.asset(
-                          'assets/images/image_started.png',
+                          'assets/images/image_started1.png',
                           width: Responsive.width(context, 0.7),
                           height: Responsive.height(context, 0.35),
                           fit: BoxFit.contain,
