@@ -91,6 +91,9 @@ class _ResourcesState extends State<Resources> {
                         ),
                         child: TextField(
                           style: const TextStyle(color: Colors.white),
+                          onChanged: (value) {
+                            context.read<ResourceCubit>().searchResources(value);
+                          },
                           decoration: InputDecoration(
                             hintText: l10n.searchResources,
                             hintStyle: const TextStyle(color: Colors.white70),

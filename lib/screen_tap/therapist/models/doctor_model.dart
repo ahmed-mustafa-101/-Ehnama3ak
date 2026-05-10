@@ -1,5 +1,10 @@
 class DoctorModel {
   final int id;
+
+  /// The GUID / string user-account ID used by the Messaging API as receiverId.
+  /// e.g. "ec87199d-4c41-4327-8cc6-650760321c23"
+  final String userId;
+
   final String name;
   final String specialization;
   final int experienceYears;
@@ -8,6 +13,7 @@ class DoctorModel {
 
   DoctorModel({
     required this.id,
+    required this.userId,
     required this.name,
     required this.specialization,
     required this.experienceYears,
@@ -24,8 +30,22 @@ class DoctorModel {
       id = int.tryParse(idVal.toString()) ?? 0;
     }
 
+    // The GUID userId may come under different keys depending on the endpoint.
+    // We prefer the string GUID over the numeric id for messaging.
+    final String userId = (json['userId'] ??
+            json['UserId'] ??
+            json['applicationUserId'] ??
+            json['ApplicationUserId'] ??
+            json['userAccountId'] ??
+            json['UserAccountId'] ??
+            json['accountId'] ??
+            json['AccountId'] ??
+            '')
+        .toString();
+
     return DoctorModel(
       id: id,
+      userId: userId,
       name: (json['name'] ?? json['Name'] ?? json['fullName'] ?? json['FullName'] ?? '').toString(),
       specialization: (json['specialization'] ?? json['Specialization'] ?? '').toString(),
       experienceYears: int.tryParse((json['experienceYears'] ?? json['ExperienceYears'] ?? 0).toString()) ?? 0,

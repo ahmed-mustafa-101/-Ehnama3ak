@@ -22,7 +22,16 @@ class ChatbotIntroScreen extends StatelessWidget {
             padding: EdgeInsets.all(Responsive.padding(context, 8)),
             child: Row(
               children: [
-                AppIconBack(top: 0, left: Responsive.spacing(context, 12)),
+                Padding(
+                  padding: EdgeInsets.only(left: Responsive.spacing(context, 12)),
+                  child: IconButton(
+                    onPressed: () => Navigator.maybePop(context),
+                    icon: Icon(
+                      Icons.arrow_back_ios_new,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

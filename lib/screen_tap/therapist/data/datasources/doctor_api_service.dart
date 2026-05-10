@@ -66,7 +66,13 @@ class DoctorApiService {
   }
 
   Map<String, dynamic> _toMap(dynamic e) {
-    if (e is Map) return Map<String, dynamic>.from(e);
+    if (e is Map) {
+      final map = Map<String, dynamic>.from(e);
+      // DEBUG: log all keys so we can identify the GUID userId field
+      log('[DoctorApiService] doctor keys: ${map.keys.toList()}');
+      log('[DoctorApiService] doctor data: $map');
+      return map;
+    }
     return {};
   }
 

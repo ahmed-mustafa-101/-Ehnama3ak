@@ -25,7 +25,7 @@ class DioClient {
       ..interceptors.add(_AuthInterceptor(_tokenStorage))
       ..interceptors.add(
         LogInterceptor(
-          requestBody: true,
+          requestBody: false, // Prevents printing 'data: null'
           responseBody: true,
           error: true,
           requestHeader: true,

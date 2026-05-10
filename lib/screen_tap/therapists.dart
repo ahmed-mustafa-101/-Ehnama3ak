@@ -486,7 +486,11 @@ class _TherapistsPageState extends State<TherapistsPage> {
                         ),
                         onPressed: () => ChatNavigator.open(
                           context,
-                          userId: doctor.id.toString(),
+                          // Use the GUID userId for messaging API (receiverId).
+                          // Fall back to numeric id only if userId is missing.
+                          userId: doctor.userId.isNotEmpty
+                              ? doctor.userId
+                              : doctor.id.toString(),
                           userName: doctor.name,
                           profileImage: doctor.imageUrl,
                         ),

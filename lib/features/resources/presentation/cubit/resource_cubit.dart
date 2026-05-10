@@ -8,6 +8,9 @@ class ResourceCubit extends Cubit<ResourceState> {
 
   ResourceCubit(this._repository) : super(const ResourceInitial());
 
+  List<ResourceModel> _allResources = [];
+  String _lastQuery = '';
+
   // ─── Fetch ───────────────────────────────────────────────────────────────────
 
   Future<void> fetchResources() async {
@@ -16,10 +19,30 @@ class ResourceCubit extends Cubit<ResourceState> {
     emit(const ResourceLoading());
 
     try {
-      final resources = await _repository.getResources();
-      emit(ResourceLoaded(resources));
+      _allResources = await _repository.getResources();
+      _applySearch();
     } catch (e) {
       emit(ResourceError(_clean(e)));
+    }
+  }
+
+  // ─── Search ──────────────────────────────────────────────────────────────────
+
+  void searchResources(String query) {
+    _lastQuery = query.trim().toLowerCase();
+    _applySearch();
+  }
+
+  void _applySearch() {
+    if (_lastQuery.isEmpty) {
+      emit(ResourceLoaded(_allResources));
+    } else {
+      final filtered = _allResources.where((r) {
+        final titleMatch = r.title.toLowerCase().contains(_lastQuery);
+        final descMatch = r.description.toLowerCase().contains(_lastQuery);
+        return titleMatch || descMatch;
+      }).toList();
+      emit(ResourceLoaded(filtered));
     }
   }
 
@@ -28,8 +51,8 @@ class ResourceCubit extends Cubit<ResourceState> {
   Future<void> refresh() async {
     emit(const ResourceLoading());
     try {
-      final resources = await _repository.getResources();
-      emit(ResourceLoaded(resources));
+      _allResources = await _repository.getResources();
+      _applySearch();
     } catch (e) {
       emit(ResourceError(_clean(e)));
     }
@@ -63,11 +86,11 @@ class ResourceCubit extends Cubit<ResourceState> {
         fileSize: fileSize,
       );
 
-      final updated = [newResource, ...currentList];
-      emit(ResourceCreateSuccess(updated));
+      _allResources = [newResource, ..._allResources];
+      _applySearch();
     } catch (e) {
       // Restore the previous list on error.
-      emit(ResourceLoaded(List<ResourceModel>.from(currentList)));
+      _applySearch();
       // Then emit the error so the UI can show a snackbar.
       emit(ResourceError(_clean(e)));
     }

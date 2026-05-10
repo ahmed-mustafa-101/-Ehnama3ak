@@ -192,7 +192,7 @@ class EhnaMa3akApp extends StatelessWidget {
               apiService: DoctorDashboardApiService(dio: dioClient.dio),
             ),
           ),
-          BlocProvider(create: (context) => ChatCubit(ChatService())),
+          BlocProvider(create: (context) => ChatCubit(ChatService(dioClient))),
         ],
         child: ValueListenableBuilder<ThemeMode>(
           valueListenable: ThemeNotifier.themeMode,

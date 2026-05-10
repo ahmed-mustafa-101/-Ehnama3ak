@@ -7,9 +7,8 @@ class AppIconBack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: top,
-      left: left,
+    return Padding(
+      padding: EdgeInsets.only(top: top, left: left),
       child: IconButton(
         onPressed: () => Navigator.maybePop(context),
         icon: Icon(

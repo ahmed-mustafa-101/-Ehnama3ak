@@ -2,6 +2,9 @@ import 'package:dio/dio.dart';
 import 'dart:developer' as dev;
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
+import 'package:ehnama3ak/core/network/dio_client.dart';
+import 'package:ehnama3ak/screens_app/chatbot/chat_models.dart';
+import 'package:ehnama3ak/screens_app/chatbot/chat_message.dart';
 
 /// Represents the full response from the /chat API endpoint.
 class ChatApiResponse {
@@ -31,13 +34,14 @@ class ChatApiResponse {
 }
 
 class ChatService {
-  final Dio _dio;
-  static const String _baseUrl =
+  final DioClient _dioClient;
+  final Dio _emotionDio;
+  static const String _emotionBaseUrl =
       "https://ahmed-hamed-emotion-api-2.hf.space";
 
-  ChatService()
-      : _dio = Dio(BaseOptions(
-          baseUrl: _baseUrl,
+  ChatService(this._dioClient)
+      : _emotionDio = Dio(BaseOptions(
+          baseUrl: _emotionBaseUrl,
           connectTimeout: const Duration(seconds: 30),
           receiveTimeout: const Duration(seconds: 30),
           sendTimeout: const Duration(seconds: 30),
@@ -45,12 +49,146 @@ class ChatService {
             'Accept': 'application/json',
           },
         )) {
-    _dio.interceptors.add(LogInterceptor(
+    _emotionDio.interceptors.add(LogInterceptor(
       requestBody: true,
       responseBody: true,
-      logPrint: (o) => dev.log(o.toString(), name: 'ChatService'),
+      logPrint: (o) => dev.log(o.toString(), name: 'EmotionService'),
     ));
   }
+
+  // --- Session Management Endpoints ---
+
+  Future<PaginatedResponse<ChatSession>> getSessions({int page = 1, int pageSize = 20}) async {
+    try {
+      final response = await _dioClient.dio.get(
+        '/api/DepoChat/sessions',
+        queryParameters: {'page': page, 'pageSize': pageSize},
+      );
+      return PaginatedResponse.fromJson(
+        response.data,
+        (item) => ChatSession.fromJson(item),
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<ChatSession> createSession(String title) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/api/DepoChat/sessions',
+        data: {'title': title},
+      );
+      return ChatSession.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<PaginatedResponse<ChatMessage>> getSessionMessages(int sessionId, {int page = 1, int pageSize = 30}) async {
+    try {
+      final response = await _dioClient.dio.get(
+        '/api/DepoChat/sessions/$sessionId',
+        queryParameters: {'page': page, 'pageSize': pageSize},
+      );
+      
+      // Map the backend items to ChatMessage
+      final items = (response.data['items'] as List?)?.map((item) {
+        final message = item['message'] ?? item['Message'] ?? '';
+        final sender = (item['sender'] ?? item['Sender'])?.toString().toLowerCase() ?? '';
+        final createdAt = item['createdAt'] ?? item['CreatedAt'];
+        final messageType = item['messageType'] ?? item['MessageType'] ?? 1;
+        String? attachmentUrl = item['attachmentUrl'] ?? item['AttachmentUrl'];
+        if (attachmentUrl != null && !attachmentUrl.startsWith('http')) {
+          attachmentUrl = 'http://e7nama3ak.runasp.net$attachmentUrl';
+        }
+
+        return ChatMessage(
+          message: message,
+          isUser: sender == 'patient',
+          timestamp: DateTime.parse(createdAt ?? DateTime.now().toIso8601String()),
+          imagePath: messageType == 1 ? attachmentUrl : null,
+          audioPath: messageType == 2 ? attachmentUrl : null,
+          emotion: item['emotion'] ?? item['Emotion'],
+        );
+      }).toList() ?? [];
+
+      return PaginatedResponse<ChatMessage>(
+        items: items,
+        totalCount: response.data['totalCount'] ?? 0,
+        page: response.data['page'] ?? 1,
+        pageSize: response.data['pageSize'] ?? 30,
+        totalPages: response.data['totalPages'] ?? 0,
+        hasNextPage: response.data['hasNextPage'] ?? false,
+        hasPreviousPage: response.data['hasPreviousPage'] ?? false,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deleteSession(int sessionId) async {
+    try {
+      await _dioClient.dio.delete('/api/DepoChat/sessions/$sessionId');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> saveMessage({
+    required int sessionId,
+    required String message,
+    required String sender,
+    required int messageType,
+    String? attachmentPath,
+    String? emotion,
+  }) async {
+    try {
+      final map = <String, dynamic>{
+        'Message': message,
+        'Sender': sender,
+        'MessageType': messageType,
+      };
+      
+      if (emotion != null) {
+        map['Emotion'] = emotion;
+      }
+
+      if (attachmentPath != null && attachmentPath.isNotEmpty) {
+        final ext = attachmentPath.split('.').last.toLowerCase();
+        final mimeType = _getMimeType(ext);
+        map['Attachment'] = await MultipartFile.fromFile(
+          attachmentPath,
+          filename: 'attachment.$ext',
+          contentType: MediaType(mimeType.split('/').first, mimeType.split('/').last),
+        );
+      }
+
+      final formData = FormData.fromMap(map);
+
+      final response = await _dioClient.dio.post(
+        '/api/DepoChat/sessions/$sessionId/save',
+        data: formData,
+      );
+      dev.log('Save Message Success: Session $sessionId, Status: ${response.statusCode}', name: 'ChatService');
+    } on DioException catch (e) {
+      dev.log('Save Message Failed: Session $sessionId, Error: ${e.message}', name: 'ChatService');
+      throw _handleError(e);
+    }
+  }
+
+  String _getMimeType(String extension) {
+    switch (extension) {
+      case 'png': return 'image/png';
+      case 'jpg':
+      case 'jpeg': return 'image/jpeg';
+      case 'mp3': return 'audio/mpeg';
+      case 'wav': return 'audio/wav';
+      default: return 'application/octet-stream';
+    }
+  }
+
+  // --- AI / Emotion API Endpoints ---
 
   Future<ChatApiResponse> sendMultimodalMessage({
     String? text,
@@ -87,7 +225,7 @@ class ChatService {
 
       final formData = FormData.fromMap(map);
 
-      final response = await _dio.post(
+      final response = await _emotionDio.post(
         '/chat',
         data: formData,
       );
@@ -122,7 +260,6 @@ class ChatService {
     }
 
     if (decodedData is Map) {
-      // Check if 'message' is present directly or nested
       final msg = decodedData['message']?.toString() ?? 
                   decodedData['response']?.toString() ?? 
                   decodedData['text']?.toString() ?? 
@@ -164,3 +301,4 @@ class ChatService {
     return Exception('Something went wrong');
   }
 }
+

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:image_picker/image_picker.dart';
 import 'package:ehnama3ak/screens_app/chatbot/chat_cubit.dart';
 import 'package:ehnama3ak/screens_app/chatbot/chat_state.dart';
@@ -15,6 +14,7 @@ import 'dart:developer' as dev;
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:ehnama3ak/screens_app/chatbot/voice_message_widget.dart';
+import 'package:ehnama3ak/screens_app/chatbot/chat_models.dart';
 
 class ChatbotScreen extends StatefulWidget {
   final VoidCallback? onClose;
@@ -30,20 +30,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final ImagePicker _picker = ImagePicker();
   String? _selectedImagePath;
 
-  late stt.SpeechToText _speech;
-  bool _isListening = false;
 
   late AudioRecorder _audioRecorder;
   bool _isRecording = false;
-  String? _audioPath;
-  double _amplitude = 0.0;
   List<double> _amplitudeHistory = List.filled(20, -60.0);
   StreamSubscription<Amplitude>? _amplitudeSub;
 
   @override
   void initState() {
     super.initState();
-    _speech = stt.SpeechToText();
     _audioRecorder = AudioRecorder();
   }
 
@@ -90,7 +85,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             .listen((amp) {
               if (mounted) {
                 setState(() {
-                  _amplitude = amp.current;
                   _amplitudeHistory.removeAt(0);
                   _amplitudeHistory.add(amp.current);
                 });
@@ -99,7 +93,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
         setState(() {
           _isRecording = true;
-          _audioPath = path;
         });
         dev.log('Recording started successfully', name: 'ChatbotScreen');
       } else {
@@ -124,7 +117,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
       setState(() {
         _isRecording = false;
-        _amplitude = 0.0;
         _amplitudeHistory = List.filled(20, -60.0);
       });
 
@@ -148,9 +140,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
       setState(() {
         _isRecording = false;
-        _amplitude = 0.0;
         _amplitudeHistory = List.filled(20, -60.0);
-        _audioPath = null;
       });
 
       if (path != null) {
@@ -164,38 +154,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
   }
 
-  void _listen() async {
-    // Keeping speech to text as an option or replacing it?
-    // Let's use tap for speech-to-text and long press for recording voice message.
-    if (!_isListening) {
-      try {
-        bool available = await _speech.initialize(
-          onStatus: (val) {
-            if (val == 'done' || val == 'notListening') {
-              setState(() => _isListening = false);
-            }
-          },
-          onError: (val) => setState(() => _isListening = false),
-        );
-        if (available) {
-          setState(() => _isListening = true);
-          _speech.listen(
-            onResult: (val) => setState(() {
-              _inputCtrl.text = val.recognizedWords;
-              _inputCtrl.selection = TextSelection.fromPosition(
-                TextPosition(offset: _inputCtrl.text.length),
-              );
-            }),
-          );
-        }
-      } catch (e) {
-        setState(() => _isListening = false);
-      }
-    } else {
-      setState(() => _isListening = false);
-      _speech.stop();
-    }
-  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -334,6 +292,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: Colors.transparent,
+      drawer: _buildHistoryDrawer(context, isDark),
       body: Column(
         children: [
           Container(
@@ -341,37 +300,52 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             height: 56,
             child: Row(
               children: [
-                const Spacer(),
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.smart_toy_outlined,
-                        color: Color(0xFF1E88E5),
-                        size: 35,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Depo',
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF1F2933),
-                        ),
-                      ),
-                    ],
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.history, color: Color(0xFF1E88E5)),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
                   ),
                 ),
                 const Spacer(),
+                Center(
+                  child: BlocBuilder<ChatCubit, ChatState>(
+                    builder: (context, state) {
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.smart_toy_outlined,
+                            color: Color(0xFF1E88E5),
+                            size: 35,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Depo',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1F2933),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.add_comment_outlined, color: Color(0xFF1E88E5)),
+                  onPressed: () => context.read<ChatCubit>().clearChat(),
+                ),
               ],
             ),
           ),
           const Divider(height: 1),
 
-          // ===== قائمة الرسائل =====
+
+          // ===== Message List =====
           Expanded(
             child: BlocConsumer<ChatCubit, ChatState>(
               listener: (context, state) {
@@ -458,7 +432,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   ),
                 Row(
                   children: [
-                // زر إضافة صورة على اليسار
+                // Add image button
                 IconButton(
                   onPressed: _showImageSourceBottomSheet,
                   padding: EdgeInsets.zero,
@@ -471,7 +445,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
                 const SizedBox(width: 4),
 
-                // حقل الكتابة داخل Container مستطيل
+                // Text field container
                 Expanded(
                   child: Container(
                     padding: EdgeInsets.symmetric(
@@ -488,10 +462,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                           : const Color(0xFFF5F7FB),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: _isListening
-                            ? Colors.blue.withValues(alpha: 0.5)
-                            : Colors.blueGrey.withValues(alpha: 0.25),
-                        width: _isListening ? 2 : 1,
+                        color: Colors.blueGrey.withValues(alpha: 0.25),
+                        width: 1,
                       ),
                     ),
                     child: Row(
@@ -674,11 +646,19 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                               padding: const EdgeInsets.only(bottom: 8.0),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.file(
-                                  File(msg.imagePath!),
-                                  width: 200,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: msg.imagePath!.startsWith('http')
+                                    ? Image.network(
+                                        msg.imagePath!,
+                                        width: 200,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) =>
+                                            const Icon(Icons.broken_image, size: 50, color: Colors.white),
+                                      )
+                                    : Image.file(
+                                        File(msg.imagePath!),
+                                        width: 200,
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                           if (msg.message.isNotEmpty && msg.message != "Image Message")
@@ -760,6 +740,26 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                 ),
                               ),
                             ),
+                          if (msg.imagePath != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: msg.imagePath!.startsWith('http')
+                                    ? Image.network(
+                                        msg.imagePath!,
+                                        width: 200,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) =>
+                                            const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                                      )
+                                    : Image.file(
+                                        File(msg.imagePath!),
+                                        width: 200,
+                                        fit: BoxFit.cover,
+                                      ),
+                              ),
+                            ),
                           Text(
                             msg.message,
                             style: TextStyle(
@@ -788,7 +788,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                 icon: Icons.ios_share_outlined,
                                 tooltip: 'Share',
                                 onPressed: () {
-                                  Share.share(msg.message);
+                                  SharePlus.instance.share(ShareParams(text: msg.message));
                                 },
                               ),
                               _buildActionButton(
@@ -829,7 +829,124 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       );
     }
   }
+
+  Widget _buildHistoryDrawer(BuildContext context, bool isDark) {
+    return Drawer(
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E88E5).withValues(alpha: 0.1),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.smart_toy_rounded, size: 50, color: Color(0xFF1E88E5)),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Chat History',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1E88E5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.add_comment, color: Color(0xFF1E88E5)),
+            title: const Text('New Chat', style: TextStyle(fontWeight: FontWeight.bold)),
+            onTap: () {
+              context.read<ChatCubit>().clearChat();
+              Navigator.pop(context);
+            },
+          ),
+          const Divider(),
+          Expanded(
+            child: BlocBuilder<ChatCubit, ChatState>(
+              builder: (context, state) {
+                if (state.sessions.isEmpty) {
+                  return const Center(
+                    child: Text('No previous chats'),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: state.sessions.length,
+                  itemBuilder: (context, index) {
+                    final session = state.sessions[index];
+                    return _buildSessionItem(context, session, state.currentSession?.id == session.id, isDark);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionItem(BuildContext context, ChatSession session, bool isSelected, bool isDark) {
+    return ListTile(
+      selected: isSelected,
+      selectedTileColor: const Color(0xFF1E88E5).withValues(alpha: 0.1),
+      title: Text(
+        session.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: isSelected ? const Color(0xFF1E88E5) : (isDark ? Colors.white70 : Colors.black87),
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      subtitle: Text(
+        "${session.messageCount} messages",
+        style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black45),
+      ),
+      leading: Icon(
+        Icons.chat_bubble_outline,
+        color: isSelected ? const Color(0xFF1E88E5) : Colors.grey,
+      ),
+      trailing: IconButton(
+        icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+        onPressed: () {
+          _showDeleteConfirmDialog(context, session.id);
+        },
+      ),
+      onTap: () {
+        context.read<ChatCubit>().selectSession(session);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context, int sessionId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Conversation'),
+        content: const Text('Are you sure you want to delete this conversation?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<ChatCubit>().deleteSession(sessionId);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
 
 // =================== Voice Waveform Widget ===================
 class VoiceWaveform extends StatelessWidget {
