@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../features/messages/data/models/conversation_model.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/localization/app_localizations.dart';
 
 /// A single row in the conversations list (Messenger/WhatsApp style).
 class ConversationTile extends StatelessWidget {
@@ -115,7 +116,7 @@ class ConversationTile extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        _formatTime(conversation.lastMessageTime),
+                        _formatTime(context, conversation.lastMessageTime),
                         style: TextStyle(
                           fontSize: 11,
                           color: hasUnread ? _blue : Colors.grey.shade500,
@@ -132,7 +133,7 @@ class ConversationTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           conversation.lastMessage.isEmpty
-                              ? 'Start a conversation'
+                              ? AppLocalizations.of(context).translate('start_conversation')
                               : conversation.lastMessage,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -195,10 +196,10 @@ class ConversationTile extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime time) {
+  String _formatTime(BuildContext context, DateTime time) {
     final now = DateTime.now();
     final diff = now.difference(time);
-    if (diff.inMinutes < 1) return 'Now';
+    if (diff.inMinutes < 1) return AppLocalizations.of(context).translate('now');
     if (diff.inHours < 24) return DateFormat.jm().format(time);
     if (diff.inDays < 7) return DateFormat('EEE').format(time);
     return DateFormat('MM/dd').format(time);

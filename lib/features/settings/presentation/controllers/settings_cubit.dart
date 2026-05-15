@@ -14,7 +14,8 @@ class SettingsCubit extends Cubit<SettingsState> {
     emit(state.copyWith(status: SettingsStatus.loading));
     try {
       final settings = await _repo.getSettings();
-      // Update cached profile image URL
+      // Update cached profile data
+      await _tokenStorage.saveUserName(settings.name);
       await _tokenStorage.saveUserProfileImageUrl(settings.profileImageUrl);
       emit(state.copyWith(status: SettingsStatus.success, userSettings: settings));
     } catch (e) {

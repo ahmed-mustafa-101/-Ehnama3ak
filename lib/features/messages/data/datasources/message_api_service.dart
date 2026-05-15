@@ -55,7 +55,9 @@ class MessageApiService {
           data: FormData.fromMap(map),
           options: Options(contentType: 'multipart/form-data'),
         );
-        return MessageModel.fromJson(Map<String, dynamic>.from(res.data as Map));
+        return MessageModel.fromJson(
+          Map<String, dynamic>.from(res.data as Map),
+        );
       } else {
         // Use standard send endpoint for text-only messages
         final res = await _dio.post(
@@ -66,7 +68,9 @@ class MessageApiService {
             'messageType': messageType,
           },
         );
-        return MessageModel.fromJson(Map<String, dynamic>.from(res.data as Map));
+        return MessageModel.fromJson(
+          Map<String, dynamic>.from(res.data as Map),
+        );
       }
     } on DioException catch (e) {
       throw _err(e);
@@ -123,7 +127,8 @@ class MessageApiService {
   Future<List<MessageModel>> getPinnedMessages(String conversationId) async {
     try {
       final res = await _dio.get(
-          '/api/Messages/conversations/$conversationId/pinned');
+        '/api/Messages/conversations/$conversationId/pinned',
+      );
       return _list(res.data, MessageModel.fromJson);
     } on DioException catch (e) {
       throw _err(e);
@@ -133,8 +138,9 @@ class MessageApiService {
   // ── 9. POST /api/Messages/conversations/{conversationId}/favorite ────
   Future<bool> toggleFavorite(String conversationId) async {
     try {
-      final res = await _dio
-          .post('/api/Messages/conversations/$conversationId/favorite');
+      final res = await _dio.post(
+        '/api/Messages/conversations/$conversationId/favorite',
+      );
       final data = res.data;
       if (data is Map) return data['isFavorite'] == true;
       return false;
@@ -160,8 +166,12 @@ class MessageApiService {
     if (data is List) {
       items = data;
     } else if (data is Map) {
-      final v = data['items'] ?? data['data'] ?? data['conversations'] ??
-          data['messages'] ?? data['favorites'];
+      final v =
+          data['items'] ??
+          data['data'] ??
+          data['conversations'] ??
+          data['messages'] ??
+          data['favorites'];
       if (v is List) items = v;
     }
     return (items ?? [])
@@ -174,7 +184,7 @@ class MessageApiService {
     if (code == 401) return Exception('Unauthorized. Please log in again.');
     if (code == 403) return Exception('You are not allowed to do this.');
     if (code == 404) return Exception('Resource not found.');
-    if (code == 500) return Exception('Server error. Please try again later.');
+    if (code == 500) return Exception('');
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.sendTimeout) {

@@ -30,7 +30,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final ImagePicker _picker = ImagePicker();
   String? _selectedImagePath;
 
-
   late AudioRecorder _audioRecorder;
   bool _isRecording = false;
   List<double> _amplitudeHistory = List.filled(20, -60.0);
@@ -154,7 +153,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
   }
 
-
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
@@ -228,7 +226,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
                 _buildOption(
                   icon: Icons.audiotrack,
-                  label: 'Audio',
+                  label: AppLocalizations.of(context).translate('audio'),
                   onTap: () {
                     Navigator.pop(context);
                     _pickAudioFile();
@@ -282,7 +280,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     } else {
       context.read<ChatCubit>().sendMessage(text);
     }
-    
+
     _inputCtrl.clear();
     _scrollToBottom();
   }
@@ -336,14 +334,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.add_comment_outlined, color: Color(0xFF1E88E5)),
+                  icon: const Icon(
+                    Icons.add_comment_outlined,
+                    color: Color(0xFF1E88E5),
+                  ),
                   onPressed: () => context.read<ChatCubit>().clearChat(),
                 ),
               ],
             ),
           ),
           const Divider(height: 1),
-
 
           // ===== Message List =====
           Expanded(
@@ -432,125 +432,127 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   ),
                 Row(
                   children: [
-                // Add image button
-                IconButton(
-                  onPressed: _showImageSourceBottomSheet,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(
-                    Icons.add_circle_outline_rounded,
-                    color: Color(0xFF1E88E5),
-                    size: 46,
-                  ),
-                ),
-                const SizedBox(width: 4),
-
-                // Text field container
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: _isRecording ? 0 : 4,
-                    ),
-                    constraints: BoxConstraints(
-                      minHeight: _isRecording ? 40 : 45,
-                      maxHeight: _isRecording ? 60 : 150,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF1E1E1E)
-                          : const Color(0xFFF5F7FB),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: Colors.blueGrey.withValues(alpha: 0.25),
-                        width: 1,
+                    // Add image button
+                    IconButton(
+                      onPressed: _showImageSourceBottomSheet,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(
+                        Icons.add_circle_outline_rounded,
+                        color: Color(0xFF1E88E5),
+                        size: 46,
                       ),
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (_isRecording)
-                          Expanded(
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  onPressed: _cancelRecording,
-                                  icon: const Icon(
-                                    Icons.delete_outline,
-                                    color: Colors.red,
-                                    size: 28,
-                                  ),
+                    const SizedBox(width: 4),
+
+                    // Text field container
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: _isRecording ? 0 : 4,
+                        ),
+                        constraints: BoxConstraints(
+                          minHeight: _isRecording ? 40 : 45,
+                          maxHeight: _isRecording ? 60 : 150,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E1E1E)
+                              : const Color(0xFFF5F7FB),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Colors.blueGrey.withValues(alpha: 0.25),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            if (_isRecording)
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: _cancelRecording,
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.red,
+                                        size: 28,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Center(
+                                        child: VoiceWaveform(
+                                          amplitudes: _amplitudeHistory,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Expanded(
-                                  child: Center(
-                                    child: VoiceWaveform(
-                                      amplitudes: _amplitudeHistory,
+                              )
+                            else
+                              Expanded(
+                                child: TextField(
+                                  controller: _inputCtrl,
+                                  maxLines: null,
+                                  minLines: 1,
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    border: InputBorder.none,
+                                    hintText: AppLocalizations.of(
+                                      context,
+                                    ).askDepo,
+                                    hintStyle: const TextStyle(
+                                      color: Color(0xFF9FB0C0),
+                                      fontSize: 18,
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
-                          )
-                        else
-                          Expanded(
-                            child: TextField(
-                              controller: _inputCtrl,
-                              maxLines: null,
-                              minLines: 1,
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                border: InputBorder.none,
-                                hintText: AppLocalizations.of(context).askDepo,
-                                hintStyle: const TextStyle(
-                                  color: Color(0xFF9FB0C0),
-                                  fontSize: 18,
-                                ),
+                              ),
+                            IconButton(
+                              onPressed: () {
+                                if (_isRecording) {
+                                  _stopRecording();
+                                } else {
+                                  _startRecording();
+                                }
+                              },
+                              icon: Icon(
+                                _isRecording
+                                    ? Icons.stop_circle
+                                    : Icons.mic_outlined,
+                                color: const Color(0xFF1E88E5),
+                                size: 32,
                               ),
                             ),
-                          ),
-                        IconButton(
-                          onPressed: () {
-                            if (_isRecording) {
-                              _stopRecording();
-                            } else {
-                              _startRecording();
-                            }
-                          },
-                          icon: Icon(
-                            _isRecording
-                                ? Icons.stop_circle
-                                : Icons.mic_outlined,
-                            color: const Color(0xFF1E88E5),
-                            size: 32,
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
+                    const SizedBox(width: 8),
 
-                // زر الإرسال الدائري الأزرق
-                GestureDetector(
-                  onTap: _sendMessage,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF1E88E5),
-                      shape: BoxShape.circle,
+                    // زر الإرسال الدائري الأزرق
+                    GestureDetector(
+                      onTap: _sendMessage,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF1E88E5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.send_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.send_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
               ],
             ),
           ),
@@ -651,8 +653,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                         msg.imagePath!,
                                         width: 200,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) =>
-                                            const Icon(Icons.broken_image, size: 50, color: Colors.white),
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                                  Icons.broken_image,
+                                                  size: 50,
+                                                  color: Colors.white,
+                                                ),
                                       )
                                     : Image.file(
                                         File(msg.imagePath!),
@@ -661,7 +668,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                       ),
                               ),
                             ),
-                          if (msg.message.isNotEmpty && msg.message != "Image Message")
+                          if (msg.message.isNotEmpty &&
+                              msg.message != "Image Message")
                             Text(
                               msg.message,
                               style: const TextStyle(
@@ -750,8 +758,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                         msg.imagePath!,
                                         width: 200,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) =>
-                                            const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                                  Icons.broken_image,
+                                                  size: 50,
+                                                  color: Colors.grey,
+                                                ),
                                       )
                                     : Image.file(
                                         File(msg.imagePath!),
@@ -776,19 +789,27 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             children: [
                               _buildActionButton(
                                 icon: Icons.thumb_up_outlined,
-                                tooltip: 'Good response',
+                                tooltip: AppLocalizations.of(
+                                  context,
+                                ).translate('good_response'),
                                 onPressed: () {},
                               ),
                               _buildActionButton(
                                 icon: Icons.thumb_down_outlined,
-                                tooltip: 'Bad response',
+                                tooltip: AppLocalizations.of(
+                                  context,
+                                ).translate('bad_response'),
                                 onPressed: () {},
                               ),
                               _buildActionButton(
                                 icon: Icons.ios_share_outlined,
-                                tooltip: 'Share',
+                                tooltip: AppLocalizations.of(
+                                  context,
+                                ).translate('share'),
                                 onPressed: () {
-                                  SharePlus.instance.share(ShareParams(text: msg.message));
+                                  SharePlus.instance.share(
+                                    ShareParams(text: msg.message),
+                                  );
                                 },
                               ),
                               _buildActionButton(
@@ -843,10 +864,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.smart_toy_rounded, size: 50, color: Color(0xFF1E88E5)),
+                  const Icon(
+                    Icons.smart_toy_outlined,
+                    size: 50,
+                    color: Color(0xFF1E88E5),
+                  ),
                   const SizedBox(height: 10),
                   Text(
-                    'Chat History',
+                    AppLocalizations.of(context).translate('chat_history'),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -859,7 +884,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.add_comment, color: Color(0xFF1E88E5)),
-            title: const Text('New Chat', style: TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              AppLocalizations.of(context).translate('new_chat'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             onTap: () {
               context.read<ChatCubit>().clearChat();
               Navigator.pop(context);
@@ -870,15 +898,24 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             child: BlocBuilder<ChatCubit, ChatState>(
               builder: (context, state) {
                 if (state.sessions.isEmpty) {
-                  return const Center(
-                    child: Text('No previous chats'),
+                  return Center(
+                    child: Text(
+                      AppLocalizations.of(
+                        context,
+                      ).translate('no_previous_chats'),
+                    ),
                   );
                 }
                 return ListView.builder(
                   itemCount: state.sessions.length,
                   itemBuilder: (context, index) {
                     final session = state.sessions[index];
-                    return _buildSessionItem(context, session, state.currentSession?.id == session.id, isDark);
+                    return _buildSessionItem(
+                      context,
+                      session,
+                      state.currentSession?.id == session.id,
+                      isDark,
+                    );
                   },
                 );
               },
@@ -889,7 +926,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
-  Widget _buildSessionItem(BuildContext context, ChatSession session, bool isSelected, bool isDark) {
+  Widget _buildSessionItem(
+    BuildContext context,
+    ChatSession session,
+    bool isSelected,
+    bool isDark,
+  ) {
     return ListTile(
       selected: isSelected,
       selectedTileColor: const Color(0xFF1E88E5).withValues(alpha: 0.1),
@@ -898,20 +940,29 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: isSelected ? const Color(0xFF1E88E5) : (isDark ? Colors.white70 : Colors.black87),
+          color: isSelected
+              ? const Color(0xFF1E88E5)
+              : (isDark ? Colors.white70 : Colors.black87),
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       subtitle: Text(
-        "${session.messageCount} messages",
-        style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black45),
+        "${session.messageCount} ${AppLocalizations.of(context).translate('messages_count')}",
+        style: TextStyle(
+          fontSize: 12,
+          color: isDark ? Colors.white54 : Colors.black45,
+        ),
       ),
       leading: Icon(
         Icons.chat_bubble_outline,
         color: isSelected ? const Color(0xFF1E88E5) : Colors.grey,
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+        icon: const Icon(
+          Icons.delete_outline,
+          size: 20,
+          color: Colors.redAccent,
+        ),
         onPressed: () {
           _showDeleteConfirmDialog(context, session.id);
         },
@@ -927,26 +978,40 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Conversation'),
-        content: const Text('Are you sure you want to delete this conversation?'),
+        title: Text(
+          AppLocalizations.of(context).translate('delete_conversation'),
+        ),
+        content: Text(
+          AppLocalizations.of(context).translate('delete_conversation_confirm'),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           TextButton(
             onPressed: () {
               context.read<ChatCubit>().deleteSession(sessionId);
               Navigator.pop(ctx);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              AppLocalizations.of(context).delete,
+              // style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
     );
   }
 }
-
 
 // =================== Voice Waveform Widget ===================
 class VoiceWaveform extends StatelessWidget {

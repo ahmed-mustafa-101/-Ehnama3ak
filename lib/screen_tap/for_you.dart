@@ -20,7 +20,6 @@ import 'package:ehnama3ak/core/utils/image_utils.dart';
 
 import 'package:ehnama3ak/core/widgets/full_image_page.dart';
 
-
 class ForYouPage extends StatefulWidget {
   const ForYouPage({super.key});
 
@@ -269,6 +268,10 @@ class _ForYouViewState extends State<ForYouView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
             child: Text(l10n.cancel),
           ),
           ElevatedButton(
@@ -279,6 +282,10 @@ class _ForYouViewState extends State<ForYouView> {
                 Navigator.pop(ctx);
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
             child: Text(l10n.save),
           ),
         ],
@@ -592,7 +599,7 @@ class PostCard extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: loadingProgress.expectedTotalBytes != null
                         ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
+                              loadingProgress.expectedTotalBytes!
                         : null,
                   ),
                 ),
@@ -671,13 +678,9 @@ class PostCard extends StatelessWidget {
           ),
         );
       },
-      child: Hero(
-        tag: heroTag,
-        child: imageWidget,
-      ),
+      child: Hero(tag: heroTag, child: imageWidget),
     );
   }
-
 
   // Moved to top-level helper function for reuse in _CommentTile
 
@@ -1055,15 +1058,33 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Color(0xFF1E88E5)),
-                  onPressed: () async {
-                    final text = _controller.text.trim();
-                    if (text.isNotEmpty) {
-                      await context.read<CommentsCubit>().addComment(text);
-                      widget.onCommentAdded?.call();
-                      _controller.clear();
-                    }
+                BlocBuilder<CommentsCubit, CommentsState>(
+                  builder: (context, state) {
+                    final isPosting = state.status == CommentsStatus.posting;
+                    return IconButton(
+                      icon: isPosting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFF1E88E5),
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.send, color: Color(0xFF1E88E5)),
+                      onPressed: isPosting
+                          ? null
+                          : () {
+                              final text = _controller.text.trim();
+                              if (text.isNotEmpty) {
+                                context.read<CommentsCubit>().addComment(text);
+                                widget.onCommentAdded?.call();
+                                _controller.clear();
+                              }
+                            },
+                    );
                   },
                 ),
               ],
@@ -1101,6 +1122,10 @@ class _CommentTile extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
             child: Text(l10n.cancel),
           ),
           ElevatedButton(
@@ -1114,6 +1139,10 @@ class _CommentTile extends StatelessWidget {
               }
               Navigator.pop(ctx);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
             child: Text(l10n.save),
           ),
         ],
@@ -1131,6 +1160,10 @@ class _CommentTile extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
             child: Text(l10n.cancel),
           ),
           TextButton(
@@ -1138,7 +1171,11 @@ class _CommentTile extends StatelessWidget {
               context.read<CommentsCubit>().deleteComment(comment.id);
               Navigator.pop(ctx);
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
+            // style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: Text(l10n.delete),
           ),
         ],
@@ -1206,7 +1243,8 @@ class _CommentTile extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (isMyComment) _buildOptionsButton(context),
+                          if (isMyComment && !comment.id.startsWith('temp_'))
+                            _buildOptionsButton(context),
                         ],
                       ),
                       const SizedBox(height: 2),
@@ -1309,5 +1347,3 @@ class _CommentTile extends StatelessWidget {
 }
 
 // Helper function to build ImageProvider for user profile pictures
-
-

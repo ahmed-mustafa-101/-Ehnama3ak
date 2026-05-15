@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
+import '../../../core/localization/app_localizations.dart';
 
 /// Full-featured bottom input bar.
 /// Calls callbacks for send/image/file/voice so the screen can
@@ -92,15 +92,15 @@ class _ChatInputBarState extends State<ChatInputBar>
         final dir = await getTemporaryDirectory();
         final path =
             '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        
+
         await _recorder.start(const RecordConfig(), path: path);
         await _recorderController.record(path: path);
-        
+
         setState(() {
           _isRecording = true;
           _recordSeconds = 0;
         });
-        
+
         _recordTimer?.cancel();
         _recordTimer = Timer.periodic(const Duration(seconds: 1), (_) {
           if (mounted) setState(() => _recordSeconds++);
@@ -108,7 +108,11 @@ class _ChatInputBarState extends State<ChatInputBar>
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Microphone permission denied')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).translate('mic_permission_denied'),
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -140,7 +144,8 @@ class _ChatInputBarState extends State<ChatInputBar>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade300,
@@ -152,17 +157,17 @@ class _ChatInputBarState extends State<ChatInputBar>
                 children: [
                   _attachBtn(
                     icon: Icons.photo_library_outlined,
-                    label: 'Gallery',
+                    label: AppLocalizations.of(context).gallery,
                     onTap: () => _pickImage(ImageSource.gallery),
                   ),
                   _attachBtn(
                     icon: Icons.camera_alt_outlined,
-                    label: 'Camera',
+                    label: AppLocalizations.of(context).camera,
                     onTap: () => _pickImage(ImageSource.camera),
                   ),
                   _attachBtn(
                     icon: Icons.attach_file_outlined,
-                    label: 'File',
+                    label: AppLocalizations.of(context).translate('file'),
                     onTap: _pickFile,
                   ),
                 ],
@@ -194,8 +199,10 @@ class _ChatInputBarState extends State<ChatInputBar>
             child: Icon(icon, color: _blue, size: 28),
           ),
           const SizedBox(height: 8),
-          Text(label,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );
@@ -218,7 +225,9 @@ class _ChatInputBarState extends State<ChatInputBar>
         ],
       ),
       child: SafeArea(
-        child: _isRecording ? _buildRecordingRow(isDark) : _buildNormalRow(isDark),
+        child: _isRecording
+            ? _buildRecordingRow(isDark)
+            : _buildNormalRow(isDark),
       ),
     );
   }
@@ -248,7 +257,7 @@ class _ChatInputBarState extends State<ChatInputBar>
               minLines: 1,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
-                hintText: 'Message...',
+                hintText: AppLocalizations.of(context).messageLabel,
                 hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 15),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../features/messages/data/models/conversation_model.dart';
 import '../../features/messages/domain/repositories/message_repository.dart';
 import '../../features/messages/presentation/controllers/chat_cubit.dart';
@@ -96,9 +97,9 @@ class _MessagesScreenState extends State<MessagesScreen>
                       state,
                       state.favorites,
                       isDark,
-                      emptyMsg: 'No favorites yet',
+                      emptyMsg: AppLocalizations.of(context).translate('no_favorites_yet'),
                       emptySubMsg:
-                          'Star a conversation to see it here',
+                          AppLocalizations.of(context).translate('star_conversation_hint'),
                     ),
                   ],
                 ),
@@ -119,9 +120,9 @@ class _MessagesScreenState extends State<MessagesScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Messages',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context).messagesTitle,
+                style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     letterSpacing: -0.5),
@@ -129,7 +130,7 @@ class _MessagesScreenState extends State<MessagesScreen>
               BlocBuilder<UnreadCubit, UnreadState>(
                 builder: (_, s) => s.count > 0
                     ? Text(
-                        '${s.count} unread',
+                        '${s.count} ${AppLocalizations.of(context).translate('unread')}',
                         style: const TextStyle(
                             color: Color(0xFF0DA5FE), fontSize: 13),
                       )
@@ -165,7 +166,7 @@ class _MessagesScreenState extends State<MessagesScreen>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -188,7 +189,7 @@ class _MessagesScreenState extends State<MessagesScreen>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 12,
               offset: const Offset(0, 3),
             )
@@ -197,7 +198,7 @@ class _MessagesScreenState extends State<MessagesScreen>
         child: TextField(
           controller: _search,
           decoration: InputDecoration(
-            hintText: 'Search conversations…',
+            hintText: AppLocalizations.of(context).translate('search_conversations'),
             hintStyle:
                 TextStyle(color: Colors.grey.shade500, fontSize: 14),
             prefixIcon: Icon(Icons.search_rounded,
@@ -231,9 +232,9 @@ class _MessagesScreenState extends State<MessagesScreen>
           unselectedLabelColor: Colors.grey,
           labelStyle: const TextStyle(
               fontWeight: FontWeight.bold, fontSize: 13),
-          tabs: const [
-            Tab(text: 'All'),
-            Tab(text: '⭐  Favorites'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context).translate('all')),
+            Tab(text: '⭐  ${AppLocalizations.of(context).translate('favorites')}'),
           ],
         ),
       ),
@@ -245,9 +246,8 @@ class _MessagesScreenState extends State<MessagesScreen>
     ConversationsState state,
     List<ConversationModel> raw,
     bool isDark, {
-    String emptyMsg = 'No conversations yet',
-    String emptySubMsg =
-        'Messages from your doctor/patient will appear here',
+    String? emptyMsg,
+    String? emptySubMsg,
   }) {
     if (state.status == ConversationsStatus.loading && raw.isEmpty) {
       return const Center(
@@ -255,11 +255,13 @@ class _MessagesScreenState extends State<MessagesScreen>
               color: Color(0xFF0DA5FE)));
     }
     if (state.status == ConversationsStatus.error && raw.isEmpty) {
-      return _errorState(state.errorMessage ?? 'Something went wrong');
+      return _errorState(state.errorMessage ?? AppLocalizations.of(context).translate('something_went_wrong'));
     }
     final items = _filter(raw);
     if (items.isEmpty) {
-      return _emptyState(emptyMsg, emptySubMsg);
+      return _emptyState(
+          emptyMsg ?? AppLocalizations.of(context).translate('no_conversations_yet'),
+          emptySubMsg ?? AppLocalizations.of(context).translate('messages_sub_empty'));
     }
     return RefreshIndicator(
       onRefresh: () async {
@@ -278,7 +280,7 @@ class _MessagesScreenState extends State<MessagesScreen>
           height: 1,
           color: isDark
               ? Colors.white10
-              : Colors.black.withOpacity(0.05),
+              : Colors.black.withValues(alpha: 0.05),
         ),
         itemBuilder: (_, i) {
           final c = items[i];
@@ -303,7 +305,7 @@ class _MessagesScreenState extends State<MessagesScreen>
           Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: const Color(0xFF0DA5FE).withOpacity(0.08),
+              color: const Color(0xFF0DA5FE).withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.forum_outlined,
@@ -333,7 +335,7 @@ class _MessagesScreenState extends State<MessagesScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.cloud_off_outlined,
-              size: 56, color: Colors.red.withOpacity(0.6)),
+              size: 56, color: Colors.red.withValues(alpha: 0.6)),
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -344,7 +346,7 @@ class _MessagesScreenState extends State<MessagesScreen>
           const SizedBox(height: 16),
           ElevatedButton.icon(
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(AppLocalizations.of(context).retry),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0DA5FE),
               foregroundColor: Colors.white,

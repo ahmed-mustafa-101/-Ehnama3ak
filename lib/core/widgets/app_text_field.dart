@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Custom TextFormField widget with consistent styling
 class AppTextField extends StatelessWidget {
@@ -18,6 +19,8 @@ class AppTextField extends StatelessWidget {
       vertical: 16,
     ),
     this.hintStyle,
+    this.inputFormatters,
+    this.onChanged,
   });
 
   final TextEditingController controller;
@@ -31,6 +34,8 @@ class AppTextField extends StatelessWidget {
   final double borderRadius;
   final EdgeInsets contentPadding;
   final TextStyle? hintStyle;
+  final List<TextInputFormatter>? inputFormatters;
+  final void Function(String)? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +44,9 @@ class AppTextField extends StatelessWidget {
       obscureText: obscureText,
       validator: validator,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      onChanged: onChanged,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: hintStyle ?? const TextStyle(color: Colors.grey),
@@ -55,6 +63,14 @@ class AppTextField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
           borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderRadius),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderRadius),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
         contentPadding: contentPadding,
         suffixIcon: showObscureToggle && onObscureToggle != null

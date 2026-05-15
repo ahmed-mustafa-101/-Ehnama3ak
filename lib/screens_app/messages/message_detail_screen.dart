@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/localization/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../../features/auth/presentation/controllers/auth_cubit.dart';
 import '../../features/auth/presentation/controllers/auth_state.dart';
 import '../../features/messages/data/models/conversation_model.dart';
 import '../../features/messages/data/models/message_model.dart';
-import '../../features/messages/domain/repositories/message_repository.dart';
 import '../../core/network/dio_client.dart';
 import '../../features/messages/presentation/controllers/chat_cubit.dart';
 import '../../features/messages/presentation/controllers/chat_state.dart';
@@ -143,7 +143,9 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: const Color(0xFF0DA5FE).withOpacity(0.15),
+                backgroundColor: const Color(
+                  0xFF0DA5FE,
+                ).withValues(alpha: 0.15),
                 backgroundImage: _conv.userImage.isNotEmpty
                     ? NetworkImage(_getFullImageUrl(_conv.userImage))
                     : null,
@@ -200,11 +202,11 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
           ),
         ],
       ),
-      actions: [
-        IconButton(icon: const Icon(Icons.videocam_outlined), onPressed: () {}),
-        IconButton(icon: const Icon(Icons.call_outlined), onPressed: () {}),
-        const SizedBox(width: 4),
-      ],
+      // actions: [
+      //   IconButton(icon: const Icon(Icons.videocam_outlined), onPressed: () {}),
+      //   IconButton(icon: const Icon(Icons.call_outlined), onPressed: () {}),
+      //   const SizedBox(width: 4),
+      // ],
     );
   }
 
@@ -253,14 +255,14 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'No messages yet',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              AppLocalizations.of(context).noMessages,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Send the first message!',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+            Text(
+              AppLocalizations.of(context).translate('send_first_message'),
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
             ),
           ],
         ),
@@ -320,11 +322,11 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
     if (date.year == now.year &&
         date.month == now.month &&
         date.day == now.day) {
-      label = 'Today';
+      label = AppLocalizations.of(context).translate('today');
     } else if (date.year == now.year &&
         date.month == now.month &&
         date.day == now.day - 1) {
-      label = 'Yesterday';
+      label = AppLocalizations.of(context).translate('yesterday');
     } else {
       label = DateFormat.yMMMMd().format(date);
     }

@@ -201,7 +201,7 @@ class EhnaMa3akApp extends StatelessWidget {
               builder: (context, locale) {
                 return MaterialApp(
                   debugShowCheckedModeBanner: false,
-                  title: 'Ehna Ma3ak',
+                  title: 'V8',
                   themeMode: mode,
                   locale: locale,
                   supportedLocales: const [Locale('en'), Locale('ar')],

@@ -21,19 +21,12 @@ class ProfileModel {
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
-      fullName: json['fullName'] ?? json['FullName'] ?? '',
+      fullName: json['fullName'] ?? '',
       email: json['email'] ?? '',
-      avatarUrl: json['avatarUrl'] ?? 
-                 json['profileImageUrl'] ?? 
-                 json['ProfileImage'] ?? 
-                 json['imageUrl'] ?? 
-                 json['image'] ?? 
-                 json['photoPath'] ?? 
-                 json['profilePicture'] ?? 
-                 json['photoUrl'] ?? '',
-      sessionsCompleted: json['sessionsCompleted'] ?? json['sessionsCount'] ?? 0,
-      exercisesCompleted: json['exercisesCompleted'] ?? json['exercisesCount'] ?? 0,
-      activeDays: json['activeDays'] ?? json['daysCount'] ?? 0,
+      avatarUrl: json['avatarUrl'] ?? '',
+      sessionsCompleted: json['sessionsCompleted'] ?? 0,
+      exercisesCompleted: json['exercisesCompleted'] ?? 0,
+      activeDays: json['activeDays'] ?? 0,
       age: json['age'] ?? json['Age'] ?? 0,
       gender: json['gender'] ?? json['Gender'] ?? '',
     );

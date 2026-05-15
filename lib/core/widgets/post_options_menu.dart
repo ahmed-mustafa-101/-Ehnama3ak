@@ -37,8 +37,9 @@ class PostOptionsMenu extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(
                   'Edit Post',
-                  style:
-                      TextStyle(color: isDark ? Colors.white : Colors.black87),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                 ),
               ],
             ),
@@ -65,7 +66,7 @@ class PostOptionsMenu extends StatelessWidget {
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
               ),
             ],
-          )
+          ),
         ),
         PopupMenuItem(
           value: 'save',
@@ -84,8 +85,11 @@ class PostOptionsMenu extends StatelessWidget {
           value: 'report',
           child: Row(
             children: [
-              const Icon(Icons.report_gmailerrorred,
-                  size: 20, color: Colors.grey),
+              const Icon(
+                Icons.report_gmailerrorred,
+                size: 20,
+                color: Colors.grey,
+              ),
               const SizedBox(width: 10),
               Text(
                 'Report',
@@ -114,14 +118,14 @@ class PostOptionsMenu extends StatelessWidget {
         });
         break;
       case 'save':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post saved')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Post saved')));
         break;
       case 'report':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post reported')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Post reported')));
         break;
     }
   }
@@ -144,17 +148,22 @@ class PostOptionsMenu extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.grey),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
             ),
+            child: Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               onDelete(postId);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0DA5FE),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
           ),
         ],
       ),

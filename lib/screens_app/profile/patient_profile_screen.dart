@@ -1,8 +1,10 @@
 // import 'dart:io';
+import 'package:ehnama3ak/core/localization/locale_cubit.dart';
 import 'package:ehnama3ak/core/network/dio_client.dart';
 import 'package:ehnama3ak/core/widgets/app_tile.dart';
 import 'package:ehnama3ak/core/widgets/custom_app_button.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
+import 'package:ehnama3ak/core/widgets/languagetile_widget.dart';
 import 'package:ehnama3ak/screen_tap/settings_screen.dart';
 import 'package:ehnama3ak/screens_app/notifications/notifications_screen.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,7 @@ import '../../core/widgets/logout_dialog.dart';
 import '../../features/auth/presentation/controllers/auth_cubit.dart';
 import '../../features/settings/presentation/controllers/settings_cubit.dart';
 import 'widgets/stat_cardprofile.dart';
+import 'package:ehnama3ak/core/widgets/full_screen_image_viewer.dart';
 import 'package:ehnama3ak/screens_app/profile/presentation/cubit/profile_cubit.dart';
 import 'package:ehnama3ak/screens_app/profile/presentation/cubit/profile_state.dart';
 import 'package:ehnama3ak/screens_app/profile/models/profile_model.dart';
@@ -43,6 +46,58 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     // Cache-busting: force Flutter to reload image after avatar update
     final ts = DateTime.now().millisecondsSinceEpoch ~/ 60000;
     return '$fullUrl?v=$ts';
+  }
+
+  void _showLanguageSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final localeCubit = context.read<LocaleCubit>();
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => BlocBuilder<LocaleCubit, Locale>(
+        bloc: localeCubit,
+        builder: (ctx, currentLocale) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.selectLanguage,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                LanguageTile(
+                  label: 'English',
+                  flag: '🇺🇸',
+                  isSelected: currentLocale.languageCode == 'en',
+                  onTap: () {
+                    localeCubit.setLocale(const Locale('en'));
+                    Navigator.pop(ctx);
+                  },
+                ),
+                const SizedBox(height: 8),
+                LanguageTile(
+                  label: 'العربية',
+                  flag: '🇸🇦',
+                  isSelected: currentLocale.languageCode == 'ar',
+                  onTap: () {
+                    localeCubit.setLocale(const Locale('ar'));
+                    Navigator.pop(ctx);
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void _showEditProfileDialog(ProfileModel profile) {
@@ -92,10 +147,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                         border: const OutlineInputBorder(),
                       ),
                       items: ['Male', 'Female']
-                          .map((g) => DropdownMenuItem(
-                                value: g,
-                                child: Text(g),
-                              ))
+                          .map(
+                            (g) => DropdownMenuItem(value: g, child: Text(g)),
+                          )
                           .toList(),
                       onChanged: (val) {
                         if (val != null) {
@@ -109,12 +163,16 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                 ),
               ),
               actions: [
-                TextButton(
+                ElevatedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    l10n.cancel,
-                    style: const TextStyle(color: Colors.grey),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
+                  child: Text(l10n.cancel),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -128,15 +186,15 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     final cubit = context.read<ProfileCubit>();
                     final settingsCubit = context.read<SettingsCubit>();
                     final age = int.tryParse(ageCtrl.text) ?? 0;
-                    
+
                     Navigator.pop(context);
-                    
+
                     await cubit.updateProfile(
                       fullName: nameCtrl.text,
                       age: age,
                       gender: selectedGender,
                     );
-                    
+
                     if (context.mounted) {
                       settingsCubit.fetchSettings();
                     }
@@ -178,6 +236,8 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isArabic = context.watch<LocaleCubit>().isArabic;
+
     return BlocListener<ProfileCubit, ProfileState>(
       listener: (context, state) {
         if (state is UpdateProfileLoading) {
@@ -243,17 +303,40 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                   children: [
                     Stack(
                       children: [
-                        CircleAvatar(
-                          radius: 70,
-                          backgroundColor: Colors.grey[200],
-                          backgroundImage: profile.avatarUrl.isNotEmpty
-                              ? NetworkImage(
-                                  _getFullImageUrl(profile.avatarUrl),
-                                )
-                              : const AssetImage(
-                                      'assets/images/user_avatar.png',
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => FullScreenImageViewer(
+                                  imageProvider: profile.avatarUrl.isNotEmpty
+                                      ? NetworkImage(
+                                          _getFullImageUrl(profile.avatarUrl),
+                                        )
+                                      : const AssetImage(
+                                              'assets/images/user_avatar.png',
+                                            )
+                                            as ImageProvider,
+                                  heroTag: 'patient_profile_image',
+                                ),
+                              ),
+                            );
+                          },
+                          child: Hero(
+                            tag: 'patient_profile_image',
+                            child: CircleAvatar(
+                              radius: 70,
+                              backgroundColor: Colors.grey[200],
+                              backgroundImage: profile.avatarUrl.isNotEmpty
+                                  ? NetworkImage(
+                                      _getFullImageUrl(profile.avatarUrl),
                                     )
-                                    as ImageProvider,
+                                  : const AssetImage(
+                                          'assets/images/user_avatar.png',
+                                        )
+                                        as ImageProvider,
+                            ),
+                          ),
                         ),
                         Positioned(
                           bottom: 0,
@@ -329,6 +412,8 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                           label: l10n.editProfile,
                           icon: Icons.edit,
                           onPressed: () => _showEditProfileDialog(profile),
+                          fontSize: 20,
+                          height: 33,
                         ),
                       ],
                     ),
@@ -373,12 +458,8 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     AppTile(
                       icon: Icons.language,
                       title: l10n.language,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsScreen(),
-                        ),
-                      ),
+                      trailingText: isArabic ? 'العربية' : 'English',
+                      onTap: () => _showLanguageSheet(context),
                     ),
                     AppTile(
                       icon: Icons.bookmark_outline,

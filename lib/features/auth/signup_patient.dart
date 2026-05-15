@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+import 'package:ehnama3ak/core/utils/validators.dart';
 import 'package:ehnama3ak/core/widgets/app_background.dart';
 import 'package:ehnama3ak/core/widgets/app_icon_back.dart' show AppIconBack;
 import 'package:flutter/material.dart';
@@ -143,10 +145,12 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                                   controller: nationalNumCtrl,
                                   hintText: 'National Number',
                                   prefixIcon: Icons.badge_outlined,
-                                  validator: (v) =>
-                                      (v == null || v.trim().isEmpty)
-                                          ? 'Enter national number'
-                                          : null,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(14),
+                                  ],
+                                  validator: validateEgyptianNationalId,
                                 ),
                                 SizedBox(height: Responsive.spacing(context, 14)),
 

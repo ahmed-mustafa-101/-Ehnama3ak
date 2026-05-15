@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../features/messages/data/models/message_model.dart';
+import '../../../core/localization/app_localizations.dart';
 
 /// Collapsible pinned-messages bar shown at the top of the chat.
 class PinnedMessagesBar extends StatefulWidget {
@@ -43,7 +44,7 @@ class _PinnedMessagesBarState extends State<PinnedMessagesBar> {
                   const Icon(Icons.push_pin, size: 14, color: Color(0xFF0DA5FE)),
                   const SizedBox(width: 6),
                   Text(
-                    '${widget.pinned.length} Pinned Message${widget.pinned.length > 1 ? "s" : ""}',
+                    '${widget.pinned.length} ${widget.pinned.length > 1 ? AppLocalizations.of(context).translate("pinned_messages") : AppLocalizations.of(context).translate("pinned_message")}',
                     style: const TextStyle(
                       color: Color(0xFF0DA5FE),
                       fontWeight: FontWeight.w600,
@@ -84,10 +85,10 @@ class _PinnedMessagesBarState extends State<PinnedMessagesBar> {
                           msg.isText
                               ? msg.message
                               : msg.isImage
-                                  ? '📷 Image'
+                                  ? '📷 ${AppLocalizations.of(context).translate("image")}'
                                   : msg.isVoice
-                                      ? '🎤 Voice message'
-                                      : '📎 ${msg.attachmentName ?? "File"}',
+                                      ? '🎤 ${AppLocalizations.of(context).translate("voice_message")}'
+                                      : '📎 ${msg.attachmentName ?? AppLocalizations.of(context).translate("file")}',
                           style: TextStyle(
                             fontSize: 13,
                             color: isDark ? Colors.white : Colors.black87,

@@ -78,7 +78,8 @@ class PostModel extends Equatable {
       // 2. Try case-insensitive matches if not found
       final lowerKeys = keys.map((k) => k.toLowerCase()).toSet();
       for (final entry in data.entries) {
-        if (lowerKeys.contains(entry.key.toLowerCase()) && entry.value != null) {
+        if (lowerKeys.contains(entry.key.toLowerCase()) &&
+            entry.value != null) {
           return entry.value;
         }
       }
@@ -86,24 +87,47 @@ class PostModel extends Equatable {
     }
 
     // Helper to pick the first non-null/non-empty string value
-    String pick(Map<String, dynamic>? data, List<String> keys, {String defaultValue = ''}) {
+    String pick(
+      Map<String, dynamic>? data,
+      List<String> keys, {
+      String defaultValue = '',
+    }) {
       final value = findValue(data, keys);
       if (value == null) return defaultValue;
       final s = value.toString().trim();
-      return (s.isNotEmpty && s.toLowerCase() != 'null' && s.toLowerCase() != 'string') ? s : defaultValue;
+      return (s.isNotEmpty &&
+              s.toLowerCase() != 'null' &&
+              s.toLowerCase() != 'string')
+          ? s
+          : defaultValue;
     }
 
     // Try to find user info in various possible nested objects
-    final List<String> userObjectKeys = ['user', 'User', 'author', 'Author', 'doctor', 'Doctor', 'patient', 'Patient', 'creator', 'Creator', 'owner', 'Owner'];
+    final List<String> userObjectKeys = [
+      'user',
+      'User',
+      'author',
+      'Author',
+      'doctor',
+      'Doctor',
+      'patient',
+      'Patient',
+      'creator',
+      'Creator',
+      'owner',
+      'Owner',
+    ];
     final dynamic userRaw = findValue(json, userObjectKeys);
-    final Map<String, dynamic>? userMap = userRaw is Map ? Map<String, dynamic>.from(userRaw) : null;
-    
+    final Map<String, dynamic>? userMap = userRaw is Map
+        ? Map<String, dynamic>.from(userRaw)
+        : null;
+
     // Derived counts from lists if needed
     int likesCount = _toInt(json['likesCount'] ?? json['likes'] ?? 0);
     if (json['likes'] is List && (json['likesCount'] == null)) {
       likesCount = (json['likes'] as List).length;
     }
-    
+
     int commentsCount = _toInt(json['commentsCount'] ?? json['comments'] ?? 0);
     if (json['comments'] is List && (json['commentsCount'] == null)) {
       commentsCount = (json['comments'] as List).length;
@@ -114,25 +138,11 @@ class PostModel extends Equatable {
       sharesCount = (json['shares'] as List).length;
     }
 
-    final List<String> nameKeys = [
-      'userName', 'UserName', 'fullName', 'FullName', 'displayName', 'DisplayName', 
-      'name', 'Name', 'userFullName', 'UserFullName', 'firstName', 'FirstName',
-      'authorName', 'AuthorName', 'doctorName', 'DoctorName', 'patientName', 'PatientName'
-    ];
+    final List<String> nameKeys = ['userName'];
 
-    final List<String> userImageOnlyKeys = [
-      'userProfileImage', 'profileImageUrl', 'ProfileImageUrl', 'profileImage', 'ProfileImage',
-      'avatarUrl', 'AvatarUrl', 'photoUrl', 'PhotoUrl', 'picture', 'Picture', 'photoPath',
-      'avatar', 'profilePicture', 'profileurl', 'profile', 'userImage', 'UserImage',
-      'authorImage', 'AuthorImage', 'doctorImage', 'DoctorImage', 'patientImage', 'PatientImage',
-      'userPhoto', 'UserPhoto', 'authorPhoto', 'AuthorPhoto', 'doctorPhoto', 'DoctorPhoto',
-      'patientPhoto', 'PatientPhoto', 'profile_picture', 'profile_photo', 'avatar_url', 'image_url',
-      'uImage', 'uPhoto', 'uAvatar', 'uPicture', 'userAvatar'
-    ];
+    final List<String> userImageOnlyKeys = ['userAvatar'];
 
-    final List<String> commonImageKeys = [
-      'imageUrl', 'ImageUrl', 'image', 'Image', 'url', 'photo', 'img'
-    ];
+    final List<String> commonImageKeys = ['imageUrl'];
 
     // Separate user info extraction to avoid collision with post image
     String profileImg = '';
@@ -140,7 +150,7 @@ class PostModel extends Equatable {
       // Inside user object, we can trust common keys like 'image' or 'url'
       profileImg = pick(userMap, [...userImageOnlyKeys, ...commonImageKeys]);
     }
-    
+
     if (profileImg.isEmpty) {
       // At root level (post itself), ONLY trust user-specific keys
       profileImg = pick(json, userImageOnlyKeys);
@@ -148,12 +158,23 @@ class PostModel extends Equatable {
 
     return PostModel(
       id: (json['id'] ?? json['postId'] ?? '').toString(),
-      userId: (json['userId'] ?? json['uId'] ?? json['userIds'] ?? json['uid'] ?? userMap?['id'] ?? userMap?['userId'] ?? '').toString(),
-      userName: pick(userMap, nameKeys, defaultValue: pick(json, nameKeys, defaultValue: 'Unknown')),
-      userRole: (json['userRole'] ?? json['role'] ?? userMap?['role'] ?? 'User').toString(),
+      userId:
+          (json['userId'] ??
+                  userMap?['id'] ??
+                  userMap?['userId'] ??
+                  '')
+              .toString(),
+      userName: pick(
+        userMap,
+        nameKeys,
+        defaultValue: pick(json, nameKeys, defaultValue: 'Unknown'),
+      ),
+      userRole: (json['userRole'] ?? json['role'] ?? userMap?['role'] ?? 'User')
+          .toString(),
       userProfileImage: profileImg,
       userAvatar: profileImg,
-      content: (json['content'] ?? json['postText'] ?? json['text'] ?? '').toString(),
+      content: (json['content'] ?? json['postText'] ?? json['text'] ?? '')
+          .toString(),
       imageUrl: json['imageUrl'] ?? json['postImage'] ?? json['image'],
       likesCount: likesCount,
       commentsCount: commentsCount,
@@ -173,25 +194,36 @@ class PostModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'userId': userId,
-        'userName': userName,
-        'userRole': userRole,
-        'userProfileImage': userProfileImage,
-        'userAvatar': userAvatar,
-        'content': content,
-        'imageUrl': imageUrl,
-        'likesCount': likesCount,
-        'commentsCount': commentsCount,
-        'sharesCount': sharesCount,
-        'isLikedByMe': isLikedByMe,
-        'createdAt': createdAt.toIso8601String(),
-        'likeId': likeId,
-      };
+    'id': id,
+    'userId': userId,
+    'userName': userName,
+    'userRole': userRole,
+    'userProfileImage': userProfileImage,
+    'userAvatar': userAvatar,
+    'content': content,
+    'imageUrl': imageUrl,
+    'likesCount': likesCount,
+    'commentsCount': commentsCount,
+    'sharesCount': sharesCount,
+    'isLikedByMe': isLikedByMe,
+    'createdAt': createdAt.toIso8601String(),
+    'likeId': likeId,
+  };
 
   bool isOwnedBy(String? currentUserId) =>
-      currentUserId != null && currentUserId.isNotEmpty && userId == currentUserId;
+      currentUserId != null &&
+      currentUserId.isNotEmpty &&
+      userId == currentUserId;
 
   @override
-  List<Object?> get props => [id, userId, content, likesCount, commentsCount, sharesCount, isLikedByMe, userAvatar];
+  List<Object?> get props => [
+    id,
+    userId,
+    content,
+    likesCount,
+    commentsCount,
+    sharesCount,
+    isLikedByMe,
+    userAvatar,
+  ];
 }

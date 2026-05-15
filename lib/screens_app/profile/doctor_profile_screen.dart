@@ -1,15 +1,13 @@
 import 'package:ehnama3ak/core/utils/responsive.dart';
-import 'package:ehnama3ak/core/widgets/registered_doctor_profile_texts.dart';
 import 'package:ehnama3ak/core/widgets/main_layout.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/models/upload_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../features/auth/presentation/controllers/auth_cubit.dart';
-import '../../features/auth/presentation/controllers/auth_state.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_cubit.dart';
 import 'package:ehnama3ak/screens_app/doctor/dashboard/presentation/cubit/doctor_dashboard_state.dart';
 import 'package:ehnama3ak/core/network/dio_client.dart';
+import 'package:ehnama3ak/core/widgets/full_screen_image_viewer.dart';
 import 'package:ehnama3ak/features/notifications/presentation/cubit/notification_cubit.dart';
 import 'package:ehnama3ak/features/notifications/presentation/cubit/notification_state.dart';
 
@@ -249,16 +247,44 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                               colors: [Colors.blue, Colors.lightBlueAccent],
                             ),
                           ),
-                          child: CircleAvatar(
-                            radius: Responsive.iconSize(context, 55),
-                            backgroundColor: Colors.grey[200],
-                            backgroundImage: state.header.imageUrl.isNotEmpty
-                                ? NetworkImage(
-                                    _getFullImageUrl(state.header.imageUrl),
-                                  )
-                                : const AssetImage(
-                                    'assets/images/user_avatar.png',
-                                  ) as ImageProvider,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => FullScreenImageViewer(
+                                    imageProvider:
+                                        state.header.imageUrl.isNotEmpty
+                                        ? NetworkImage(
+                                            _getFullImageUrl(
+                                              state.header.imageUrl,
+                                            ),
+                                          )
+                                        : const AssetImage(
+                                                'assets/images/user_avatar.png',
+                                              )
+                                              as ImageProvider,
+                                    heroTag: 'doctor_profile_image',
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Hero(
+                              tag: 'doctor_profile_image',
+                              child: CircleAvatar(
+                                radius: Responsive.iconSize(context, 55),
+                                backgroundColor: Colors.grey[200],
+                                backgroundImage:
+                                    state.header.imageUrl.isNotEmpty
+                                    ? NetworkImage(
+                                        _getFullImageUrl(state.header.imageUrl),
+                                      )
+                                    : const AssetImage(
+                                            'assets/images/user_avatar.png',
+                                          )
+                                          as ImageProvider,
+                              ),
+                            ),
                           ),
                         ),
                         SizedBox(width: Responsive.spacing(context, 15)),
@@ -302,7 +328,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                       (index) => Icon(
                                         Icons.star,
                                         size: Responsive.iconSize(context, 14),
-                                        color: index < state.header.rating.round()
+                                        color:
+                                            index < state.header.rating.round()
                                             ? Colors.blue
                                             : Colors.grey.shade400,
                                       ),
@@ -311,11 +338,19 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                   if (state.header.isAvailable)
                                     Container(
                                       padding: EdgeInsets.symmetric(
-                                        horizontal: Responsive.padding(context, 10),
-                                        vertical: Responsive.padding(context, 4),
+                                        horizontal: Responsive.padding(
+                                          context,
+                                          10,
+                                        ),
+                                        vertical: Responsive.padding(
+                                          context,
+                                          4,
+                                        ),
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.blue.withValues(alpha: 0.05),
+                                        color: Colors.blue.withValues(
+                                          alpha: 0.05,
+                                        ),
                                         borderRadius: BorderRadius.circular(
                                           Responsive.borderRadius(context, 20),
                                         ),
@@ -324,16 +359,27 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           CircleAvatar(
-                                            radius: Responsive.iconSize(context, 4),
+                                            radius: Responsive.iconSize(
+                                              context,
+                                              4,
+                                            ),
                                             backgroundColor: Colors.green,
                                           ),
-                                          SizedBox(width: Responsive.spacing(context, 5)),
+                                          SizedBox(
+                                            width: Responsive.spacing(
+                                              context,
+                                              5,
+                                            ),
+                                          ),
                                           Text(
                                             l10n.available,
                                             style: TextStyle(
                                               color: const Color(0xFF0DA5FE),
                                               fontWeight: FontWeight.bold,
-                                              fontSize: Responsive.fontSize(context, 12),
+                                              fontSize: Responsive.fontSize(
+                                                context,
+                                                12,
+                                              ),
                                             ),
                                           ),
                                         ],

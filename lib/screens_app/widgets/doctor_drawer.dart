@@ -1,5 +1,4 @@
 import 'package:ehnama3ak/core/widgets/logout_dialog.dart';
-import 'package:ehnama3ak/core/widgets/registered_doctor_profile_texts.dart';
 import 'package:ehnama3ak/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -148,7 +147,7 @@ class DoctorDrawer extends StatelessWidget {
                     backgroundImage: header.imageUrl.isNotEmpty
                         ? NetworkImage(_getFullImageUrl(header.imageUrl))
                         : const AssetImage('assets/images/user_avatar.png')
-                            as ImageProvider,
+                              as ImageProvider,
                   ),
                 ),
                 const SizedBox(width: 15),
@@ -178,7 +177,10 @@ class DoctorDrawer extends StatelessWidget {
                       ),
                       Text(
                         '${header.experienceYears} Years Exp',
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -205,7 +207,9 @@ class DoctorDrawer extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 35,
                   backgroundColor: Colors.grey[200],
-                  backgroundImage: const AssetImage('assets/images/user_avatar.png'),
+                  backgroundImage: const AssetImage(
+                    'assets/images/user_avatar.png',
+                  ),
                 ),
               ),
               const SizedBox(width: 15),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
 import '../../../features/messages/data/models/message_model.dart';
 import '../../chatbot/voice_message_widget.dart';
+import '../../../core/localization/app_localizations.dart';
 
 /// A single chat bubble supporting text, image, voice, and file messages.
 class MessageBubble extends StatelessWidget {
@@ -184,24 +185,24 @@ class MessageBubble extends StatelessWidget {
               ),
             ),
             if (message.isText)
-              _menuItem(context, Icons.copy_outlined, 'Copy', () {
+              _menuItem(context, Icons.copy_outlined, AppLocalizations.of(context).translate('copy'), () {
                 Clipboard.setData(ClipboardData(text: message.message));
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Copied to clipboard')),
+                  SnackBar(content: Text(AppLocalizations.of(context).copiedToClipboard)),
                 );
               }),
             if (!message.isPinned)
-              _menuItem(context, Icons.push_pin_outlined, 'Pin message', () {
+              _menuItem(context, Icons.push_pin_outlined, AppLocalizations.of(context).translate('pin_message'), () {
                 Navigator.pop(context);
                 onPin?.call();
               }),
             if (message.isPinned)
-              _menuItem(context, Icons.push_pin, 'Unpin message', () {
+              _menuItem(context, Icons.push_pin, AppLocalizations.of(context).translate('unpin_message'), () {
                 Navigator.pop(context);
                 onUnpin?.call();
               }),
-            _menuItem(context, Icons.delete_outline, 'Delete',
+            _menuItem(context, Icons.delete_outline, AppLocalizations.of(context).delete,
                 () => Navigator.pop(context),
                 color: Colors.red),
             const SizedBox(height: 8),

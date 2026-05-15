@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../data/models/comment_model.dart';
 
-enum CommentsStatus { initial, loading, loaded, error, loadingMore }
+enum CommentsStatus { initial, loading, loaded, error, loadingMore, posting }
 
 class CommentsState extends Equatable {
   final CommentsStatus status;

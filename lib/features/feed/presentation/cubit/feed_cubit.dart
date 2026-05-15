@@ -158,6 +158,7 @@ class FeedCubit extends Cubit<FeedState> {
       final currentAvatar = await PrefManager.getUserProfileImageUrl() ?? '';
 
       final newPost = responsePost.copyWith(
+        userId: userId, // Ensure userId is populated correctly to allow immediate deletion/editing
         userName: (responsePost.userName != 'Unknown')
             ? responsePost.userName
             : currentName,

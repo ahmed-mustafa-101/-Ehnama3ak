@@ -15,17 +15,17 @@ class CustomAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 35, right: 16.0),
+      padding: const EdgeInsetsDirectional.only(start: 16.0, end: 16.0),
       child: Row(
         children: [
           // Logo
-          Transform.translate(
-            offset: const Offset(-10, 0),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 9.0),
             child: Image.asset(
               'assets/images/name_app.png',
               width: 150,
               height: 35,
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
             ),
           ),
           const Spacer(),
